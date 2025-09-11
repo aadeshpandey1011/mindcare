@@ -5,6 +5,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose";
+import sendMail from "../utils/mail.js";
+// const sendMail = require("../utils/mail.js");
+
 
 
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -119,6 +122,10 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImageLocalPath = req.files.coverImage[0].path;
     }
 
+
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required");
     }
@@ -176,74 +183,94 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
 });
 
+const loginUser = async (req, res, next) => {
+  try {
+    const { email, username, password } = req.body;
 
-const loginUser = asyncHandler(async (req, res) => {
-    // req body -> data
-    // username or email
-    //find the user
-    //password check
-    //access and referesh token
-    //send cookie
-
-    const { email, username, password } = req.body
-    console.log(email);
-
-    if (!username && !email) {
-        throw new ApiError(400, "username or email is required")
+    if ((!email && !username) || !password) {
+      return res.status(400).json({ message: "Email/Username and password are required" });
     }
 
-    // Here is an alternative of above code based on logic discussed in video:
-    // if (!(username || email)) {
-    //     throw new ApiError(400, "username or email is required")
-
-    // }
-
-    const user = await User.findOne({
-        $or: [{ username }, { email }]
-    })
+    // Find user by email OR username
+    const user = await User.findOne(
+      email ? { email } : { username }
+    ).select("+password");
 
     if (!user) {
-        throw new ApiError(404, "User does not exist")
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (!user.isApproved) {
-        return res.status(403).json({
-            message: "Your account is pending approval by an admin."
-        });
-    }
-
-    
-
-    const isPasswordValid = await user.isPasswordCorrect(password)
-
+    const isPasswordValid = await user.isPasswordCorrect(password);
     if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid user credentials")
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+    // generate tokens
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
-    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    res.status(200).json({
+      success: true,
+      token: accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        username: user.username, // ✅ include username in response
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
 
-    return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    user: loggedInUser, accessToken, refreshToken
-                },
-                "User logged In Successfully"
-            )
-        )
+// })
+// user.controller.js
+// const loginUser = async (req, res, next) => {
+//   try {
+//     const { email, password } = req.body;
 
-})
+//     if (!email || !password) {
+//       return res.status(400).json({ message: "Email and password required" });
+//     }
+
+//     const user = await User.findOne({ email }).select("+password"); // 👈 include password
+
+//     if (!user) {
+//       return res.status(401).json({ message: "Invalid credentials" });
+//     }
+
+//     const isPasswordValid = await user.isPasswordCorrect(password);
+
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ message: "Invalid credentials" });
+//     }
+
+//     // generate tokens
+//     const accessToken = user.generateAccessToken();
+//     const refreshToken = user.generateRefreshToken();
+
+//     res.status(200).json({
+//       success: true,
+//       token: accessToken,
+//       refreshToken,
+//       user: {
+//         id: user._id,
+//         fullName: user.fullName,
+//         email: user.email,
+//         role: user.role,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Login error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 
 
 // user.controller.js
@@ -286,6 +313,69 @@ const logoutUser = asyncHandler(async (req, res) => {
         .clearCookie("refreshToken", options)
         .json(new ApiResponse(200, {}, "User logged Out"))
 })
+
+
+/* ========================
+    FORGOT & RESET PASSWORD
+========================= */
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(404, "No user found with this email");
+
+  const resetToken = jwt.sign({ id: user._id }, process.env.RESET_PASSWORD_SECRET, {
+    expiresIn: "15m",
+  });
+
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  await sendMail({
+    to: email,
+    subject: "Password Reset Request",
+    html: `<p>Click the link to reset your password:</p><a href="${resetUrl}">${resetUrl}</a>`
+    });
+
+  return res.status(200).json(new ApiResponse(200, {}, "Password reset link sent to email"));
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) throw new ApiError(404, "Invalid token or user does not exist");
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, {}, "Password reset successful"));
+  } catch (error) {
+    throw new ApiError(400, "Invalid or expired token");
+  }
+});
+
+
+
+
+/* ========================
+    UPDATE USER PROFILE
+========================= */
+// const updateAccountDetails = asyncHandler(async (req, res) => {
+//   const { fullName, email } = req.body;
+//   if (!fullName || !email) throw new ApiError(400, "Full name and email are required");
+
+//   const updatedUser = await User.findByIdAndUpdate(
+//     req.user._id,
+//     { fullName, email },
+//     { new: true }
+//   ).select("-password");
+
+//   return res.status(200).json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
+// });
+
+
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
@@ -598,4 +688,6 @@ export {
     getUserChannelProfile,
     getWatchHistory,
     approveUser,
+    forgotPassword,
+    resetPassword,
 }

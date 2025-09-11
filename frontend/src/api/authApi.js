@@ -6,10 +6,11 @@ const API = axios.create({
 });
 
 // Register new user
-export const signup = (userData) => API.post("/auth/signup", userData);
+export const signup = (userData) => API.post("/users/register", userData);
+
 
 // Login
-export const login = (credentials) => API.post("/auth/login", credentials);
+export const login = (credentials) => API.post("/users/login", credentials);
 
 // Fetch current user
 export const getMe = (token) =>

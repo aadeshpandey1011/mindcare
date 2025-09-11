@@ -116,6 +116,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import crypto from "crypto";// ✅ Required for reset password token generation
 
 const userSchema = new Schema(
     {
@@ -147,15 +148,16 @@ const userSchema = new Schema(
         coverImage: {
             type: String, // cloudinary url
         },
-        watchHistory: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Video",
-            },
-        ],
+        // watchHistory: [
+        //     {
+        //         type: Schema.Types.ObjectId,
+        //         ref: "Video",
+        //     },
+        // ],
         password: {
             type: String,
             required: [true, "Password is required"],
+            select: false , // 🔒 ensure password is not returned by default
         },
         refreshToken: {
             type: String,
@@ -169,11 +171,15 @@ const userSchema = new Schema(
         },
         isApproved: {
             type: Boolean,
-            
+
             default: function () {
                 return this.role === "student"; // ✅ students auto-approved
             }
         },
+        institution: { type: String },
+        createdAt: { type: Date, default: Date.now },
+        resetPasswordToken: String,
+        resetPasswordExpires: Date
     },
     {
         timestamps: true,
@@ -217,6 +223,35 @@ userSchema.methods.generateRefreshToken = function () {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
         }
     );
+};
+
+userSchema.methods.getResetPasswordToken = function() {
+  // create token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  // hash token and set expire
+  this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+  return resetToken;
+};
+
+
+/* ==========================================
+   GENERATE RESET PASSWORD TOKEN
+========================================== */
+userSchema.methods.getResetPasswordToken = function () {
+  // Generate random token
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  // Hash token before storing in DB for security
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // Token expires in 1 hour
+  this.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
+
+  return resetToken; // plain token for sending via email
 };
 
 export const User = mongoose.model("User", userSchema);
