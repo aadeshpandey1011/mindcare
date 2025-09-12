@@ -57,6 +57,10 @@ export default function Signup() {
       setMessageType("");
     }, 5000);
   };
+   const handleJoinNow = () => {
+    // setShowSignup(true);
+    navigate("/login");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -389,9 +393,12 @@ export default function Signup() {
       {/* Login link - outside the box */}
       <div className="mt-4 mb-14 text-gray-700 text-center">
         Already have an account?{" "}
-        <span className="text-red-400 hover:underline cursor-pointer">
+       <button 
+          onClick={handleJoinNow}
+          className="text-red-400 hover:underline cursor-pointer bg-none border-none"
+        >
           Sign In
-        </span>
+        </button>
       </div>
     </div>
   );

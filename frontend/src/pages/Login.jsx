@@ -161,13 +161,14 @@ if (!token || !user) {
   };
 
   const handleJoinNow = () => {
-    setShowSignup(true);
+    // setShowSignup(true);
+    navigate("/signup");
   };
 
   // Simple component switching for demo
-  if (showSignup) {
-    return <SignupComponent onBackToLogin={() => setShowSignup(false)} />;
-  }
+  // if (showSignup) {
+  //   return <SignupComponent onBackToLogin={() => setShowSignup(false)} />;
+  // }
 
   if (showForgotPassword) {
     return <ForgotPasswordComponent onBackToLogin={() => setShowForgotPassword(false)} />;
