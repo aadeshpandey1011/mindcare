@@ -179,7 +179,8 @@ const userSchema = new Schema(
         institution: { type: String },
         createdAt: { type: Date, default: Date.now },
         resetPasswordToken: String,
-        resetPasswordExpires: Date
+        resetPasswordExpires: Date,
+        status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }, // 👈 NEW
     },
     {
         timestamps: true,

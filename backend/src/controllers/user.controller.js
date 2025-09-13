@@ -116,6 +116,8 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists");
     }
 
+    const status = role === "student" ? "approved" : "pending";  // 👈 set status based on role
+
     const avatarLocalPath = req.files?.avatar[0]?.path;
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
@@ -172,6 +174,7 @@ const registerUser = asyncHandler(async (req, res) => {
         username: username.toLowerCase(),
         role: role || "student", // 👈 assign role here
         isApproved,
+        status,
     });
 
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
@@ -271,6 +274,10 @@ const loginUser = async (req, res, next) => {
 //   }
 // };
 
+// GET /api/v1/auth/me
+const getMe = asyncHandler(async (req, res) => {
+  res.json(new ApiResponse(200, { user: req.user }, "User details fetched"));
+});
 
 
 // user.controller.js
@@ -690,4 +697,5 @@ export {
     approveUser,
     forgotPassword,
     resetPassword,
+    getMe,
 }

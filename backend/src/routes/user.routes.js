@@ -85,8 +85,8 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js"; // ✅ new import
-
+import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js"; // ✅ new 
+import { getMe } from "../controllers/user.controller.js";
 import { forgotPassword, resetPassword } from "../controllers/user.controller.js";
 
 const router = Router();
@@ -121,6 +121,9 @@ router.route("/refresh-token").post(refreshAccessToken);
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
+
+
+router.get("/me", verifyJWT, getMe);
 
 
 

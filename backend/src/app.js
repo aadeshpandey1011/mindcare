@@ -32,8 +32,9 @@ import likeRouter from "./routes/like.routes.js"
 import playlistRouter from "./routes/playlist.routes.js"
 import dashboardRouter from "./routes/dashboard.routes.js"
 import screeningRouter from "./routes/screening.routes.js"
+import adminRouter from "./routes/admin.routes.js";
 
-
+import authRouter from "./routes/user.routes.js";
 
 //routes declaration
 app.use("/api/v1/healthcheck", healthcheckRouter)
@@ -46,6 +47,9 @@ app.use("/api/v1/likes", likeRouter)
 app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/dashboard", dashboardRouter)
 app.use("/api/v1/screenings", screeningRouter)
+// Mount admin routes
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/auth", authRouter);
 
 // http://localhost:8000/api/v1/users/register
 
