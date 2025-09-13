@@ -114,16 +114,16 @@ if (!token || !user) {
 
       showMessage("Login successful! Redirecting...", "success");
         localStorage.setItem("token", token);
-        // localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("dpi_token",data.token); 
 
 
-        localStorage.setItem("user", JSON.stringify({
-          id: user.id || user._id,
-          fullName: user.fullName,
-          email: user.email,
-          role: user.role
-        }));
+        // localStorage.setItem("user", JSON.stringify({
+        //   id: user.id || user._id,
+        //   fullName: user.fullName,
+        //   email: user.email,
+        //   role: user.role
+        // }));
 
         // Redirect after short delay
         setTimeout(() => {
@@ -132,7 +132,7 @@ if (!token || !user) {
           } else {
             navigate("/Newhome");
           }
-        }, 3000);
+        }, 1500);
       
       // In a real app, you would use context/state management and navigation
       // For demo purposes, we'll just show success
