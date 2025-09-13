@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useState, useRef, useEffect } from "react";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth(); // Add loading from context
   const location = useLocation();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -82,7 +82,16 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center space-x-4">
-          {user ? (
+          {loading ? (
+            // Show loading skeleton while auth is initializing
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="hidden lg:block">
+                <div className="w-24 h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="w-16 h-3 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          ) : user ? (
             <div className="relative" ref={dropdownRef}>
               {/* Avatar Button */}
               <button
@@ -238,70 +247,3 @@ export default function Navbar() {
     </header>
   );
 }
-
-
-
-// import { Link, useLocation } from "react-router-dom";
-// import { useAuth } from "../context/AuthContext";
-
-// export default function Navbar() {
-//   const { user, logout } = useAuth();
-//   const location = useLocation();
-
-//   const navItems = [
-//     { name: "AI Chat Support", path: "/chat" },
-//     { name: "Screening Test", path: "/screening" },
-//     { name: "Book Appointment", path: "/booking" },
-//     { name: "Resources", path: "/resources" },
-//     { name: "Peer Forum", path: "/forum" },
-//   ];
-
-//   const isActive = (path) => location.pathname === path;
-
-//   return (
-//     <header className="sticky top-0 z-50 shadow-md bg-gradient-to-r from-white via-blue-50 to-blue-100 backdrop-blur border-b">
-//       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-//         <Link
-//           // to="/"
-//           className="text-2xl font-extrabold tracking-tight text-indigo-700"
-//         >
-//           MindCare
-//         </Link>
-
-//         <nav className="hidden md:flex space-x-6 font-medium">
-//           {navItems.map((item) => (
-//             <Link
-//               key={item.name}
-//               to={item.path}
-//               className={`transition-colors duration-200 pb-1 border-b-2 ${
-//                 isActive(item.path)
-//                   ? "border-indigo-600 text-indigo-700 font-semibold"
-//                   : "border-transparent text-gray-600 hover:text-indigo-600 hover:border-indigo-500"
-//               }`}
-//             >
-//               {item.name}
-//             </Link>
-//           ))}
-//         </nav>
-
-//         {/* <div>
-//           {user ? (
-//             <button
-//               onClick={logout}
-//               className="ml-6 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md shadow"
-//             >
-//               Logout
-//             </button>
-//           ) : (
-//             <Link
-//               to="/login"
-//               className="ml-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md shadow"
-//             >
-//               Login
-//             </Link>
-//           )}
-//         </div> */}
-//       </div>
-//     </header>
-//   );
-// }

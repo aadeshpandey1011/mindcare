@@ -132,7 +132,7 @@ if (!token || !user) {
           } else {
             navigate("/Newhome");
           }
-        }, 1000);
+        }, 3000);
       
       // In a real app, you would use context/state management and navigation
       // For demo purposes, we'll just show success

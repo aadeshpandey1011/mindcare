@@ -7,16 +7,19 @@ const AuthContext = createContext();
 // Provider Component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("dpi_token") || null);
+  const [token, setToken] = useState(() => localStorage.getItem("dpi_token"));
   const [loading, setLoading] = useState(true);
 
-  // Check if token is valid on mount
+  // Initialize auth state on mount
   useEffect(() => {
     const initAuth = async () => {
-      if (token) {
+      const storedToken = localStorage.getItem("dpi_token");
+      
+      if (storedToken) {
         try {
-          const res = await getMe(token);
+          const res = await getMe(storedToken);
           setUser(res.data.data.user);
+          setToken(storedToken);
         } catch (err) {
           console.error("Auth check failed:", err.response?.data?.message);
           setUser(null);
@@ -24,16 +27,19 @@ export const AuthProvider = ({ children }) => {
           // localStorage.removeItem("dpi_token");
         }
       }
+      
       setLoading(false);
     };
+
     initAuth();
-  }, [token]);
+  }, []); // Remove the dependency array complexity
 
   // Login function
-  const login = (token, user) => {
-    setToken(token);
-    setUser(user);
-    localStorage.setItem("dpi_token", token);
+  const login = (newToken, newUser) => {
+    setToken(newToken);
+    setUser(newUser);
+    localStorage.setItem("dpi_token", newToken);
+    setLoading(false); // Ensure loading is false after login
   };
 
   // Logout function
@@ -45,71 +51,16 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
 
 // Hook for consuming context
-export const useAuth = () => useContext(AuthContext);
-
-
-
-
-// import React, { createContext, useContext, useEffect, useState } from "react";
-// import { getMe } from "../api/authApi";
-
-// // Create Context
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const [token, setToken] = useState(localStorage.getItem("dpi_token") || null);
-//   const [loading, setLoading] = useState(true);
-
-//   // ✅ Check token validity on mount
-//   useEffect(() => {
-//     const initAuth = async () => {
-//       if (token) {
-//         try {
-//           const res = await getMe(token);
-//           setUser(res.data.data.user);
-//         } catch (err) {
-//           console.error("Auth check failed:", err.response?.data?.message);
-//           setUser(null);
-//           setToken(null);
-//           // localStorage.removeItem("dpi_token"); // ✅ better to clear invalid tokens
-//         }
-//       }
-//       setLoading(false);
-//     };
-//     initAuth();
-//   }, [token]);
-
-//   // Login
-//   const login = (token, user) => {
-//     setToken(token);
-//     setUser(user);
-//     localStorage.setItem("dpi_token", token);
-//   };
-
-//   // Logout
-//   const logout = () => {
-//     setToken(null);
-//     setUser(null);
-//     localStorage.removeItem("dpi_token");
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, token, login, logout, loading }}>
-//       {!loading && children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-
-
-
-
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

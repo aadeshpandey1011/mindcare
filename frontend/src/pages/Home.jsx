@@ -83,28 +83,28 @@ export default function Home() {
               icon={<MessageCircle size={36} className="text-white" />}
               title="AI Chat Support"
               desc="Get immediate, confidential mental health guidance."
-              // link="/chat"
+              link="/Signup"
               gradient="from-blue-500 to-blue-400"
             />
             <FeatureCard
               icon={<Calendar size={36} className="text-white" />}
               title="Confidential Booking"
               desc="Book private sessions with qualified counselors."
-              // link="/booking"
+              link="/Signup"
               gradient="from-purple-500 to-purple-400"
             />
             <FeatureCard
               icon={<BookOpen size={36} className="text-white" />}
               title="Resource Hub"
               desc="Learn coping strategies and mental wellness tips."
-              // link="/resources"
+              link="/Signup"
               gradient="from-green-500 to-green-400"
             />
             <FeatureCard
               icon={<Users size={36} className="text-white" />}
               title="Peer Forum"
               desc="Connect anonymously with peers in a safe space."
-              // link="/forum"
+              link="/Signup"
               gradient="from-orange-500 to-orange-400"
             />
           </div>
