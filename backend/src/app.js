@@ -36,6 +36,9 @@ import adminRouter from "./routes/admin.routes.js";
 
 import authRouter from "./routes/user.routes.js";
 
+// ✅ New Forum Post Router
+import postRouter from './routes/post.routes.js';
+
 //routes declaration
 app.use("/api/v1/healthcheck", healthcheckRouter)
 app.use("/api/v1/users", userRouter)
@@ -50,6 +53,9 @@ app.use("/api/v1/screenings", screeningRouter)
 // Mount admin routes
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/auth", authRouter);
+
+// ✅ Mount forum routes
+app.use("/api/forum", postRouter);
 
 // http://localhost:8000/api/v1/users/register
 

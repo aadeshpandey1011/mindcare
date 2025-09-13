@@ -128,7 +128,7 @@ function App() {
       <Route
         path="/screening"
         element={
-          <ProtectedRoute allowedRoles={["student", "counselor", "admin"]}>
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <Screening />
           </ProtectedRoute>
         }
@@ -136,7 +136,7 @@ function App() {
       <Route
         path="/chat"
         element={
-          <ProtectedRoute allowedRoles={["student", "counselor", "admin"]}>
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <ChatSupport />
           </ProtectedRoute>
         }
@@ -144,7 +144,7 @@ function App() {
       <Route
         path="/booking"
         element={
-          <ProtectedRoute allowedRoles={["student", "counselor", "admin"]}>
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <Booking />
           </ProtectedRoute>
         }
@@ -152,7 +152,7 @@ function App() {
       <Route
         path="/resources"
         element={
-          <ProtectedRoute allowedRoles={["student", "counselor", "admin"]}>
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <Resources />
           </ProtectedRoute>
         }
@@ -160,7 +160,7 @@ function App() {
       <Route
         path="/forum"
         element={
-          <ProtectedRoute allowedRoles={["student", "counselor", "admin"]}>
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <Forum />
           </ProtectedRoute>
         }

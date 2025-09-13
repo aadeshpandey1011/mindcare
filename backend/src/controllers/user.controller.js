@@ -217,6 +217,7 @@ const loginUser = async (req, res, next) => {
       token: accessToken,
       refreshToken,
       user: {
+        isApproved: user.isApproved, // ✅ include isApproved in response
         id: user._id,
         fullName: user.fullName,
         email: user.email,
