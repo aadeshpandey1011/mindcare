@@ -15,7 +15,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-  const [showSignup, setShowSignup] = useState(false);
+  // const [showSignup, setShowSignup] = useState(false); 
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleChange = (e) => {
@@ -130,7 +130,7 @@ if (!token || !user) {
           if (user.role === "admin") {
             navigate("/dashboard");
           } else {
-            navigate("/");
+            navigate("/Newhome");
           }
         }, 1000);
       
@@ -524,164 +524,3 @@ function ForgotPasswordComponent({ onBackToLogin }) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, { useState } from "react";
-// import { useNavigate, Link } from "react-router-dom";
-// import { ToastContainer, toast } from "react-toastify";
-// import { login as apiLogin } from "../api/authApi";
-// import { useAuth } from "../context/AuthContext";
-// import "react-toastify/dist/ReactToastify.css";
-
-// // Import assets
-// import Logo from "../assets/logo.png";
-// import GoogleIcon from "../assets/icons/google-icon.png";
-
-// export default function Login() {
-//   const [form, setForm] = useState({ email: "", password: "" });
-//   const [loading, setLoading] = useState(false);
-
-//   const navigate = useNavigate();
-//   const { login } = useAuth();
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!form.email || !form.password) {
-//       toast.error("Please fill all fields.");
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const res = await apiLogin(form);
-//       const { token, user } = res.data.data;
-
-//       // Save token and user to context
-//       login(token, user);
-
-//       toast.success("Login successful!");
-//       navigate("/dashboard");
-//     } catch (err) {
-//       console.error(err);
-//       toast.error(err.response?.data?.message || "Invalid login credentials");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleGoogleLogin = () => {
-//     toast.info("Google login coming soon...");
-//   };
-
-//   return (
-//     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 p-4">
-//       <div className="w-[85%] md:w-[28%] max-w-md bg-white rounded-lg shadow-xl p-10">
-//         {/* Header */}
-//         <div className="text-3xl font-bold mb-6 text-gray-800 text-center">
-//           Sign In
-//         </div>
-        
-//         {/* Logo */}
-//         <div className="flex justify-center mb-6">
-//           <img src={Logo} alt="App Logo" className="w-16 h-16" />
-//         </div>
-        
-//         {/* Google Login Button */}
-//         <div className="my-5">
-//           <button
-//             onClick={handleGoogleLogin}
-//             className="w-full flex items-center justify-center gap-2 border-2 border-gray-300 rounded-lg py-3 px-4 text-lg hover:bg-gray-50 transition-colors"
-//           >
-//             <img src={GoogleIcon} alt="Google" className="w-5 h-5" />
-//             <span>Continue with Google</span>
-//           </button>
-//         </div>
-
-//         {/* Divider */}
-//         <div className="flex items-center gap-2 my-6">
-//           <div className="flex-1 h-px bg-gray-400"></div>
-//           <div className="text-gray-400">or</div>
-//           <div className="flex-1 h-px bg-gray-400"></div>
-//         </div>
-
-//         {/* Login Form */}
-//         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-//           <div>
-//             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-//               Email
-//             </label>
-//             <input
-//               type="email"
-//               name="email"
-//               id="email"
-//               value={form.email}
-//               onChange={handleChange}
-//               className="w-full text-lg border-2 border-gray-300 rounded-lg px-5 py-2 focus:border-blue-500 focus:outline-none"
-//               placeholder="Email"
-//               required
-//             />
-//           </div>
-
-//           <div>
-//             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-//               Password
-//             </label>
-//             <input
-//               type="password"
-//               name="password"
-//               id="password"
-//               value={form.password}
-//               onChange={handleChange}
-//               className="w-full text-lg border-2 border-gray-300 rounded-lg px-5 py-2 focus:border-blue-500 focus:outline-none"
-//               placeholder="Password"
-//               required
-//             />
-//           </div>
-
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 rounded-xl text-lg font-medium cursor-pointer mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-//           >
-//             {loading ? "Signing in..." : "Login"}
-//           </button>
-//         </form>
-
-//         {/* Forgot Password Link */}
-//         <div className="mt-4 text-center">
-//           <Link 
-//             to="/forgot-password" 
-//             className="text-red-400 hover:underline text-sm"
-//           >
-//             Forgot Password?
-//           </Link>
-//         </div>
-//       </div>
-      
-//       {/* Sign up link - outside the box */}
-//       <div className="mt-4 mb-14 text-gray-700">
-//         New to MindCare?{" "}
-        // <Link to="/signup" className="text-red-400 hover:underline">
-        //   Join Now
-        // </Link>
-//       </div>
-      
-//       <ToastContainer />
-//     </div>
-//   );
-// }

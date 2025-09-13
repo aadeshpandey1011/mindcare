@@ -1,83 +1,3 @@
-// import React, { useState } from "react";
-// import axios from "axios";
-// import { useAuth } from "../context/AuthContext";
-
-// export default function Screening() {
-//   const { token } = useAuth();
-//   const [answers, setAnswers] = useState({});
-//   const [result, setResult] = useState(null);
-
-//   const questions = [
-//     "I feel anxious frequently.",
-//     "I have trouble sleeping.",
-//     "I find it hard to concentrate.",
-//   ];
-
-//   const handleChange = (i, val) => {
-//     setAnswers({ ...answers, [i]: val });
-//   };
-
-//   const handleSubmit = async () => {
-//     try {
-//       const res = await axios.post(
-//         "http://localhost:5000/api/v1/screenings",
-//         { answers },
-//         { headers: { Authorization: `Bearer ${token}` } }
-//       );
-//       setResult(res.data.data);
-//     } catch (err) {
-//       alert("Error submitting screening");
-//     }
-//   };
-
-//   return (
-//     <div className="max-w-3xl mx-auto p-6">
-//       <h2 className="text-2xl font-bold mb-4">Screening Test</h2>
-//       {questions.map((q, i) => (
-//         <div key={i} className="mb-4">
-//           <p>{q}</p>
-//           <select
-//             className="border p-2 w-full"
-//             onChange={(e) => handleChange(i, e.target.value)}
-//           >
-//             <option value="">Select</option>
-//             <option value="0">Never</option>
-//             <option value="1">Sometimes</option>
-//             <option value="2">Often</option>
-//             <option value="3">Always</option>
-//           </select>
-//         </div>
-//       ))}
-//       <button
-//         onClick={handleSubmit}
-//         className="px-4 py-2 bg-blue-600 text-white rounded"
-//       >
-//         Submit
-//       </button>
-
-//       {result && (
-//         <div className="mt-6 p-4 bg-gray-100 rounded">
-//           <h3 className="font-semibold">Your Result:</h3>
-//           <p>{result.message}</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { submitScreening, getMyScreenings } from '../api/screeningApi';
 import { useAuth } from '../context/AuthContext';
@@ -133,7 +53,7 @@ export default function Screening() {
   useEffect(() => {
     // fetch user screenings if logged in
     if (token) {
-      getMyScreenings(token).then(res => setHistory(res.data.data)).catch(() => {});
+      getMyScreenings(token).then(res => setHistory(res.data.data)).catch(() => { });
     }
   }, [token]);
 
@@ -180,7 +100,7 @@ export default function Screening() {
     setSubmitting(true);
     const payload = {
       type,
-      answers: answers.map((score, i) => ({ questionId: `${type}_${i+1}`, score: Number(score) }))
+      answers: answers.map((score, i) => ({ questionId: `${type}_${i + 1}`, score: Number(score) }))
     };
     try {
       const res = await submitScreening(payload, token);
@@ -218,9 +138,9 @@ export default function Screening() {
               <h1 className="text-3xl font-bold">Self-Assessment Screening (PHQ-9 / GAD-7)</h1>
               <p className="text-gray-600 mt-1">Answer a few short questions to understand your mental health status.</p>
             </div>
-            <div className="text-sm text-gray-600">
+            {/* <div className="text-sm text-gray-600">
               {user ? <div>Signed in as <strong>{user.fullName}</strong></div> : <Link to="/login" className="text-blue-600">Sign in / Create account</Link>}
-            </div>
+            </div> */}
           </div>
 
           {/* select type */}
@@ -228,16 +148,16 @@ export default function Screening() {
             <label className="text-sm text-gray-700">Test</label>
             <div className="flex gap-2">
               <button onClick={() => setType('PHQ9')}
-                className={`px-4 py-2 rounded ${type==='PHQ9' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>PHQ-9</button>
+                className={`px-4 py-2 rounded ${type === 'PHQ9' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>PHQ-9</button>
               <button onClick={() => setType('GAD7')}
-                className={`px-4 py-2 rounded ${type==='GAD7' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>GAD-7</button>
+                className={`px-4 py-2 rounded ${type === 'GAD7' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>GAD-7</button>
             </div>
           </div>
 
           {/* progress */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              <div className="text-sm text-gray-600">Question {answeredCount > index ? index+1 : index+1} of {questions.length}</div>
+              <div className="text-sm text-gray-600">Question {answeredCount > index ? index + 1 : index + 1} of {questions.length}</div>
               <div className="text-sm text-gray-600">{progress}%</div>
             </div>
             <div className="w-full h-3 bg-gray-200 rounded overflow-hidden">
@@ -267,7 +187,7 @@ export default function Screening() {
             {/* controls */}
             <div className="mt-6 flex justify-between items-center">
               <button onClick={handleBack} disabled={index === 0}
-                className={`px-5 py-2 rounded border ${index===0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'}`}>← Back</button>
+                className={`px-5 py-2 rounded border ${index === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'}`}>← Back</button>
 
               <div className="flex items-center gap-3">
                 <div className="text-sm text-gray-600 mr-4">Answered: {answeredCount}/{questions.length}</div>
@@ -312,7 +232,7 @@ export default function Screening() {
             <div className="mt-8">
               <h4 className="text-lg font-semibold mb-3">Recent screenings</h4>
               <div className="space-y-3">
-                {history.slice(0,5).map(h => (
+                {history.slice(0, 5).map(h => (
                   <div key={h._id} className="bg-gray-50 p-3 rounded flex justify-between items-center">
                     <div>
                       <div className="font-semibold">{h.type} • {h.severity}</div>

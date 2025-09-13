@@ -39,18 +39,18 @@ export default function Home() {
               Confidential, stigma-free, and student-focused mental health support at your fingertips.
             </p>
             <div className="mt-6 flex space-x-4">
-              <Link
+              {/* <Link
                 to="/signup"
                 className="px-6 py-3 bg-white text-purple-600 rounded-lg shadow hover:bg-gray-100 hover:scale-105 transform transition duration-500 flex items-center"
               >
                 Get Started <ArrowRight className="ml-2" size={18} />
-              </Link>
-              {/* <Link
+              </Link> */}
+              <Link
                 to="/screening"
                 className="px-6 py-3 border border-white rounded-lg hover:bg-white hover:text-purple-600 hover:scale-105 transform transition duration-500"
               >
                 Take Screening
-              </Link> */}
+              </Link>
             </div>
           </motion.div>
 
@@ -83,28 +83,28 @@ export default function Home() {
               icon={<MessageCircle size={36} className="text-white" />}
               title="AI Chat Support"
               desc="Get immediate, confidential mental health guidance."
-              // link="/chat"
+              link="/chat"
               gradient="from-blue-500 to-blue-400"
             />
             <FeatureCard
               icon={<Calendar size={36} className="text-white" />}
               title="Confidential Booking"
               desc="Book private sessions with qualified counselors."
-              // link="/booking"
+              link="/booking"
               gradient="from-purple-500 to-purple-400"
             />
             <FeatureCard
               icon={<BookOpen size={36} className="text-white" />}
               title="Resource Hub"
               desc="Learn coping strategies and mental wellness tips."
-              // link="/resources"
+              link="/resources"
               gradient="from-green-500 to-green-400"
             />
             <FeatureCard
               icon={<Users size={36} className="text-white" />}
               title="Peer Forum"
               desc="Connect anonymously with peers in a safe space."
-              // link="/forum"
+              link="/forum"
               gradient="from-orange-500 to-orange-400"
             />
           </div>
@@ -181,16 +181,16 @@ export default function Home() {
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Home</span>
+                <Link to="/" className="hover:text-purple-400 transition-colors duration-300">Home</Link>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Resources</span>
+                <Link to="/resources" className="hover:text-purple-400 transition-colors duration-300">Resources</Link>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Forum</span>
+                <Link to="/forum" className="hover:text-purple-400 transition-colors duration-300">Forum</Link>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Contact</span>
+                <Link to="/contact" className="hover:text-purple-400 transition-colors duration-300">Contact</Link>
               </li>
             </ul>
           </div>
