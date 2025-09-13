@@ -39,6 +39,8 @@ export default function Navbar() {
   const handleLogout = () => {
     setIsDropdownOpen(false);
     logout();
+    // localStorage.removeItem("dpi_token");
+    localStorage.clear();
     navigate("/");
   };
 

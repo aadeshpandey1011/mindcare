@@ -195,6 +195,9 @@ import {
   BarChart3,
 } from "lucide-react";
 
+
+import { useAuth } from '../context/AuthContext'; // Adjust path as needed
+
 const API_BASE = import.meta.env?.VITE_API_URL || "http://localhost:5000/api/v1";
 
 // Enhanced mock data with more realistic mental health platform metrics
@@ -273,7 +276,7 @@ const mockStats = {
       avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
     },
     {
-      _id: "2", 
+      _id: "2",
       fullName: "Dr. Lisa Anderson",
       email: "l.anderson@counseling.org",
       role: "counsellor",
@@ -285,7 +288,7 @@ const mockStats = {
       avatar: "https://images.unsplash.com/photo-1594824388170-22dfd5c3a5cc?w=150&h=150&fit=crop&crop=face",
     },
     {
-      _id: "3", 
+      _id: "3",
       fullName: "Dr. James Wilson",
       email: "j.wilson@therapy.com",
       role: "counsellor",
@@ -304,9 +307,13 @@ const mockStats = {
   ],
 };
 
+
+
+
 export default function EnhancedAdminDashboard() {
-  const [user, setUser] = useState({ fullName: "Admin User" }); // Mock user context
-  const [token, setToken] = useState("mock-token"); // Mock token
+  // const [user, setUser] = useState({ fullName: "Admin User" }); // Mock user context
+  // const [token, setToken] = useState("mock-token"); // Mock token
+  const { token, user } = useAuth();
   const [stats, setStats] = useState(mockStats);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -317,9 +324,21 @@ export default function EnhancedAdminDashboard() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
 
+  const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(true); // Renamed to avoid conflicts
+  const [usersError, setUsersError] = useState(null); // Renamed to avoid conflicts
+
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users' && token) {
+      fetchPendingUsers();
+    }
+  }, [activeTab, token]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -341,40 +360,155 @@ export default function EnhancedAdminDashboard() {
     setRefreshing(false);
   };
 
-  const handleUserAction = async (userId, action) => {
-    setActionLoading(prev => ({ ...prev, [userId]: action }));
-    
+  // const handleUserAction = async (userId, action) => {
+  //   setActionLoading(prev => ({ ...prev, [userId]: action }));
+
+  //   try {
+  //     // Simulate API call
+  //     await new Promise(resolve => setTimeout(resolve, 1500));
+
+  //     // Update local state
+  //     setStats(prev => ({
+  //       ...prev,
+  //       pendingUsers: prev.pendingUsers.filter(u => u._id !== userId),
+  //       overview: {
+  //         ...prev.overview,
+  //         pendingApprovals: prev.overview.pendingApprovals - 1
+  //       }
+  //     }));
+
+  //     alert(`User ${action}d successfully!`);
+  //   } catch (err) {
+  //     console.error(`Error ${action}ing user:`, err);
+  //     alert(`Error ${action}ing user`);
+  //   } finally {
+  //     setActionLoading(prev => ({ ...prev, [userId]: false }));
+  //   }
+  // };
+
+  // 4. Add these functions inside your Dashboard component
+  const fetchPendingUsers = async () => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update local state
-      setStats(prev => ({
-        ...prev,
-        pendingUsers: prev.pendingUsers.filter(u => u._id !== userId),
-        overview: {
-          ...prev.overview,
-          pendingApprovals: prev.overview.pendingApprovals - 1
+      setUsersLoading(true);
+      setUsersError(null);
+
+      const response = await fetch(`${API_BASE}/admin/pending-users`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      }));
-      
-      alert(`User ${action}d successfully!`);
+      });
+
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please login as admin');
+        } else if (response.status === 403) {
+          throw new Error('Forbidden - Admin access required');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.log("Non-JSON response:", textResponse);
+        throw new Error('Server returned non-JSON response');
+      }
+
+      const data = await response.json();
+      console.log("Full API Response:", data);
+
+      if (data && data.success && data.data && Array.isArray(data.data.users)) {
+        setUsers(data.data.users);
+        console.log("Users loaded:", data.data.users.length);
+      } else if (data && data.success && data.data && Array.isArray(data.data.users) && data.data.users.length === 0) {
+        console.log("No pending users found");
+        setUsers([]);
+      } else {
+        console.log("Unexpected response structure:", data);
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error("API Error Details:", err);
+      setUsersError(`Failed to fetch pending users: ${err.message}`);
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleUserAction = async (userId, action) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [userId]: action }));
+
+      const endpoint = action === 'approve' ? 'approve' : 'reject';
+      const response = await fetch(`${API_BASE}/admin/${endpoint}/${userId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log(`${action} response status:`, response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Unauthorized - Please login as admin');
+        } else if (response.status === 403) {
+          throw new Error('Forbidden - Admin access required');
+        } else if (response.status === 404) {
+          throw new Error('User not found');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the user from the list after successful action
+        setUsers(prev => prev.filter(user => user._id !== userId));
+        alert(`User ${action}d successfully!`);
+      } else {
+        alert(`Failed to ${action} user: ${data.message}`);
+      }
     } catch (err) {
       console.error(`Error ${action}ing user:`, err);
-      alert(`Error ${action}ing user`);
+      alert(`Error ${action}ing user: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
 
+
+
+
+
+
+
   const StatCard = ({ title, value, change, icon: Icon, color = "blue" }) => {
     const colorClasses = {
       blue: "text-blue-600",
-      green: "text-green-600", 
+      green: "text-green-600",
       yellow: "text-yellow-600",
       red: "text-red-600"
     };
 
+    // 6. Add this filtering logic before your return statement
+    const filteredUsers = users.filter(user => {
+      const matchesSearch = user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesRole = filterRole === 'all' || user.role === filterRole;
+
+      return matchesSearch && matchesRole;
+    });
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between">
@@ -382,9 +516,8 @@ export default function EnhancedAdminDashboard() {
             <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
             {change && (
-              <p className={`text-sm flex items-center mt-1 ${
-                change > 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <p className={`text-sm flex items-center mt-1 ${change > 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
                 <TrendingUp className="h-4 w-4 mr-1" />
                 {change > 0 ? '+' : ''}{change}% from last month
               </p>
@@ -407,7 +540,7 @@ export default function EnhancedAdminDashboard() {
             </button>
           </div>
         </div>
-        
+
         <div className="p-6 space-y-6">
           {/* Profile Picture */}
           <div className="flex justify-center">
@@ -450,12 +583,12 @@ export default function EnhancedAdminDashboard() {
               </div>
             )}
           </div>
-          
+
           <div>
             <label className="text-sm font-medium text-gray-500">Application Submitted</label>
             <p className="text-gray-900">{new Date(user.submittedAt).toLocaleString()}</p>
           </div>
-          
+
           <div className="flex space-x-4 pt-4 border-t border-gray-200">
             <button
               onClick={() => onApprove(user._id)}
@@ -498,11 +631,13 @@ export default function EnhancedAdminDashboard() {
     );
   }
 
-  const filteredUsers = stats.pendingUsers.filter(user => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesFilter;
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesRole = filterRole === 'all' || user.role === filterRole;
+    return matchesSearch && matchesRole;
   });
 
   return (
@@ -515,7 +650,7 @@ export default function EnhancedAdminDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600">Welcome back, {user?.fullName}</p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleRefresh}
@@ -525,7 +660,7 @@ export default function EnhancedAdminDashboard() {
                 <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                 Refresh
               </button>
-              
+
               <div className="relative">
                 <Bell className="h-6 w-6 text-gray-600 hover:text-gray-800 cursor-pointer" />
                 <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
@@ -548,11 +683,10 @@ export default function EnhancedAdminDashboard() {
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center px-4 py-4 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`flex items-center px-4 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <Icon className="h-4 w-4 mr-2" />
                 {label}
@@ -647,11 +781,10 @@ export default function EnhancedAdminDashboard() {
                 <div className="space-y-4">
                   {stats.recentActivity.map((activity) => (
                     <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                      <div className={`w-2 h-2 rounded-full ${
-                        activity.severity === 'critical' ? 'bg-red-500' :
+                      <div className={`w-2 h-2 rounded-full ${activity.severity === 'critical' ? 'bg-red-500' :
                         activity.severity === 'warning' ? 'bg-yellow-500' :
-                        activity.severity === 'success' ? 'bg-green-500' : 'bg-blue-500'
-                      }`}></div>
+                          activity.severity === 'success' ? 'bg-green-500' : 'bg-blue-500'
+                        }`}></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">{activity.message}</p>
                         <p className="text-xs text-gray-500">{activity.timestamp}</p>
@@ -685,6 +818,20 @@ export default function EnhancedAdminDashboard() {
 
         {activeTab === 'users' && (
           <div className="space-y-6">
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">User Management</h2>
+              <p className="text-gray-600">
+                {users.length} user{users.length !== 1 ? 's' : ''} awaiting approval
+              </p>
+              <button
+                onClick={fetchPendingUsers}
+                className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
+
             {/* Search and Filter */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -711,99 +858,178 @@ export default function EnhancedAdminDashboard() {
               </div>
             </div>
 
-            {/* Pending Approvals */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Pending Approvals ({filteredUsers.length})
-                </h3>
-                <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
+            {/* Loading State */}
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-lg text-gray-600">Loading pending users...</p>
+                </div>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <h3 className="text-red-800 font-semibold mb-2">Error Loading Data</h3>
+                <p className="text-red-700">{error}</p>
+                <button
+                  onClick={fetchPendingUsers}
+                  className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                >
+                  Retry
                 </button>
               </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredUsers.map((user) => (
-                  <div key={user._id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                    <div className="flex items-start space-x-4 mb-4">
-                      <img
-                        src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&size=60&background=3b82f6&color=ffffff`}
-                        alt={user.fullName}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{user.fullName}</h4>
-                            <p className="text-sm text-gray-600">{user.email}</p>
-                            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            )}
+
+            {/* Users Content */}
+            {!loading && !error && (
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Pending Approvals ({filteredUsers.length})
+                  </h3>
+                  <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </button>
+                </div>
+
+                {filteredUsers.length === 0 ? (
+                  <div className="text-center py-12">
+                    {users.length === 0 ? (
+                      <>
+                        <div className="text-6xl mb-4">✅</div>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">All Caught Up!</h3>
+                        <p className="text-gray-500">No pending user approvals at this time.</p>
+                      </>
+                    ) : (
+                      <>
+                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No matching users</h3>
+                        <p className="text-gray-500">No users match your search criteria.</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredUsers.map((user) => (
+                      <div
+                        key={user._id}
+                        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300"
+                      >
+                        {/* User Avatar */}
+                        <div className="relative h-32 bg-gradient-to-r from-blue-400 to-purple-500">
+                          {user.coverImage && (
+                            <img
+                              src={user.coverImage}
+                              alt="Cover"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute -bottom-8 left-4">
+                            <div className="w-16 h-16 rounded-full border-4 border-white bg-gray-200 overflow-hidden">
+                              {user.avatar ? (
+                                <img
+                                  src={user.avatar}
+                                  alt={user.fullName}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold">
+                                  {user.fullName?.charAt(0) || '?'}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-                            Pending
-                          </span>
+                        </div>
+
+                        {/* User Details */}
+                        <div className="pt-10 p-6">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                            {user.fullName || 'No Name'}
+                          </h3>
+                          <p className="text-gray-600 mb-3">@{user.username}</p>
+
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center text-sm">
+                              <span className="font-medium text-gray-700 w-16">Email:</span>
+                              <span className="text-gray-600 truncate">{user.email}</span>
+                            </div>
+
+                            <div className="flex items-center text-sm">
+                              <span className="font-medium text-gray-700 w-16">Role:</span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                                {user.role}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center text-sm">
+                              <span className="font-medium text-gray-700 w-16">Status:</span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 capitalize">
+                                {user.status}
+                              </span>
+                            </div>
+
+                            {user.specialization && (
+                              <div className="flex items-center text-sm">
+                                <span className="font-medium text-gray-700 w-20">Specialty:</span>
+                                <span className="text-gray-600">{user.specialization}</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center text-sm">
+                              <span className="font-medium text-gray-700 w-16">Joined:</span>
+                              <span className="text-gray-600">
+                                {new Date(user.createdAt || user.submittedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowUserModal(true);
+                              }}
+                              className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleUserAction(user._id, 'approve')}
+                              disabled={actionLoading[user._id]}
+                              className="flex items-center px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading[user._id] === 'approve' ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                              ) : (
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                              )}
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleUserAction(user._id, 'reject')}
+                              disabled={actionLoading[user._id]}
+                              className="flex items-center px-3 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading[user._id] === 'reject' ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
+                              ) : (
+                                <XCircle className="h-3 w-3 mr-1" />
+                              )}
+                              Reject
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {user.specialization && (
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Specialty:</strong> {user.specialization}
-                      </p>
-                    )}
-                    
-                    <p className="text-xs text-gray-500 mb-4">
-                      Submitted: {new Date(user.submittedAt).toLocaleDateString()}
-                    </p>
-                    
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowUserModal(true);
-                        }}
-                        className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => handleUserAction(user._id, 'approve')}
-                        disabled={actionLoading[user._id]}
-                        className="flex items-center px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading[user._id] === 'approve' ? (
-                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
-                        ) : (
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                        )}
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleUserAction(user._id, 'reject')}
-                        disabled={actionLoading[user._id]}
-                        className="flex items-center px-3 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-                      >
-                        {actionLoading[user._id] === 'reject' ? (
-                          <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent mr-1"></div>
-                        ) : (
-                          <XCircle className="h-3 w-3 mr-1" />
-                        )}
-                        Reject
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No pending users</h3>
-                  <p className="text-gray-500">All users have been processed or no users match your search.</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
 
@@ -836,7 +1062,7 @@ export default function EnhancedAdminDashboard() {
                   <Calendar className="h-8 w-8 text-blue-600" />
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -848,7 +1074,7 @@ export default function EnhancedAdminDashboard() {
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -909,27 +1135,27 @@ export default function EnhancedAdminDashboard() {
                       <span className="text-gray-600">72%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{width: '72%'}}></div>
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: '72%' }}></div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium text-gray-700">Session Attendance</span>
                       <span className="text-gray-600">85%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-600 h-2 rounded-full" style={{width: '85%'}}></div>
+                      <div className="bg-green-600 h-2 rounded-full" style={{ width: '85%' }}></div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium text-gray-700">User Satisfaction</span>
                       <span className="text-gray-600">94%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-yellow-600 h-2 rounded-full" style={{width: '94%'}}></div>
+                      <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '94%' }}></div>
                     </div>
                   </div>
                 </div>

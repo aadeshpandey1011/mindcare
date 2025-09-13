@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
           console.error("Auth check failed:", err.response?.data?.message);
           setUser(null);
           setToken(null);
-          // localStorage.removeItem("dpi_token");
+          localStorage.removeItem("dpi_token");
         }
       }
       
