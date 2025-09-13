@@ -32,7 +32,8 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []); // Remove the dependency array complexity
+  // },[]); // Remove the dependency array complexity
+  }); // Remove the dependency array complexity
 
   // Login function
   const login = (newToken, newUser) => {
@@ -64,3 +65,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+

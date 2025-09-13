@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; 
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
 
 export default function Login() {
   const navigate = useNavigate();   // ✅ initialize navigate
+  const { login } = useAuth();   // ✅ get login function from context
   const [form, setForm] = useState({ 
     email: "", 
     username: "", 
@@ -124,7 +126,8 @@ if (!token || !user) {
           email: user.email,
           role: user.role
         }));
-
+              // ✅ update context instead of just localStorage
+      await login(token, user);
         // Redirect after short delay
         setTimeout(() => {
           if (user.role === "admin") {
