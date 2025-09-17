@@ -222,6 +222,7 @@ const loginUser = async (req, res, next) => {
         fullName: user.fullName,
         email: user.email,
         username: user.username, // ✅ include username in response
+        avatar: user.avatar, // ✅ include avatar in response
         role: user.role,
       },
     });

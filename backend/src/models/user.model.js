@@ -181,7 +181,13 @@ const userSchema = new Schema(
         resetPasswordToken: String,
         resetPasswordExpires: Date,
         status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }, // 👈 NEW
+             // Add to user.model.js
+        specialization: {
+            type: String, // For counselors
+            required: function() { return this.role === 'counsellour'; }
+            },
     },
+
     {
         timestamps: true,
     }

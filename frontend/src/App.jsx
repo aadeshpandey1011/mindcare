@@ -89,9 +89,14 @@ import Forum from "./pages/Forum";
 
 import Layout from "./components/Layout"; // <-- Layout with Navbar
 import UserApprovals from "./pages/UserApproval";
+// In your routing file (App.jsx or similar)
+import AllBookings from './pages/AllBookings';
+
+
 
 // Wrappers
 import ProtectedRoute from "./components/ProtectedRoute";
+import BookingDashboard from "./components/BookingDashboard";
 
 function App() {
   return (
@@ -141,6 +146,28 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/counsellorDashboard"
+        element={
+          <ProtectedRoute allowedRoles={["counsellor"]}>
+            <BookingDashboard/>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/all-bookings"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <AllBookings/>
+          </ProtectedRoute>
+        }
+      />
+      // Add this route
+      {/* <Route 
+        path="/all-bookings" 
+        element={
+        <AllBookings />
+        } /> */}
       <Route
         path="/booking"
         element={
