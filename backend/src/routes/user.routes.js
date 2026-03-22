@@ -1,134 +1,80 @@
-// import { Router } from "express";
-// import { 
-//     loginUser, 
-//     logoutUser, 
-//     registerUser, 
-//     refreshAccessToken, 
-//     changeCurrentPassword, 
-//     getCurrentUser, 
-//     updateUserAvatar, 
-//     updateUserCoverImage, 
-//     getUserChannelProfile, 
-//     getWatchHistory, 
-//     updateAccountDetails
-// } from "../controllers/user.controller.js";
-// import {upload} from "../middlewares/multer.middleware.js"
-// import { verifyJWT } from "../middlewares/auth.middleware.js";
-
-
-// const router = Router()
-
-// router.route("/register").post(
-//     upload.fields([
-//         {
-//             name: "avatar",
-//             maxCount: 1
-//         }, 
-//         {
-//             name: "coverImage",
-//             maxCount: 1
-//         }
-//     ]),
-//     registerUser
-//     )
-
-// router.route("/login").post(loginUser)
-
-// //secured routes
-// router.route("/logout").post(verifyJWT,  logoutUser)
-// router.route("/refresh-token").post(refreshAccessToken)
-// router.route("/change-password").post(verifyJWT, changeCurrentPassword)
-// router.route("/current-user").get(verifyJWT, getCurrentUser)
-// router.route("/update-account").patch(verifyJWT, updateAccountDetails)
-
-// router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
-// router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage)
-
-// router.route("/c/:username").get(verifyJWT, getUserChannelProfile)
-// router.route("/history").get(verifyJWT, getWatchHistory)
-
-// export default router
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { Router } from "express";
-import { 
-    loginUser, 
-    logoutUser, 
-    registerUser, 
-    refreshAccessToken, 
-    changeCurrentPassword, 
-    getCurrentUser, 
-    updateUserAvatar, 
-    updateUserCoverImage, 
-    getUserChannelProfile, 
-    getWatchHistory, 
+import {
+    loginUser,
+    logoutUser,
+    registerUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateUserAvatar,
+    updateUserCoverImage,
     updateAccountDetails,
     approveUser,
+    forgotPassword,
+    resetPassword,
+    getMe,
+    updateGovtId,
+    getGovtId,
+    verifyGovtId,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js"; // ✅ new 
-import { getMe } from "../controllers/user.controller.js";
-import { forgotPassword, resetPassword } from "../controllers/user.controller.js";
+import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js";
 
 const router = Router();
 
-// ---------------------- PUBLIC ROUTES ----------------------
-router.route("/register").post(
+// ─────────────────────────────────────────────────────────────
+//  PUBLIC ROUTES
+// ─────────────────────────────────────────────────────────────
+router.post(
+    "/register",
     upload.fields([
-        {
-            name: "avatar",
-            maxCount: 1,
-        },
-        {
-            name: "coverImage",
-            maxCount: 1,
-        },
+        { name: "avatar", maxCount: 1 },
+        { name: "coverImage", maxCount: 1 },
     ]),
     registerUser
 );
-// user.routes.js
-// FOR ADMIN TO APPROVE USER
-router.route("/approve/:id").patch(
-  verifyJWT,
-  authorizeRoles("admin"),
-  approveUser
-);
 
+router.post("/login", loginUser);
+router.post("/refresh-token", refreshAccessToken);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
-router.route("/login").post(loginUser);
-router.route("/refresh-token").post(refreshAccessToken);
-
-// ---------------------- PROTECTED ROUTES ----------------------
-router.route("/logout").post(verifyJWT, logoutUser);
-router.route("/change-password").post(verifyJWT, changeCurrentPassword);
-router.route("/current-user").get(verifyJWT, getCurrentUser);
-
-
+// ─────────────────────────────────────────────────────────────
+//  PROTECTED ROUTES  (any authenticated user)
+// ─────────────────────────────────────────────────────────────
+router.post("/logout", verifyJWT, logoutUser);
+router.post("/change-password", verifyJWT, changeCurrentPassword);
+router.get("/current-user", verifyJWT, getCurrentUser);
 router.get("/me", verifyJWT, getMe);
 
+router.patch(
+    "/update-account",
+    verifyJWT,
+    updateAccountDetails
+);
+router.patch("/avatar", verifyJWT, upload.single("avatar"), updateUserAvatar);
+router.patch("/cover-image", verifyJWT, upload.single("coverImage"), updateUserCoverImage);
 
+// ── Government ID routes ──────────────────────────────────────
+// GET  /api/v1/users/govt-id          → returns masked IDs for the logged-in user
+router.get("/govt-id", verifyJWT, getGovtId);
 
-router.route("/forgot-password").post(forgotPassword);
-router.route("/reset-password/:token").post(resetPassword);
+// PATCH /api/v1/users/govt-id         → user updates their own Aadhar/PAN
+router.patch("/govt-id", verifyJWT, updateGovtId);
 
+// ─────────────────────────────────────────────────────────────
+//  ADMIN-ONLY ROUTES
+// ─────────────────────────────────────────────────────────────
+// PATCH /api/v1/users/approve/:id      → approve a pending user
+router.patch("/approve/:id", verifyJWT, authorizeRoles("admin"), approveUser);
 
-export default router
+// PATCH /api/v1/users/verify-govt-id/:userId  → admin marks a user's ID as verified
+router.patch(
+    "/verify-govt-id/:userId",
+    verifyJWT,
+    authorizeRoles("admin"),
+    verifyGovtId
+);
+
+export default router;

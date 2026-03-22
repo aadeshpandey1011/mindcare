@@ -1,129 +1,15 @@
-// import mongoose, {Schema} from "mongoose";
-// import jwt from "jsonwebtoken"
-// import bcrypt from "bcrypt"
-
-// const userSchema = new Schema(
-//     {
-//         username: {
-//             type: String,
-//             required: true,
-//             unique: true,
-//             lowercase: true,
-//             trim: true, 
-//             index: true
-//         },
-//         email: {
-//             type: String,
-//             required: true,
-//             unique: true,
-//             lowecase: true,
-//             trim: true, 
-//         },
-//         fullName: {
-//             type: String,
-//             required: true,
-//             trim: true, 
-//             index: true
-//         },
-//         avatar: {
-//             type: String, // cloudinary url
-//             required: true,
-//         },
-//         coverImage: {
-//             type: String, // cloudinary url
-//         },
-//         watchHistory: [
-//             {
-//                 type: Schema.Types.ObjectId,
-//                 ref: "Video"
-//             }
-//         ],
-//         password: {
-//             type: String,
-//             required: [true, 'Password is required']
-//         },
-//         refreshToken: {
-//             type: String
-//         }
-
-//     },
-//     {
-//         timestamps: true
-//     }
-// )
-
-// userSchema.pre("save", async function (next) {
-//     if(!this.isModified("password")) return next();
-
-//     this.password = await bcrypt.hash(this.password, 10)
-//     next()
-// })
-
-// userSchema.methods.isPasswordCorrect = async function(password){
-//     return await bcrypt.compare(password, this.password)
-// }
-
-// userSchema.methods.generateAccessToken = function(){
-//     return jwt.sign(
-//         {
-//             _id: this._id,
-//             email: this.email,
-//             username: this.username,
-//             fullName: this.fullName
-//         },
-//         process.env.ACCESS_TOKEN_SECRET,
-//         {
-//             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-//         }
-//     )
-// }
-// userSchema.methods.generateRefreshToken = function(){
-//     return jwt.sign(
-//         {
-//             _id: this._id,
-
-//         },
-//         process.env.REFRESH_TOKEN_SECRET,
-//         {
-//             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
-//         }
-//     )
-// }
-
-// export const User = mongoose.model("User", userSchema)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import crypto from "crypto";// ✅ Required for reset password token generation
+import crypto from "crypto";
 
 const userSchema = new Schema(
     {
         username: {
             type: String,
-            required: true,
+            required: function () { return !this.googleId; }, // not required for Google users
             unique: true,
+            sparse: true, // allows multiple docs without username (Google users before they set one)
             lowercase: true,
             trim: true,
             index: true,
@@ -132,7 +18,7 @@ const userSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            lowercase: true, // fixed typo "lowecase"
+            lowercase: true,
             trim: true,
         },
         fullName: {
@@ -142,28 +28,31 @@ const userSchema = new Schema(
             index: true,
         },
         avatar: {
-            type: String, // cloudinary url
-            required: true,
+            type: String,
+            required: function () { return !this.googleId; }, // Google provides avatar
         },
-        coverImage: {
-            type: String, // cloudinary url
-        },
-        // watchHistory: [
-        //     {
-        //         type: Schema.Types.ObjectId,
-        //         ref: "Video",
-        //     },
-        // ],
+        coverImage: { type: String },
         password: {
             type: String,
-            required: [true, "Password is required"],
-            select: false , // 🔒 ensure password is not returned by default
+            required: function () { return !this.googleId; }, // Google users have no password
+            select: false,
         },
-        refreshToken: {
-            type: String,
-        },
+        refreshToken: { type: String },
 
-        // 🔑 New field for RBAC
+        // ── Google OAuth ───────────────────────────────────────────────
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true, // only set for Google users
+            select: false,
+        },
+        authProvider: {
+            type: String,
+            enum: ["local", "google"],
+            default: "local",
+        },
+        // ── End Google OAuth ───────────────────────────────────────────
+
         role: {
             type: String,
             enum: ["student", "counsellor", "admin"],
@@ -171,94 +60,94 @@ const userSchema = new Schema(
         },
         isApproved: {
             type: Boolean,
-
-            default: function () {
-                return this.role === "student"; // ✅ students auto-approved
-            }
+            default: function () { return this.role === "student"; },
         },
         institution: { type: String },
-        createdAt: { type: Date, default: Date.now },
         resetPasswordToken: String,
         resetPasswordExpires: Date,
-        status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }, // 👈 NEW
-             // Add to user.model.js
+        status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending",
+        },
         specialization: {
-            type: String, // For counselors
-            required: function() { return this.role === 'counsellour'; }
+            type: String,
+            required: function () { return this.role === "counsellor"; },
+        },
+        phone: {
+            type: String,
+            trim: true,
+            select: false,
+            validate: {
+                validator: (v) => !v || /^\+?\d{10,15}$/.test(v.replace(/[\s\-().]/g, "")),
+                message: "Invalid phone number format",
             },
+        },
+        dob: {
+            type: Date,
+            validate: {
+                validator: function (v) {
+                    if (!v) return true;
+                    const now = new Date();
+                    const minAge = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate());
+                    const maxAge = new Date(now.getFullYear() - 5,   now.getMonth(), now.getDate());
+                    return v >= minAge && v <= maxAge;
+                },
+                message: "Date of birth must be between 5 and 100 years ago",
+            },
+        },
+        govtId: {
+            aadharNumber: {
+                type: String, trim: true, select: false,
+                validate: { validator: (v) => !v || /^\d{12}$/.test(v), message: "Aadhar must be 12 digits" },
+            },
+            panNumber: {
+                type: String, trim: true, uppercase: true, select: false,
+                validate: { validator: (v) => !v || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v), message: "PAN must be ABCDE1234F" },
+            },
+            otpHash:       { type: String, select: false },
+            otpExpiry:     { type: Date,   select: false },
+            otpAttempts:   { type: Number, default: 0, select: false },
+            phoneVerified: { type: Boolean, default: false },
+            isVerified:    { type: Boolean, default: false },
+            verifiedAt:    { type: Date },
+        },
     },
-
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {
-    if (!this.isModified("password")) return next();
+    if (!this.isModified("password") || !this.password) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
+    if (!this.password) return false; // Google users have no password
     return await bcrypt.compare(password, this.password);
 };
 
 userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
-        {
-            _id: this._id,
-            email: this.email,
-            username: this.username,
-            fullName: this.fullName,
-            role: this.role, // include role in token
-        },
+        { _id: this._id, email: this.email, username: this.username, fullName: this.fullName, role: this.role },
         process.env.ACCESS_TOKEN_SECRET,
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-        }
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
     );
 };
 
 userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
-        {
-            _id: this._id,
-            role: this.role,
-        },
+        { _id: this._id, role: this.role },
         process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-        }
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
     );
 };
 
-userSchema.methods.getResetPasswordToken = function() {
-  // create token
-  const resetToken = crypto.randomBytes(20).toString('hex');
-  // hash token and set expire
-  this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  this.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
-  return resetToken;
-};
-
-
-/* ==========================================
-   GENERATE RESET PASSWORD TOKEN
-========================================== */
 userSchema.methods.getResetPasswordToken = function () {
-  // Generate random token
-  const resetToken = crypto.randomBytes(20).toString("hex");
-
-  // Hash token before storing in DB for security
-  this.resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
-  // Token expires in 1 hour
-  this.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
-
-  return resetToken; // plain token for sending via email
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
+    return resetToken;
 };
 
 export const User = mongoose.model("User", userSchema);

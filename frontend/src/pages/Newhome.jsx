@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-// import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Hero from "../assets/logo.png";
+import { useAuth } from "../context/AuthContext";
 import {
   MessageCircle,
   Calendar,
@@ -12,12 +12,53 @@ import {
   UserPlus,
   Heart,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Home() {
+  const { user } = useAuth();
+
+  // Check if user has NOT verified identity yet
+  // We don't have govtId.isVerified in the JWT, so we show the banner
+  // unless user has dismissed it (stored in sessionStorage)
+  const [bannerDismissed, setBannerDismissed] = React.useState(
+    () => sessionStorage.getItem("verifyBannerDismissed") === "true"
+  );
+
+  const dismissBanner = () => {
+    sessionStorage.setItem("verifyBannerDismissed", "true");
+    setBannerDismissed(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* <Navbar />  */}
+
+      {/* ── Verify Identity Banner (shown to all logged-in users who haven't dismissed) ── */}
+      {user && !bannerDismissed && (
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="text-amber-600 flex-shrink-0" size={20} />
+            <p className="text-sm text-amber-800">
+              <span className="font-semibold">Verify your identity</span> — add your phone number and government ID to get a verified badge on your profile.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              to="/verify-identity"
+              className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+            >
+              Verify Now
+            </Link>
+            <button
+              onClick={dismissBanner}
+              className="text-amber-500 hover:text-amber-700 text-lg leading-none"
+              title="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <motion.section
@@ -39,12 +80,6 @@ export default function Home() {
               Confidential, stigma-free, and student-focused mental health support at your fingertips.
             </p>
             <div className="mt-6 flex space-x-4">
-              {/* <Link
-                to="/signup"
-                className="px-6 py-3 bg-white text-purple-600 rounded-lg shadow hover:bg-gray-100 hover:scale-105 transform transition duration-500 flex items-center"
-              >
-                Get Started <ArrowRight className="ml-2" size={18} />
-              </Link> */}
               <Link
                 to="/screening"
                 className="px-6 py-3 border border-white rounded-lg hover:bg-white hover:text-purple-600 hover:scale-105 transform transition duration-500"
@@ -121,29 +156,14 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold mb-10 text-center text-gray-800">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <StepCard
-              icon={<UserPlus size={40} className="text-white" />}
-              title="Sign Up"
-              desc="Create an account securely to get started."
-              gradient="from-blue-500 to-blue-400"
-            />
-            <StepCard
-              icon={<MessageCircle size={40} className="text-white" />}
-              title="Get Support"
-              desc="Use AI chat or book a session with a counselor."
-              gradient="from-green-500 to-green-400"
-            />
-            <StepCard
-              icon={<Heart size={40} className="text-white" />}
-              title="Stay Well"
-              desc="Access resources to maintain mental wellness."
-              gradient="from-red-500 to-red-400"
-            />
+            <StepCard icon={<UserPlus size={40} className="text-white" />} title="Sign Up" desc="Create an account securely to get started." gradient="from-blue-500 to-blue-400" />
+            <StepCard icon={<MessageCircle size={40} className="text-white" />} title="Get Support" desc="Use AI chat or book a session with a counselor." gradient="from-green-500 to-green-400" />
+            <StepCard icon={<Heart size={40} className="text-white" />} title="Stay Well" desc="Access resources to maintain mental wellness." gradient="from-red-500 to-red-400" />
           </div>
         </div>
       </motion.section>
 
-      {/* Testimonials Section */}
+      {/* Testimonials */}
       <motion.section
         className="bg-gradient-to-r from-purple-100 via-indigo-100 to-purple-100 py-16"
         initial={{ opacity: 0 }}
@@ -153,19 +173,13 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">What Students Say</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TestimonialCard
-              name="Anonymous Student"
-              text="This platform gave me a safe space to express myself and get real help."
-            />
-            <TestimonialCard
-              name="Another User"
-              text="Booking sessions was super easy and private. Loved the experience!"
-            />
+            <TestimonialCard name="Anonymous Student" text="This platform gave me a safe space to express myself and get real help." />
+            <TestimonialCard name="Another User" text="Booking sessions was super easy and private. Loved the experience!" />
           </div>
         </div>
       </motion.section>
 
-      {/* Classy Animated Footer */}
+      {/* Footer */}
       <motion.footer
         className="bg-gradient-to-r from-gray-800 via-gray-900 to-black text-white py-10"
         initial={{ opacity: 0, y: 50 }}
@@ -180,18 +194,10 @@ export default function Home() {
           <div>
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <Link to="/" className="hover:text-purple-400 transition-colors duration-300">Home</Link>
-              </li>
-              <li>
-                <Link to="/resources" className="hover:text-purple-400 transition-colors duration-300">Resources</Link>
-              </li>
-              <li>
-                <Link to="/forum" className="hover:text-purple-400 transition-colors duration-300">Forum</Link>
-              </li>
-              <li>
-                <Link to="/contact" className="hover:text-purple-400 transition-colors duration-300">Contact</Link>
-              </li>
+              <li><Link to="/" className="hover:text-purple-400 transition-colors duration-300">Home</Link></li>
+              <li><Link to="/resources" className="hover:text-purple-400 transition-colors duration-300">Resources</Link></li>
+              <li><Link to="/forum" className="hover:text-purple-400 transition-colors duration-300">Forum</Link></li>
+              <li><Link to="/verify-identity" className="hover:text-purple-400 transition-colors duration-300">Verify Identity</Link></li>
             </ul>
           </div>
           <div>
@@ -203,7 +209,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
         <div className="mt-10 border-t border-gray-700 pt-4 text-center text-gray-500">
           © 2025 MindCare. All rights reserved.
         </div>

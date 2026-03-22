@@ -41,7 +41,7 @@ const Forum = () => {
       return;
     }
 
-    if (!user || !user._id) {
+    if (!user || !user.id) {
       alert('You must be logged in to create a post');
       return;
     }
@@ -51,7 +51,7 @@ const Forum = () => {
       description: newPost.description,
       tags: newPost.tags.split(',').map((tag) => tag.trim()).filter(tag => tag),
       category,
-      userId: user._id || user.id,
+      userId: user.id || user.id,
     };
 
     try {
