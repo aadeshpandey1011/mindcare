@@ -1,9 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import "./utils/googleAuth.js"; // initialise Passport Google strategy
+import "./utils/googleAuth.js";
 
-// Routers
 import userRouter         from "./routes/user.routes.js";
 import bookingRouter      from "./routes/booking.routes.js";
 import healthcheckRouter  from "./routes/healthcheck.routes.js";
@@ -19,11 +18,10 @@ import adminRouter        from "./routes/admin.routes.js";
 import postRouter         from "./routes/post.routes.js";
 import chatRouter         from "./routes/chat.routes.js";
 import verificationRouter from "./routes/verification.routes.js";
-import googleAuthRouter   from "./routes/auth.google.routes.js"; // ← NEW
+import googleAuthRouter   from "./routes/auth.google.routes.js";
 
 export const app = express();
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173";
 
 const corsOptions = {
@@ -38,13 +36,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// ── General middleware ────────────────────────────────────────────────────────
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+// Increased limit for JSON bodies; multipart (media uploads) is handled by multer directly
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-// ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/v1/health",        healthcheckRouter);
 app.use("/api/v1/users",         userRouter);
 app.use("/api/v1/bookings",      bookingRouter);
@@ -57,13 +54,12 @@ app.use("/api/v1/playlist",      playlistRouter);
 app.use("/api/v1/dashboard",     dashboardRouter);
 app.use("/api/v1/screenings",    screeningRouter);
 app.use("/api/v1/admin",         adminRouter);
-app.use("/api/v1/auth",          userRouter);       // keeps /api/v1/auth/... aliases
-app.use("/api/v1/auth",          googleAuthRouter); // ← NEW: /api/v1/auth/google
+app.use("/api/v1/auth",          userRouter);
+app.use("/api/v1/auth",          googleAuthRouter);
 app.use("/api/forum",            postRouter);
 app.use("/api/v1/chat",          chatRouter);
 app.use("/api/v1/verify",        verificationRouter);
 
-// ── Error handling ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(err.statusCode || 500).json({

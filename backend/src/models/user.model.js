@@ -7,9 +7,9 @@ const userSchema = new Schema(
     {
         username: {
             type: String,
-            required: function () { return !this.googleId; }, // not required for Google users
+            required: function () { return !this.googleId; },
             unique: true,
-            sparse: true, // allows multiple docs without username (Google users before they set one)
+            sparse: true,
             lowercase: true,
             trim: true,
             index: true,
@@ -29,21 +29,20 @@ const userSchema = new Schema(
         },
         avatar: {
             type: String,
-            required: function () { return !this.googleId; }, // Google provides avatar
+            required: function () { return !this.googleId; },
         },
         coverImage: { type: String },
         password: {
             type: String,
-            required: function () { return !this.googleId; }, // Google users have no password
+            required: function () { return !this.googleId; },
             select: false,
         },
         refreshToken: { type: String },
 
-        // ── Google OAuth ───────────────────────────────────────────────
         googleId: {
             type: String,
             unique: true,
-            sparse: true, // only set for Google users
+            sparse: true,
             select: false,
         },
         authProvider: {
@@ -51,7 +50,6 @@ const userSchema = new Schema(
             enum: ["local", "google"],
             default: "local",
         },
-        // ── End Google OAuth ───────────────────────────────────────────
 
         role: {
             type: String,
@@ -112,6 +110,22 @@ const userSchema = new Schema(
             isVerified:    { type: Boolean, default: false },
             verifiedAt:    { type: Date },
         },
+
+        // ── Forum moderation ───────────────────────────────────────────────
+        forumWarnings: [
+            {
+                reason:     { type: String, required: true },
+                postId:     { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
+                issuedBy:   { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                issuedAt:   { type: Date, default: Date.now },
+            }
+        ],
+        forumWarningCount: { type: Number, default: 0 },
+        isBannedFromForum: { type: Boolean, default: false },
+        bannedAt:          { type: Date },
+        bannedBy:          { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        banReason:         { type: String },
+        // ── End Forum moderation ───────────────────────────────────────────
     },
     { timestamps: true }
 );
@@ -123,7 +137,7 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-    if (!this.password) return false; // Google users have no password
+    if (!this.password) return false;
     return await bcrypt.compare(password, this.password);
 };
 
