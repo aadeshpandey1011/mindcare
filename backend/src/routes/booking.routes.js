@@ -1,117 +1,50 @@
-// import { Router } from "express";
-// import {
-//   createBooking,
-//   getUserBookings,
-//   updateBookingStatus,
-//   getAvailableSlots,
-//   getAvailableCounselors,
-//   getBookingById,
-//   cancelBooking,
-//   approveBooking,
-//   getBookingStats,
-//   searchBookings
-// } from "../controllers/booking.controller.js";
-// import { verifyJWT } from "../middlewares/auth.middleware.js";
-
-// const router = Router();
-
-// // ✅ All booking routes require authentication
-// router.use(verifyJWT);
-
-// // ------------------- Booking CRUD -------------------
-// router.route("/")
-//   .post(createBooking)     // POST /api/v1/bookings - Create booking
-//   .get(getUserBookings);   // GET  /api/v1/bookings - Get user's bookings (with pagination/filters)
-
-// router.route("/:bookingId")
-//   .get(getBookingById);    // GET /api/v1/bookings/:id
-
-// router.route("/:bookingId/status")
-//   .put(updateBookingStatus); // PUT /api/v1/bookings/:id/status
-
-// // ------------------- Quick Actions -------------------
-// router.route("/:bookingId/approve")
-//   .put(approveBooking);     // PUT /api/v1/bookings/:id/approve
-
-// router.route("/:bookingId/cancel")
-//   .put(cancelBooking);      // PUT /api/v1/bookings/:id/cancel
-
-// // ------------------- Availability -------------------
-// router.route("/counselors")
-//   .get(getAvailableCounselors); // GET /api/v1/bookings/counselors
-
-// router.route("/slots/:counselorId/:date")
-//   .get(getAvailableSlots);      // GET /api/v1/bookings/slots/:counselorId/:date
-
-// // ------------------- Admin Features -------------------
-// router.route("/admin/stats")
-//   .get(getBookingStats);        // GET /api/v1/bookings/admin/stats
-
-// router.route("/admin/search")
-//   .get(searchBookings);         // GET /api/v1/bookings/admin/search
-
-// export default router;
-
-
-
-
-
-
-// // routes/booking.routes.js
 import { Router } from "express";
 import {
-  createBooking,
-  getUserBookings,
-  updateBookingStatus,
-  getAvailableSlots,
-  getAvailableCounselors,
-  getBookingById,
-  cancelBooking,
-  approveBooking,
-  getBookingStats,
-  searchBookings
+    createBooking, getUserBookings, getBookingById,
+    updateBookingStatus, approveBooking, rejectBooking,
+    cancelBooking, markSessionDone, studentConfirmComplete,
+    disputeSession, getCounsellorReviews,
+    getAvailableSlots, getAvailableCounselors,
+    getBookingStats, searchBookings,
 } from "../controllers/booking.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT }      from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js";
 
 const router = Router();
 
 // All booking routes require authentication
 router.use(verifyJWT);
 
-// Booking CRUD operations
+// ── Discovery ────────────────────────────────────────────────────────────────
+router.get("/counselors",               getAvailableCounselors);
+router.get("/slots/:counselorId/:date", getAvailableSlots);
+
+// ── Reviews (public read) ─────────────────────────────────────────────────────
+router.get("/reviews/:counsellorId",    getCounsellorReviews);
+
+// ── CRUD ──────────────────────────────────────────────────────────────────────
 router.route("/")
-  .post(createBooking)          // POST /api/v1/bookings - Create new booking
-  .get(getUserBookings);        // GET /api/v1/bookings - Get user's bookings with filters
+    .post(createBooking)    // Student: creates booking
+    .get(getUserBookings);  // Student / Counsellor / Admin: own bookings
 
+router.get("/:bookingId",          getBookingById);
+router.put("/:bookingId/status",   updateBookingStatus);  // Admin override
 
-// Availability and counselor info
-router.route("/counselors")
-  .get(getAvailableCounselors); // GET /api/v1/bookings/counselors - Get available counselors
+// ── Booking lifecycle ─────────────────────────────────────────────────────────
+// Counsellor actions
+router.put("/:bookingId/approve",  approveBooking);   // confirmed → pending paid booking
+router.put("/:bookingId/reject",   rejectBooking);    // pending → cancelled + refund
+router.put("/:bookingId/done",     markSessionDone);  // confirmed → session_done (sends student email)
 
-router.route("/").post(createBooking).get(getUserBookings);
-// Individual booking operations
-router.route("/:bookingId")
-  .get(getBookingById);         // GET /api/v1/bookings/:id - Get single booking
+// Student actions
+router.post("/:bookingId/confirm-complete", studentConfirmComplete); // session_done → completed + review + payout
+router.post("/:bookingId/dispute",          disputeSession);         // session_done → cancelled (admin alert)
 
-// Booking status updates
-router.route("/:bookingId/status")
-  .put(updateBookingStatus);    // PUT /api/v1/bookings/:id/status - Update booking status
+// Shared
+router.put("/:bookingId/cancel",   cancelBooking);
 
-// Quick actions
-router.route("/:bookingId/approve")
-  .put(approveBooking);         // PUT /api/v1/bookings/:id/approve - Quick approve
-
-router.route("/:bookingId/cancel")
-  .put(cancelBooking);          // PUT /api/v1/bookings/:id/cancel - Quick cancel
-
-router.route("/slots/:counselorId/:date")
-  .get(getAvailableSlots);      // GET /api/v1/bookings/slots/:counselorId/:date - Get available slots
-
-// Admin routes (statistics and search)
-router.route("/admin/stats")
-  .get(getBookingStats);        // GET /api/v1/bookings/admin/stats - Get booking statistics
-
-router.route("/admin/search")
-  .get(searchBookings);         // GET /api/v1/bookings/admin/search - Search bookings
+// ── Admin ─────────────────────────────────────────────────────────────────────
+router.get("/admin/stats",  authorizeRoles("admin"), getBookingStats);
+router.get("/admin/search", authorizeRoles("admin"), searchBookings);
 
 export default router;

@@ -1,45 +1,60 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
-import Home              from "./pages/Home";
-import Signup            from "./pages/Signup";
-import Login             from "./pages/Login";
-import ForgotPassword    from "./pages/ForgotPassword";
-import ResetPassword     from "./pages/ResetPassword";
-import GoogleAuthSuccess from "./pages/GoogleAuthSuccess";
-import Newhome           from "./pages/Newhome";
-import Dashboard         from "./pages/Dashboard";
-import Screening         from "./pages/Screening";
-import ChatSupport       from "./pages/ChatSupport";
-import Booking           from "./pages/Booking";
-import Resources         from "./pages/Resources";
-import Forum             from "./pages/Forum";
-import AllBookings       from "./pages/AllBookings";
-import UserApprovals     from "./pages/UserApproval";
-import VerifyIdentity    from "./pages/VerifyIdentity";
-import Profile           from "./pages/Profile";
+import Home               from "./pages/Home";
+import Signup             from "./pages/Signup";
+import Login              from "./pages/Login";
+import ForgotPassword     from "./pages/ForgotPassword";
+import ResetPassword      from "./pages/ResetPassword";
+import GoogleAuthSuccess  from "./pages/GoogleAuthSuccess";
+import Newhome            from "./pages/Newhome";
+import Dashboard          from "./pages/Dashboard";
+import Screening          from "./pages/Screening";
+import ChatSupport        from "./pages/ChatSupport";
+import Booking            from "./pages/Booking";
+import Resources          from "./pages/Resources";
+import Forum              from "./pages/Forum";
+import AllBookings        from "./pages/AllBookings";
+import UserApprovals      from "./pages/UserApproval";
+import VerifyIdentity     from "./pages/VerifyIdentity";
+import Profile            from "./pages/Profile";
+import CounsellorSettings from "./pages/CounsellorSettings";
+import AdminUsers         from "./pages/AdminUsers";
+import PaymentLogs        from "./pages/PaymentLogs";
 
-import Layout            from "./components/Layout";
-import ProtectedRoute    from "./components/ProtectedRoute";
-import BookingDashboard  from "./components/BookingDashboard";
+import Layout             from "./components/Layout";
+import ProtectedRoute     from "./components/ProtectedRoute";
+import BookingDashboard   from "./components/BookingDashboard";
+
+// ── Booking page smart redirect ───────────────────────────────────────────────
+// Admin   → /dashboard          (no booking workflow)
+// Counsellor → /counsellorDashboard
+// Student → /booking (normal)
+function BookingOrRedirect() {
+  const { user } = useAuth();
+  if (user?.role === "admin")      return <Navigate to="/dashboard"            replace />;
+  if (user?.role === "counsellor") return <Navigate to="/counsellorDashboard"  replace />;
+  return <Booking />;
+}
 
 function App() {
   return (
     <Routes>
 
-      {/* ── Fully public — no auth, no navbar ── */}
-      <Route path="/"                        element={<Home />} />
-      <Route path="/login"                   element={<Login />} />
-      <Route path="/signup"                  element={<Signup />} />
-      <Route path="/forgot-password"         element={<ForgotPassword />} />
-      <Route path="/reset-password/:token"   element={<ResetPassword />} />
-      <Route path="/auth/google/success"     element={<GoogleAuthSuccess />} />
+      {/* ── Fully public ── */}
+      <Route path="/"                      element={<Home />} />
+      <Route path="/login"                 element={<Login />} />
+      <Route path="/signup"                element={<Signup />} />
+      <Route path="/forgot-password"       element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/auth/google/success"   element={<GoogleAuthSuccess />} />
 
-      {/* ── Protected — requires login, renders inside Layout (Navbar) ── */}
+      {/* ── Protected inside Layout (with Navbar) ── */}
       <Route element={<Layout />}>
 
         <Route path="/newhome" element={<Newhome />} />
 
-        {/* Any authenticated role */}
+        {/* All authenticated roles */}
         <Route path="/profile" element={
           <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <Profile />
@@ -65,14 +80,16 @@ function App() {
             <Forum />
           </ProtectedRoute>
         } />
-        <Route path="/booking" element={
-          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
-            <Booking />
-          </ProtectedRoute>
-        } />
         <Route path="/verify-identity" element={
           <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <VerifyIdentity />
+          </ProtectedRoute>
+        } />
+
+        {/* Book Appointment — admin + counsellor get smart-redirected */}
+        <Route path="/booking" element={
+          <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
+            <BookingOrRedirect />
           </ProtectedRoute>
         } />
 
@@ -83,10 +100,22 @@ function App() {
           </ProtectedRoute>
         } />
 
+        {/* Student + counsellor payment history */}
+        <Route path="/my-payments" element={
+          <ProtectedRoute allowedRoles={["student", "counsellor"]}>
+            <PaymentLogs />
+          </ProtectedRoute>
+        } />
+
         {/* Counsellor only */}
         <Route path="/counsellorDashboard" element={
           <ProtectedRoute allowedRoles={["counsellor"]}>
             <BookingDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/counsellor-settings" element={
+          <ProtectedRoute allowedRoles={["counsellor"]}>
+            <CounsellorSettings />
           </ProtectedRoute>
         } />
 
@@ -101,8 +130,18 @@ function App() {
             <UserApprovals />
           </ProtectedRoute>
         } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminUsers />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/payments" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <PaymentLogs />
+          </ProtectedRoute>
+        } />
 
-        {/* Catch-all inside layout → newhome if logged in */}
+        {/* Catch-all inside layout */}
         <Route path="*" element={<Navigate to="/newhome" />} />
       </Route>
 

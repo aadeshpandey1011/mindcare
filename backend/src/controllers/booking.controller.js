@@ -1,1164 +1,845 @@
-// // controllers/booking.controller.js
-// import { asyncHandler } from "../utils/asyncHandler.js";
-// import { ApiError } from "../utils/ApiError.js";
-// import { ApiResponse } from "../utils/ApiResponse.js";
-// import { Booking } from "../models/booking.model.js";
-// import { User } from "../models/user.model.js";
-// import sendMail from "../utils/mail.js";
-
-// // Create a new booking
-// const createBooking = asyncHandler(async (req, res) => {
-//   const { counselorId, date, timeSlot, mode, reason, notes } = req.body;
-//   const studentId = req.user._id;
-
-//   // Validate required fields
-//   if (!counselorId || !date || !timeSlot || !mode || !reason) {
-//     throw new ApiError(400, "All required fields must be provided");
-//   }
-
-//   // Check if counselor exists and is approved
-//   const counselor = await User.findOne({ 
-//     _id: counselorId, 
-//     role: "counsellor", 
-//     isApproved: true 
-//   });
-
-//   if (!counselor) {
-//     throw new ApiError(404, "Counselor not found or not approved");
-//   }
-
-//   // Check if slot is available
-//   const existingBooking = await Booking.findOne({
-//     counselor: counselorId,
-//     date: new Date(date),
-//     timeSlot,
-//     status: { $in: ["pending", "confirmed"] }
-//   });
-
-//   if (existingBooking) {
-//     throw new ApiError(409, "Time slot is already booked");
-//   }
-
-//   // Check if student already has a booking on the same day
-//   const studentBooking = await Booking.findOne({
-//     student: studentId,
-//     date: new Date(date),
-//     status: { $in: ["pending", "confirmed"] }
-//   });
-
-//   if (studentBooking) {
-//     throw new ApiError(409, "You already have a booking on this date");
-//   }
-
-//   // Create booking
-//   const booking = await Booking.create({
-//     student: studentId,
-//     counselor: counselorId,
-//     date: new Date(date),
-//     timeSlot,
-//     mode,
-//     reason,
-//     notes: notes || ""
-//   });
-
-//   const populatedBooking = await Booking.findById(booking._id)
-//     .populate("student", "fullName email username")
-//     .populate("counselor", "fullName email");
-
-//   // Send email notifications
-//   try {
-//     // Email to student
-//     await sendMail({
-//       to: req.user.email,
-//       subject: "Booking Confirmation - Mental Health Support",
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-//           <h2 style="color: #2563eb;">Booking Request Submitted</h2>
-//           <p>Dear ${req.user.fullName},</p>
-//           <p>Your counseling session booking request has been submitted successfully.</p>
-          
-//           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-//             <h3 style="margin-top: 0;">Booking Details:</h3>
-//             <p><strong>Counselor:</strong> ${counselor.fullName}</p>
-//             <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
-//             <p><strong>Time:</strong> ${timeSlot}</p>
-//             <p><strong>Mode:</strong> ${mode}</p>
-//             <p><strong>Status:</strong> Pending Approval</p>
-//           </div>
-          
-//           <p>You will receive a confirmation email once your booking is approved by the counselor.</p>
-//           <p>All sessions are completely confidential.</p>
-          
-//           <p style="color: #6b7280; font-size: 14px;">
-//             If you need immediate support, please contact the crisis helpline: 1-800-XXX-XXXX
-//           </p>
-//         </div>
-//       `
-//     });
-
-//     // Email to counselor
-//     await sendMail({
-//       to: counselor.email,
-//       subject: "New Booking Request - Mental Health Support",
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-//           <h2 style="color: #dc2626;">New Booking Request</h2>
-//           <p>Dear ${counselor.fullName},</p>
-//           <p>You have received a new counseling session booking request.</p>
-          
-//           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-//             <h3 style="margin-top: 0;">Booking Details:</h3>
-//             <p><strong>Student:</strong> ${req.user.fullName}</p>
-//             <p><strong>Date:</strong> ${new Date(date).toLocaleDateString()}</p>
-//             <p><strong>Time:</strong> ${timeSlot}</p>
-//             <p><strong>Mode:</strong> ${mode}</p>
-//             <p><strong>Reason:</strong> ${reason}</p>
-//             ${notes ? `<p><strong>Additional Notes:</strong> ${notes}</p>` : ''}
-//           </div>
-          
-//           <p>Please log in to your dashboard to approve or decline this request.</p>
-//           <a href="${process.env.FRONTEND_URL}/dashboard" 
-//              style="background-color: #2563eb; color: white; padding: 10px 20px; 
-//                     text-decoration: none; border-radius: 5px; display: inline-block;">
-//             View Dashboard
-//           </a>
-//         </div>
-//       `
-//     });
-//   } catch (emailError) {
-//     console.error("Email sending failed:", emailError);
-//     // Don't throw error - booking was created successfully
-//   }
-
-//   return res.status(201).json(
-//     new ApiResponse(201, populatedBooking, "Booking created successfully")
-//   );
-// });
-
-// // Get all bookings for a user (student or counselor)
-// const getUserBookings = asyncHandler(async (req, res) => {
-//   const userId = req.user._id;
-//   const { status, page = 1, limit = 10 } = req.query;
-
-//   let query = {};
-  
-//   // Determine if user is student or counselor
-//   if (req.user.role === "student") {
-//     query.student = userId;
-//   } else if (req.user.role === "counsellor") {
-//     query.counselor = userId;
-//   } else {
-//     throw new ApiError(403, "Access denied");
-//   }
-
-//   // Add status filter if provided
-//   if (status) {
-//     query.status = status;
-//   }
-
-//   const skip = (page - 1) * limit;
-
-//   const bookings = await Booking.find(query)
-//     .populate("student", "fullName email username")
-//     .populate("counselor", "fullName email")
-//     .sort({ createdAt: -1 })
-//     .skip(skip)
-//     .limit(parseInt(limit));
-
-//   const total = await Booking.countDocuments(query);
-
-//   return res.status(200).json(
-//     new ApiResponse(200, {
-//       bookings,
-//       pagination: {
-//         page: parseInt(page),
-//         limit: parseInt(limit),
-//         total,
-//         totalPages: Math.ceil(total / limit)
-//       }
-//     }, "Bookings fetched successfully")
-//   );
-// });
-
-// // Update booking status (approve/decline/cancel)
-// const updateBookingStatus = asyncHandler(async (req, res) => {
-//   const { bookingId } = req.params;
-//   const { status, cancellationReason, meetingLink } = req.body;
-
-//   const booking = await Booking.findById(bookingId)
-//     .populate("student", "fullName email")
-//     .populate("counselor", "fullName email");
-
-//   if (!booking) {
-//     throw new ApiError(404, "Booking not found");
-//   }
-
-//   // Check permissions
-//   const isOwner = booking.student._id.toString() === req.user._id.toString() ||
-//                   booking.counselor._id.toString() === req.user._id.toString();
-  
-//   if (!isOwner && req.user.role !== "admin") {
-//     throw new ApiError(403, "Access denied");
-//   }
-
-//   // Validate status transitions
-//   const validTransitions = {
-//     "pending": ["confirmed", "cancelled"],
-//     "confirmed": ["cancelled", "completed"],
-//     "cancelled": [], // Can't change from cancelled
-//     "completed": [] // Can't change from completed
-//   };
-
-//   if (!validTransitions[booking.status].includes(status)) {
-//     throw new ApiError(400, `Cannot change status from ${booking.status} to ${status}`);
-//   }
-
-//   // Update booking
-//   booking.status = status;
-//   if (cancellationReason) booking.cancellationReason = cancellationReason;
-//   if (meetingLink && status === "confirmed") booking.meetingLink = meetingLink;
-
-//   await booking.save();
-
-//   // Send notification emails
-//   try {
-//     let emailSubject, emailContent;
-    
-//     switch (status) {
-//       case "confirmed":
-//         emailSubject = "Booking Confirmed - Mental Health Support";
-//         emailContent = `
-//           <h2 style="color: #059669;">Booking Confirmed!</h2>
-//           <p>Your counseling session has been confirmed.</p>
-//           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-//             <p><strong>Counselor:</strong> ${booking.counselor.fullName}</p>
-//             <p><strong>Date:</strong> ${booking.date.toLocaleDateString()}</p>
-//             <p><strong>Time:</strong> ${booking.timeSlot}</p>
-//             <p><strong>Mode:</strong> ${booking.mode}</p>
-//             ${booking.meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${booking.meetingLink}">${booking.meetingLink}</a></p>` : ''}
-//           </div>
-//         `;
-//         break;
-        
-//       case "cancelled":
-//         emailSubject = "Booking Cancelled - Mental Health Support";
-//         emailContent = `
-//           <h2 style="color: #dc2626;">Booking Cancelled</h2>
-//           <p>Your counseling session has been cancelled.</p>
-//           ${cancellationReason ? `<p><strong>Reason:</strong> ${cancellationReason}</p>` : ''}
-//           <p>You can book another session at your convenience.</p>
-//         `;
-//         break;
-        
-//       case "completed":
-//         emailSubject = "Session Completed - Mental Health Support";
-//         emailContent = `
-//           <h2 style="color: #2563eb;">Session Completed</h2>
-//           <p>Thank you for attending your counseling session.</p>
-//           <p>Your well-being is important to us. Feel free to book another session if needed.</p>
-//         `;
-//         break;
-//     }
-
-//     // Send to student
-//     await sendMail({
-//       to: booking.student.email,
-//       subject: emailSubject,
-//       html: `
-//         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-//           ${emailContent}
-//         </div>
-//       `
-//     });
-
-//   } catch (emailError) {
-//     console.error("Notification email failed:", emailError);
-//   }
-
-//   return res.status(200).json(
-//     new ApiResponse(200, booking, `Booking ${status} successfully`)
-//   );
-// });
-
-// // Get available time slots for a counselor on a specific date
-// const getAvailableSlots = asyncHandler(async (req, res) => {
-//   const { counselorId, date } = req.params;
-
-//   const counselor = await User.findOne({ 
-//     _id: counselorId, 
-//     role: "counsellor", 
-//     isApproved: true 
-//   });
-
-//   if (!counselor) {
-//     throw new ApiError(404, "Counselor not found");
-//   }
-
-//   // All possible time slots
-//   const allSlots = [
-//     "09:00-10:00",
-//     "10:00-11:00", 
-//     "11:00-12:00",
-//     "14:00-15:00",
-//     "15:00-16:00",
-//     "16:00-17:00"
-//   ];
-
-//   // Get booked slots for the date
-//   const bookedSlots = await Booking.find({
-//     counselor: counselorId,
-//     date: new Date(date),
-//     status: { $in: ["pending", "confirmed"] }
-//   }).select("timeSlot");
-
-//   const bookedTimeSlots = bookedSlots.map(booking => booking.timeSlot);
-//   const availableSlots = allSlots.filter(slot => !bookedTimeSlots.includes(slot));
-
-//   return res.status(200).json(
-//     new ApiResponse(200, { availableSlots }, "Available slots fetched successfully")
-//   );
-// });
-
-// // Get all approved counselors
-// const getAvailableCounselors = asyncHandler(async (req, res) => {
-//   const counselors = await User.find({ 
-//     role: "counsellour", 
-//     isApproved: true 
-//   }).select("fullName email avatar specialization");
-
-//   return res.status(200).json(
-//     new ApiResponse(200, counselors, "Available counselors fetched successfully")
-//   );
-// });
-
-// export {
-//   createBooking,
-//   getUserBookings,
-//   updateBookingStatus,
-//   getAvailableSlots,
-//   getAvailableCounselors
-// };
-
-/// controllers/booking.controller.js - Enhanced Version 11 working
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import { Booking } from "../models/booking.model.js";
-import { User } from "../models/user.model.js";
-import sendMail from "../utils/mail.js";
-import mongoose from "mongoose";
+import { ApiError }      from "../utils/ApiError.js";
+import { ApiResponse }   from "../utils/ApiResponse.js";
+import { Booking }       from "../models/booking.model.js";
+import { Review }        from "../models/review.model.js";
+import { User }          from "../models/user.model.js";
+import { Payment }       from "../models/payment.model.js";
+import { logAudit }      from "../utils/auditLog.js";
+import sendMail          from "../utils/mail.js";
+import mongoose          from "mongoose";
 
-// Create a new booking
+// ─────────────────────────────────────────────────────────────────────────────
+//  INTERNAL: release payout to counsellor
+//  Called when booking moves to "completed" (student confirmed or auto-confirmed)
+// ─────────────────────────────────────────────────────────────────────────────
+const releasePayout = async (booking) => {
+    if (!booking.feePaid || booking.feePaid === 0) return; // free session
+
+    try {
+        // Update booking payout status
+        await Booking.findByIdAndUpdate(booking._id, {
+            payoutStatus:     "released",
+            payoutReleasedAt: new Date(),
+        });
+
+        // Update payment record
+        if (booking.paymentId) {
+            await Payment.findByIdAndUpdate(booking.paymentId, {
+                payoutStatus:     "released",
+                payoutReleasedAt: new Date(),
+            });
+        }
+
+        // Email counsellor about payout
+        const counsellorEmail = booking.counselor?.email;
+        const counsellorName  = booking.counselor?.fullName;
+        if (counsellorEmail) {
+            await sendMail({
+                to:      counsellorEmail,
+                subject: "💰 Payout Released — MindCare",
+                html: payoutEmailHtml(counsellorName, booking),
+            }).catch(e => console.error("[Mail] payout email:", e.message));
+        }
+
+        console.log(`[Payout] Released ₹${booking.feePaid} for booking ${booking._id}`);
+    } catch (err) {
+        console.error("[Payout] Failed to release payout:", err.message);
+        await Booking.findByIdAndUpdate(booking._id, { payoutStatus: "failed" });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CREATE BOOKING
+//  POST /api/v1/bookings
+// ─────────────────────────────────────────────────────────────────────────────
 const createBooking = asyncHandler(async (req, res) => {
-  const { counselorId, date, timeSlot, mode, reason, notes } = req.body;
-  const studentId = req.user._id;
+    const { counselorId, date, timeSlot, mode, reason, notes } = req.body;
+    const studentId = req.user._id;
 
-  // Validate required fields
-  if (!counselorId || !date || !timeSlot || !mode || !reason) {
-    throw new ApiError(400, "All required fields must be provided");
-  }
+    if (!counselorId || !date || !timeSlot || !mode || !reason)
+        throw new ApiError(400, "All required fields must be provided");
 
-  // Validate ObjectId format
-  if (!mongoose.isValidObjectId(counselorId)) {
-    throw new ApiError(400, "Invalid counselor ID format");
-  }
+    if (!mongoose.isValidObjectId(counselorId))
+        throw new ApiError(400, "Invalid counselor ID");
 
-  // Check if counselor exists and is approved
-  const counselor = await User.findOne({ 
-    _id: counselorId, 
-    role: "counsellor", 
-    isApproved: true 
-  });
+    const counselor = await User.findOne({ _id: counselorId, role: "counsellor", isApproved: true });
+    if (!counselor) throw new ApiError(404, "Counselor not found or not approved");
 
-  if (!counselor) {
-    throw new ApiError(404, "Counselor not found or not approved");
-  }
+    const bookingDate = new Date(date);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (bookingDate < today) throw new ApiError(400, "Cannot book appointments in the past");
 
-  // Validate date (not in past, not more than 30 days ahead)
-  const bookingDate = new Date(date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  if (bookingDate < today) {
-    throw new ApiError(400, "Cannot book appointments in the past");
-  }
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 30);
+    if (bookingDate > maxDate) throw new ApiError(400, "Cannot book more than 30 days in advance");
 
-  const maxDate = new Date();
-  maxDate.setDate(maxDate.getDate() + 30);
-  if (bookingDate > maxDate) {
-    throw new ApiError(400, "Cannot book more than 30 days in advance");
-  }
+    const slotTaken = await Booking.findOne({
+        counselor: counselorId, date: bookingDate, timeSlot,
+        status: { $in: ["payment_pending", "pending", "confirmed", "session_done"] },
+    });
+    if (slotTaken) throw new ApiError(409, "Time slot is already booked");
 
-  // Check if slot is available
-  const existingBooking = await Booking.findOne({
-    counselor: counselorId,
-    date: bookingDate,
-    timeSlot,
-    status: { $in: ["pending", "confirmed"] }
-  });
+    const studentConflict = await Booking.findOne({
+        student: studentId, date: bookingDate,
+        status:  { $in: ["payment_pending", "pending", "confirmed", "session_done"] },
+    });
+    if (studentConflict) throw new ApiError(409, "You already have a booking on this date");
 
-  if (existingBooking) {
-    throw new ApiError(409, "Time slot is already booked");
-  }
-
-  // Check if student already has a booking on the same day
-  const studentBooking = await Booking.findOne({
-    student: studentId,
-    date: bookingDate,
-    status: { $in: ["pending", "confirmed"] }
-  });
-
-  if (studentBooking) {
-    throw new ApiError(409, "You already have a booking on this date");
-  }
-
-  // Create booking
-  const booking = await Booking.create({
-    student: studentId,
-    counselor: counselorId,
-    date: bookingDate,
-    timeSlot,
-    mode,
-    reason,
-    notes: notes || ""
-  });
-
-  const populatedBooking = await Booking.findById(booking._id)
-    .populate("student", "fullName email username")
-    .populate("counselor", "fullName email");
-
-  // Send email notifications
-  try {
-    // Email to student
-    await sendMail({
-      to: req.user.email,
-      subject: "Booking Confirmation - Mental Health Support",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin-bottom: 10px;">Mental Health Support</h1>
-            <div style="height: 3px; background: linear-gradient(90deg, #2563eb, #1d4ed8); margin: 0 auto; width: 100px;"></div>
-          </div>
-          
-          <h2 style="color: #1f2937; margin-bottom: 20px;">Booking Request Submitted</h2>
-          <p style="color: #374151; line-height: 1.6;">Dear ${req.user.fullName},</p>
-          <p style="color: #374151; line-height: 1.6;">Your counseling session booking request has been submitted successfully.</p>
-          
-          <div style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #2563eb;">
-            <h3 style="margin-top: 0; color: #1f2937;">📅 Booking Details:</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Counselor:</strong></td><td style="color: #1f2937;">${counselor.fullName}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Date:</strong></td><td style="color: #1f2937;">${bookingDate.toLocaleDateString()}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Time:</strong></td><td style="color: #1f2937;">${timeSlot}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Mode:</strong></td><td style="color: #1f2937; text-transform: capitalize;">${mode}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Status:</strong></td><td style="color: #f59e0b; font-weight: bold;">⏳ Pending Approval</td></tr>
-            </table>
-          </div>
-          
-          <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-            <p style="margin: 0; color: #92400e;">📧 You will receive a confirmation email once your booking is approved by the counselor.</p>
-          </div>
-          
-          <p style="color: #374151; line-height: 1.6;">🔒 All sessions are completely confidential and designed to provide you with a safe space for support.</p>
-          
-          <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-            <p style="color: #991b1b; margin: 0; font-size: 14px;">
-              <strong>Crisis Support:</strong> If you need immediate support, please contact the crisis helpline: <strong>1-800-XXX-XXXX</strong>
-            </p>
-          </div>
-          
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              Thank you for prioritizing your mental health 💙
-            </p>
-          </div>
-        </div>
-      `
+    const booking = await Booking.create({
+        student: studentId, counselor: counselorId,
+        date: bookingDate, timeSlot, mode, reason,
+        notes: notes || "", status: "payment_pending",
     });
 
-    // Email to counselor
-    await sendMail({
-      to: counselor.email,
-      subject: "New Booking Request - Mental Health Support",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #dc2626; margin-bottom: 10px;">Mental Health Support</h1>
-            <div style="height: 3px; background: linear-gradient(90deg, #dc2626, #b91c1c); margin: 0 auto; width: 100px;"></div>
-          </div>
-          
-          <h2 style="color: #1f2937; margin-bottom: 20px;">🔔 New Booking Request</h2>
-          <p style="color: #374151; line-height: 1.6;">Dear ${counselor.fullName},</p>
-          <p style="color: #374151; line-height: 1.6;">You have received a new counseling session booking request.</p>
-          
-          <div style="background: linear-gradient(135deg, #fef2f2, #fee2e2); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #dc2626;">
-            <h3 style="margin-top: 0; color: #1f2937;">👤 Student Details:</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Name:</strong></td><td style="color: #1f2937;">${req.user.fullName}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Email:</strong></td><td style="color: #1f2937;">${req.user.email}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Username:</strong></td><td style="color: #1f2937;">${req.user.username}</td></tr>
-            </table>
-            
-            <h3 style="color: #1f2937;">📅 Session Details:</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Date:</strong></td><td style="color: #1f2937;">${bookingDate.toLocaleDateString()}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Time:</strong></td><td style="color: #1f2937;">${timeSlot}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Mode:</strong></td><td style="color: #1f2937; text-transform: capitalize;">${mode}</td></tr>
-              <tr><td style="padding: 8px 0; color: #374151;"><strong>Reason:</strong></td><td style="color: #1f2937;">${reason}</td></tr>
-              ${notes ? `<tr><td style="padding: 8px 0; color: #374151;"><strong>Notes:</strong></td><td style="color: #1f2937;">${notes}</td></tr>` : ''}
-            </table>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <p style="color: #374151; margin-bottom: 20px;">Please log in to your dashboard to approve or decline this request.</p>
-            <a href="${process.env.FRONTEND_URL}/dashboard" 
-               style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;
-                      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); transition: all 0.3s ease;">
-              📋 View Dashboard
-            </a>
-          </div>
-          
-          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              Thank you for supporting student mental health 🙏
-            </p>
-          </div>
-        </div>
-      `
-    });
-  } catch (emailError) {
-    console.error("Email sending failed:", emailError);
-    // Don't throw error - booking was created successfully
-  }
+    const populated = await Booking.findById(booking._id)
+        .populate("student",   "fullName email username")
+        .populate("counselor", "fullName email sessionFee");
 
-  return res.status(201).json(
-    new ApiResponse(201, populatedBooking, "Booking created successfully")
-  );
+    logAudit(req, "BOOKING_INITIATED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { counselorId, date: bookingDate, timeSlot, mode },
+    });
+
+    return res.status(201).json(new ApiResponse(201, {
+        booking: populated,
+        sessionFee:      counselor.sessionFee || 299,
+        sessionFeePaise: (counselor.sessionFee || 299) * 100,
+    }, "Booking initiated. Proceed to payment."));
 });
 
-// Get all bookings for a user (student or counselor)
+// ─────────────────────────────────────────────────────────────────────────────
+//  GET USER BOOKINGS
+// ─────────────────────────────────────────────────────────────────────────────
 const getUserBookings = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const { status, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const userId = req.user._id;
+    const { status, page = 1, limit = 10, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
-  let query = {};
-  
-  // Determine if user is student or counselor
-  if (req.user.role === "student") {
-    query.student = userId;
-  } else if (req.user.role === "counsellor") {
-    query.counselor = userId;
-  } else if (req.user.role === "admin") {
-    // Admin can see all bookings
-    // No additional filter needed
-  } else {
-    throw new ApiError(403, "Access denied");
-  }
+    let query = {};
+    if      (req.user.role === "student")    query.student   = userId;
+    else if (req.user.role === "counsellor") query.counselor = userId;
 
-  // Add status filter if provided
-  if (status && ['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
-    query.status = status;
-  }
+    const validStatuses = ["payment_pending","pending","confirmed","session_done","completed","cancelled"];
+    if (status && validStatuses.includes(status)) query.status = status;
 
-  const skip = (page - 1) * limit;
-  const sortOptions = {};
-  sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    const skip = (page - 1) * limit;
+    const sort = { [sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-  const bookings = await Booking.find(query)
-    .populate("student", "fullName email username avatar")
-    .populate("counselor", "fullName email avatar specialization")
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(parseInt(limit));
+    const [bookings, total] = await Promise.all([
+        Booking.find(query)
+            .populate("student",  "fullName email username avatar")
+            .populate("counselor","fullName email avatar specialization sessionFee")
+            .populate("paymentId","status amount cf_payment_id paymentMethod")
+            .populate("reviewId", "rating comment")
+            .sort(sort).skip(skip).limit(parseInt(limit)),
+        Booking.countDocuments(query),
+    ]);
 
-  const total = await Booking.countDocuments(query);
-
-  return res.status(200).json(
-    new ApiResponse(200, {
-      bookings,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1
-      }
-    }, "Bookings fetched successfully")
-  );
-});
-
-// Get single booking by ID
-const getBookingById = asyncHandler(async (req, res) => {
-  const { bookingId } = req.params;
-
-  if (!mongoose.isValidObjectId(bookingId)) {
-    throw new ApiError(400, "Invalid booking ID format");
-  }
-
-  const booking = await Booking.findById(bookingId)
-    .populate("student", "fullName email username avatar")
-    .populate("counselor", "fullName email avatar specialization");
-
-  if (!booking) {
-    throw new ApiError(404, "Booking not found");
-  }
-
-  // Check permissions
-  const isOwner = booking.student._id.toString() === req.user._id.toString() ||
-                  booking.counselor._id.toString() === req.user._id.toString();
-  
-  if (!isOwner && req.user.role !== "admin") {
-    throw new ApiError(403, "Access denied");
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, booking, "Booking fetched successfully")
-  );
-});
-
-// Update booking status (approve/decline/cancel)
-const updateBookingStatus = asyncHandler(async (req, res) => {
-  const { bookingId } = req.params;
-  const { status, cancellationReason, meetingLink, sessionNotes } = req.body;
-
-  if (!mongoose.isValidObjectId(bookingId)) {
-    throw new ApiError(400, "Invalid booking ID format");
-  }
-
-  const booking = await Booking.findById(bookingId)
-    .populate("student", "fullName email")
-    .populate("counselor", "fullName email");
-
-  if (!booking) {
-    throw new ApiError(404, "Booking not found");
-  }
-
-  // Check permissions
-  const isOwner = booking.student._id.toString() === req.user._id.toString() ||
-                  booking.counselor._id.toString() === req.user._id.toString();
-  
-  if (!isOwner && req.user.role !== "admin") {
-    throw new ApiError(403, "Access denied");
-  }
-
-  // Validate status transitions
-  const validTransitions = {
-    "pending": ["confirmed", "cancelled"],
-    "confirmed": ["cancelled", "completed"],
-    "cancelled": [], // Can't change from cancelled
-    "completed": [] // Can't change from completed
-  };
-
-  if (!validTransitions[booking.status]?.includes(status)) {
-    throw new ApiError(400, `Cannot change status from ${booking.status} to ${status}`);
-  }
-
-  // Prevent cancellation within 2 hours of session (for confirmed bookings)
-  if (status === "cancelled" && booking.status === "confirmed") {
-    const sessionDateTime = new Date(booking.date);
-    const [startTime] = booking.timeSlot.split('-');
-    const [hours, minutes] = startTime.split(':');
-    sessionDateTime.setHours(parseInt(hours), parseInt(minutes));
-    
-    const twoHoursBefore = new Date(sessionDateTime.getTime() - 2 * 60 * 60 * 1000);
-    if (new Date() > twoHoursBefore) {
-      throw new ApiError(400, "Cannot cancel booking within 2 hours of session time");
-    }
-  }
-
-  // Update booking
-  booking.status = status;
-  if (cancellationReason) booking.cancellationReason = cancellationReason;
-  if (meetingLink && status === "confirmed") booking.meetingLink = meetingLink;
-  if (sessionNotes && status === "completed") booking.sessionNotes = sessionNotes;
-
-  await booking.save();
-
-  // Send notification emails
-  try {
-    let emailSubject, emailContent;
-    const recipientEmail = booking.student.email;
-    
-    switch (status) {
-      case "confirmed":
-        emailSubject = "✅ Booking Confirmed - Mental Health Support";
-        emailContent = `
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #059669; margin-bottom: 10px;">Mental Health Support</h1>
-            <div style="height: 3px; background: linear-gradient(90deg, #059669, #047857); margin: 0 auto; width: 100px;"></div>
-          </div>
-          
-          <h2 style="color: #065f46;">🎉 Booking Confirmed!</h2>
-          <p>Dear ${booking.student.fullName},</p>
-          <p>Great news! Your counseling session has been confirmed by ${booking.counselor.fullName}.</p>
-          
-          <div style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #059669;">
-            <h3 style="margin-top: 0; color: #065f46;">📅 Session Details:</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #047857;"><strong>Counselor:</strong></td><td style="color: #065f46;">${booking.counselor.fullName}</td></tr>
-              <tr><td style="padding: 8px 0; color: #047857;"><strong>Date:</strong></td><td style="color: #065f46;">${booking.date.toLocaleDateString()}</td></tr>
-              <tr><td style="padding: 8px 0; color: #047857;"><strong>Time:</strong></td><td style="color: #065f46;">${booking.timeSlot}</td></tr>
-              <tr><td style="padding: 8px 0; color: #047857;"><strong>Mode:</strong></td><td style="color: #065f46; text-transform: capitalize;">${booking.mode}</td></tr>
-              ${booking.meetingLink ? `<tr><td style="padding: 8px 0; color: #047857;"><strong>Meeting Link:</strong></td><td><a href="${booking.meetingLink}" style="color: #2563eb; text-decoration: none;">${booking.meetingLink}</a></td></tr>` : ''}
-            </table>
-          </div>
-          
-          <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e;">💡 <strong>Reminder:</strong> Please join the session 5 minutes early and ensure you have a stable internet connection for online sessions.</p>
-          </div>
-        `;
-        break;
-        
-      case "cancelled":
-        emailSubject = "❌ Booking Cancelled - Mental Health Support";
-        emailContent = `
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #dc2626; margin-bottom: 10px;">Mental Health Support</h1>
-            <div style="height: 3px; background: linear-gradient(90deg, #dc2626, #b91c1c); margin: 0 auto; width: 100px;"></div>
-          </div>
-          
-          <h2 style="color: #991b1b;">📅 Booking Cancelled</h2>
-          <p>Dear ${booking.student.fullName},</p>
-          <p>Unfortunately, your counseling session scheduled for ${booking.date.toLocaleDateString()} at ${booking.timeSlot} has been cancelled.</p>
-          
-          ${cancellationReason ? `
-          <div style="background-color: #fee2e2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-            <p style="margin: 0; color: #991b1b;"><strong>Reason:</strong> ${cancellationReason}</p>
-          </div>` : ''}
-          
-          <div style="background-color: #e0f2fe; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #0277bd;">💙 Don't worry - you can book another session at your convenience. Your mental health journey is important to us.</p>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL}/book-session" 
-               style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
-              📝 Book New Session
-            </a>
-          </div>
-        `;
-        break;
-        
-      case "completed":
-        emailSubject = "✨ Session Completed - Mental Health Support";
-        emailContent = `
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin-bottom: 10px;">Mental Health Support</h1>
-            <div style="height: 3px; background: linear-gradient(90deg, #2563eb, #1d4ed8); margin: 0 auto; width: 100px;"></div>
-          </div>
-          
-          <h2 style="color: #1e40af;">🌟 Session Completed</h2>
-          <p>Dear ${booking.student.fullName},</p>
-          <p>Thank you for attending your counseling session with ${booking.counselor.fullName}.</p>
-          
-          <div style="background: linear-gradient(135deg, #eff6ff, #dbeafe); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #2563eb;">
-            <p style="margin: 0; color: #1e40af;">🎯 Your well-being is important to us. We hope this session was helpful for your mental health journey.</p>
-          </div>
-          
-          <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0; color: #166534;">💚 <strong>Next Steps:</strong> Feel free to book another session whenever you need support. We're here for you every step of the way.</p>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL}/book-session" 
-               style="background: linear-gradient(135deg, #059669, #047857); color: white; padding: 12px 30px; 
-                      text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
-              📅 Book Another Session
-            </a>
-          </div>
-        `;
-        break;
-    }
-
-    // Send to student
-    await sendMail({
-      to: recipientEmail,
-      subject: emailSubject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          ${emailContent}
-          
-          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              Questions? Contact us at support@mentalhealthsupport.com
-            </p>
-          </div>
-        </div>
-      `
-    });
-
-  } catch (emailError) {
-    console.error("Notification email failed:", emailError);
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, booking, `Booking ${status} successfully`)
-  );
-});
-
-// Quick approve booking (for counselors)
-const approveBooking = asyncHandler(async (req, res) => {
-  const { bookingId } = req.params;
-  const { meetingLink } = req.body;
-
-  const booking = await Booking.findById(bookingId)
-    .populate("student", "fullName email")
-    .populate("counselor", "fullName email");
-
-  if (!booking) {
-    throw new ApiError(404, "Booking not found");
-  }
-
-  // Only counselor can approve their own bookings
-  if (booking.counselor._id.toString() !== req.user._id.toString() && req.user.role !== "admin") {
-    throw new ApiError(403, "Only the assigned counselor can approve this booking");
-  }
-
-  if (booking.status !== "pending") {
-    throw new ApiError(400, "Only pending bookings can be approved");
-  }
-
-  booking.status = "confirmed";
-  if (meetingLink) booking.meetingLink = meetingLink;
-  await booking.save();
-
-  // Send approval email (similar to updateBookingStatus)
-  try {
-    await sendMail({
-      to: booking.student.email,
-      subject: "Booking Approved - Mental Health Support",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #059669;">Booking Approved!</h2>
-          <p>Dear ${booking.student.fullName},</p>
-          <p>Your counseling session has been approved by ${booking.counselor.fullName}.</p>
-          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Date:</strong> ${booking.date.toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${booking.timeSlot}</p>
-            <p><strong>Mode:</strong> ${booking.mode}</p>
-            ${booking.meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${booking.meetingLink}">${booking.meetingLink}</a></p>` : ''}
-          </div>
-        </div>
-      `
-    });
-  } catch (emailError) {
-    console.error("Approval email failed:", emailError);
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200, booking, "Booking approved successfully")
-  );
-});
-
-// Quick cancel booking
-const cancelBooking = asyncHandler(async (req, res) => {
-  const { bookingId } = req.params;
-  const { cancellationReason } = req.body;
-
-  const booking = await Booking.findById(bookingId)
-    .populate("student", "fullName email")
-    .populate("counselor", "fullName email");
-
-  if (!booking) {
-    throw new ApiError(404, "Booking not found");
-  }
-
-  // Check permissions
-  const isOwner = booking.student._id.toString() === req.user._id.toString() ||
-                  booking.counselor._id.toString() === req.user._id.toString();
-  
-  if (!isOwner && req.user.role !== "admin") {
-    throw new ApiError(403, "Access denied");
-  }
-
-  if (!["pending", "confirmed"].includes(booking.status)) {
-    throw new ApiError(400, "Cannot cancel this booking");
-  }
-
-  booking.status = "cancelled";
-  if (cancellationReason) booking.cancellationReason = cancellationReason;
-  await booking.save();
-
-  return res.status(200).json(
-    new ApiResponse(200, booking, "Booking cancelled successfully")
-  );
-});
-
-// Get available time slots for a counselor on a specific date
-const getAvailableSlots = asyncHandler(async (req, res) => {
-  const { counselorId, date } = req.params;
-
-  if (!mongoose.isValidObjectId(counselorId)) {
-    throw new ApiError(400, "Invalid counselor ID format");
-  }
-
-  const counselor = await User.findOne({ 
-    _id: counselorId, 
-    role: "counsellor", 
-    isApproved: true 
-  });
-
-  if (!counselor) {
-    throw new ApiError(404, "Counselor not found");
-  }
-
-  // Validate date
-  const requestedDate = new Date(date);
-  if (isNaN(requestedDate.getTime())) {
-    throw new ApiError(400, "Invalid date format");
-  }
-
-  // All possible time slots
-  const allSlots = [
-    "09:00-10:00",
-    "10:00-11:00", 
-    "11:00-12:00",
-    "14:00-15:00",
-    "15:00-16:00",
-    "16:00-17:00"
-  ];
-
-  // Get booked slots for the date
-  const bookedSlots = await Booking.find({
-    counselor: counselorId,
-    date: requestedDate,
-    status: { $in: ["pending", "confirmed"] }
-  }).select("timeSlot");
-
-  const bookedTimeSlots = bookedSlots.map(booking => booking.timeSlot);
-  const availableSlots = allSlots.filter(slot => !bookedTimeSlots.includes(slot));
-
-  return res.status(200).json(
-    new ApiResponse(200, { 
-      date: requestedDate.toISOString().split('T')[0],
-      counselor: {
-        id: counselor._id,
-        name: counselor.fullName,
-        specialization: counselor.specialization
-      },
-      availableSlots,
-      totalSlots: allSlots.length,
-      bookedSlots: bookedTimeSlots.length
-    }, "Available slots fetched successfully")
-  );
-});
-
-// Get all approved counselors
-const getAvailableCounselors = asyncHandler(async (req, res) => {
-  const { specialization, limit = 50 } = req.query;
-
-  let query = { 
-    role: "counsellor", 
-    isApproved: true 
-  };
-
-  if (specialization) {
-    query.specialization = { $regex: specialization, $options: 'i' };
-  }
-
-  const counselors = await User.find(query)
-    .select("fullName email avatar specialization institution createdAt")
-    .limit(parseInt(limit))
-    .sort({ createdAt: -1 });
-
-  return res.status(200).json(
-    new ApiResponse(200, counselors, "Available counselors fetched successfully")
-  );
-});
-
-// Get booking statistics (for admin dashboard)
-const getBookingStats = asyncHandler(async (req, res) => {
-  if (req.user.role !== "admin") {
-    throw new ApiError(403, "Admin access required");
-  }
-
-  const stats = await Booking.aggregate([
-    {
-      $group: {
-        _id: "$status",
-        count: { $sum: 1 }
-      }
-    }
-  ]);
-
-  const monthlyStats = await Booking.aggregate([
-    {
-      $group: {
-        _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" }
+    return res.status(200).json(new ApiResponse(200, {
+        bookings,
+        pagination: {
+            page: parseInt(page), limit: parseInt(limit), total,
+            totalPages: Math.ceil(total / limit),
+            hasNext: page * limit < total,
+            hasPrev: page > 1,
         },
-        count: { $sum: 1 }
-      }
-    },
-    { $sort: { "_id.year": -1, "_id.month": -1 } },
-    { $limit: 6 }
-  ]);
-
-  const modeStats = await Booking.aggregate([
-    {
-      $group: {
-        _id: "$mode",
-        count: { $sum: 1 }
-      }
-    }
-  ]);
-
-  // Get upcoming sessions (next 7 days)
-  const nextWeek = new Date();
-  nextWeek.setDate(nextWeek.getDate() + 7);
-
-  const upcomingSessions = await Booking.find({
-    status: "confirmed",
-    date: { $gte: new Date(), $lte: nextWeek }
-  })
-  .populate("student", "fullName")
-  .populate("counselor", "fullName")
-  .sort({ date: 1 })
-  .limit(10);
-
-  return res.status(200).json(
-    new ApiResponse(200, {
-      statusStats: stats,
-      monthlyStats,
-      modeStats,
-      upcomingSessions,
-      totalBookings: await Booking.countDocuments()
-    }, "Booking statistics fetched successfully")
-  );
+    }, "Bookings fetched"));
 });
 
-// Search bookings (for admin)
-const searchBookings = asyncHandler(async (req, res) => {
-  if (req.user.role !== "admin") {
-    throw new ApiError(403, "Admin access required");
-  }
+// ─────────────────────────────────────────────────────────────────────────────
+//  GET SINGLE BOOKING
+// ─────────────────────────────────────────────────────────────────────────────
+const getBookingById = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    if (!mongoose.isValidObjectId(bookingId)) throw new ApiError(400, "Invalid booking ID");
 
-  const { 
-    query: searchQuery, 
-    status, 
-    mode, 
-    dateFrom, 
-    dateTo,
-    page = 1, 
-    limit = 20 
-  } = req.query;
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email username avatar")
+        .populate("counselor","fullName email avatar specialization sessionFee")
+        .populate("paymentId","status amount cf_payment_id paymentMethod refundId")
+        .populate("reviewId", "rating comment createdAt");
 
-  let aggregateQuery = [];
+    if (!booking) throw new ApiError(404, "Booking not found");
 
-  // Match stage
-  let matchStage = {};
-  
-  if (status) matchStage.status = status;
-  if (mode) matchStage.mode = mode;
-  
-  if (dateFrom || dateTo) {
-    matchStage.date = {};
-    if (dateFrom) matchStage.date.$gte = new Date(dateFrom);
-    if (dateTo) matchStage.date.$lte = new Date(dateTo);
-  }
+    const isOwner =
+        booking.student._id.toString()   === req.user._id.toString() ||
+        booking.counselor._id.toString() === req.user._id.toString();
+    if (!isOwner && req.user.role !== "admin") throw new ApiError(403, "Access denied");
 
-  aggregateQuery.push({ $match: matchStage });
+    return res.status(200).json(new ApiResponse(200, booking, "Booking fetched"));
+});
 
-  // Populate user data
-  aggregateQuery.push(
-    {
-      $lookup: {
-        from: "users",
-        localField: "student",
-        foreignField: "_id",
-        as: "student"
-      }
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "counselor",
-        foreignField: "_id",
-        as: "counselor"
-      }
-    }
-  );
+// ─────────────────────────────────────────────────────────────────────────────
+//  APPROVE BOOKING (counsellor)
+//  PUT /api/v1/bookings/:bookingId/approve
+// ─────────────────────────────────────────────────────────────────────────────
+const approveBooking = asyncHandler(async (req, res) => {
+    const { bookingId }   = req.params;
+    const { meetingLink } = req.body;
 
-  // Unwind arrays
-  aggregateQuery.push(
-    { $unwind: "$student" },
-    { $unwind: "$counselor" }
-  );
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
 
-  // Text search if query provided
-  if (searchQuery) {
-    aggregateQuery.push({
-      $match: {
-        $or: [
-          { "student.fullName": { $regex: searchQuery, $options: 'i' } },
-          { "student.email": { $regex: searchQuery, $options: 'i' } },
-          { "counselor.fullName": { $regex: searchQuery, $options: 'i' } },
-          { "counselor.email": { $regex: searchQuery, $options: 'i' } },
-          { "reason": { $regex: searchQuery, $options: 'i' } }
-        ]
-      }
+    if (booking.counselor._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
+        throw new ApiError(403, "Only the assigned counsellor can approve this booking");
+    if (booking.status !== "pending")
+        throw new ApiError(400, `Booking is "${booking.status}" — only pending bookings can be approved`);
+
+    booking.status = "confirmed";
+    if (meetingLink) booking.meetingLink = meetingLink;
+    await booking.save();
+
+    logAudit(req, "BOOKING_CONFIRMED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { counselorId: req.user._id, meetingLink },
     });
-  }
 
-  // Sort and paginate
-  const skip = (page - 1) * limit;
-  aggregateQuery.push(
-    { $sort: { createdAt: -1 } },
-    { $skip: skip },
-    { $limit: parseInt(limit) }
-  );
+    await sendMail({
+        to:      booking.student.email,
+        subject: "✅ Session Confirmed — MindCare",
+        html:    confirmEmailHtml(booking),
+    }).catch(e => console.error("[Mail]", e.message));
 
-  // Project only necessary fields
-  aggregateQuery.push({
-    $project: {
-      _id: 1,
-      date: 1,
-      timeSlot: 1,
-      mode: 1,
-      status: 1,
-      reason: 1,
-      createdAt: 1,
-      "student.fullName": 1,
-      "student.email": 1,
-      "counselor.fullName": 1,
-      "counselor.email": 1
-    }
-  });
-
-  const bookings = await Booking.aggregate(aggregateQuery);
-  
-  // Get total count for pagination
-  const totalQuery = [...aggregateQuery.slice(0, -3)]; // Remove sort, skip, limit
-  totalQuery.push({ $count: "total" });
-  const totalResult = await Booking.aggregate(totalQuery);
-  const total = totalResult[0]?.total || 0;
-
-  return res.status(200).json(
-    new ApiResponse(200, {
-      bookings,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    }, "Search results fetched successfully")
-  );
+    return res.status(200).json(new ApiResponse(200, booking, "Booking confirmed"));
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  REJECT BOOKING (counsellor → auto-refund)
+//  PUT /api/v1/bookings/:bookingId/reject
+// ─────────────────────────────────────────────────────────────────────────────
+const rejectBooking = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    const { reason }    = req.body;
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    if (booking.counselor._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
+        throw new ApiError(403, "Only the assigned counsellor can reject this booking");
+    if (booking.status !== "pending")
+        throw new ApiError(400, "Only pending bookings can be rejected");
+
+    booking.status             = "cancelled";
+    booking.cancellationReason = reason || "Rejected by counsellor";
+    await booking.save();
+
+    logAudit(req, "BOOKING_REJECTED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { reason, counselorId: req.user._id },
+    });
+
+    // Auto-refund via Cashfree
+    const payment = await Payment.findOne({ bookingId, status: "success" });
+    if (payment) {
+        try {
+            const refundId = `RF_REJ_${bookingId}_${Date.now()}`;
+            const cfRes = await fetch(
+                `${process.env.NODE_ENV === "production" ? "https://api.cashfree.com" : "https://sandbox.cashfree.com"}/pg/orders/${payment.order_id}/refunds`,
+                {
+                    method:  "POST",
+                    headers: {
+                        "Content-Type":    "application/json",
+                        "x-api-version":   "2023-08-01",
+                        "x-client-id":     process.env.CASHFREE_APP_ID,
+                        "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+                    },
+                    body: JSON.stringify({
+                        refund_amount: payment.amount,
+                        refund_id:     refundId,
+                        refund_note:   reason || "Booking rejected by counsellor",
+                    }),
+                }
+            );
+            const cfData = await cfRes.json();
+            payment.status       = "refunded";
+            payment.refundId     = cfData.refund_id || refundId;
+            payment.refundAmount = payment.amount;
+            payment.refundReason = "Booking rejected by counsellor";
+            payment.refundedAt   = new Date();
+            await payment.save();
+
+            logAudit(null, "REFUND_INITIATED", {
+                resourceType: "Payment", resourceId: payment._id,
+                metadata: { refundId: payment.refundId, amount: payment.amount },
+            });
+        } catch (err) {
+            console.error("[Refund] Auto-refund failed:", err.message);
+        }
+    }
+
+    await sendMail({
+        to:      booking.student.email,
+        subject: "❌ Session Request Rejected — MindCare",
+        html:    rejectEmailHtml(booking, reason),
+    }).catch(e => console.error("[Mail]", e.message));
+
+    return res.status(200).json(new ApiResponse(200, booking, "Booking rejected and refund initiated"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CANCEL BOOKING (student or counsellor)
+//  PUT /api/v1/bookings/:bookingId/cancel
+// ─────────────────────────────────────────────────────────────────────────────
+const cancelBooking = asyncHandler(async (req, res) => {
+    const { bookingId }          = req.params;
+    const { cancellationReason } = req.body;
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    const uid     = req.user._id.toString();
+    const isOwner = booking.student._id.toString() === uid || booking.counselor._id.toString() === uid;
+    if (!isOwner && req.user.role !== "admin") throw new ApiError(403, "Access denied");
+
+    if (!["payment_pending","pending","confirmed"].includes(booking.status))
+        throw new ApiError(400, "Cannot cancel a booking in its current state");
+
+    // 2-hour cutoff for confirmed sessions (students)
+    if (req.user.role === "student" && booking.status === "confirmed") {
+        const sessionTime = new Date(booking.date);
+        const [h, m] = booking.timeSlot.split("-")[0].split(":");
+        sessionTime.setHours(parseInt(h), parseInt(m));
+        if (new Date() > new Date(sessionTime - 2 * 3600 * 1000))
+            throw new ApiError(400, "Cannot cancel within 2 hours of the session");
+    }
+
+    booking.status             = "cancelled";
+    booking.cancellationReason = cancellationReason || "Cancelled";
+    await booking.save();
+
+    logAudit(req, "BOOKING_CANCELLED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { reason: cancellationReason, cancelledBy: req.user.role },
+    });
+
+    return res.status(200).json(new ApiResponse(200, booking, "Booking cancelled"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MARK SESSION DONE (counsellor — step 1 of completion)
+//  PUT /api/v1/bookings/:bookingId/done
+//  Body: { sessionNotes? }
+//
+//  → status: confirmed → session_done
+//  → student gets email asking to confirm + review
+// ─────────────────────────────────────────────────────────────────────────────
+const markSessionDone = asyncHandler(async (req, res) => {
+    const { bookingId }    = req.params;
+    const { sessionNotes } = req.body;
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    if (booking.counselor._id.toString() !== req.user._id.toString() && req.user.role !== "admin")
+        throw new ApiError(403, "Only the assigned counsellor can mark this session done");
+    if (booking.status !== "confirmed")
+        throw new ApiError(400, "Only confirmed sessions can be marked as done");
+
+    booking.status        = "session_done";
+    booking.sessionNotes  = sessionNotes || "";
+    booking.sessionDoneAt = new Date();
+    await booking.save();
+
+    logAudit(req, "SESSION_DONE_MARKED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { counselorId: req.user._id, hasNotes: !!sessionNotes },
+    });
+
+    // Email student asking them to confirm + review
+    await sendMail({
+        to:      booking.student.email,
+        subject: "📋 Please Confirm Your Session & Leave a Review — MindCare",
+        html:    sessionDoneEmailHtml(booking),
+    }).catch(e => console.error("[Mail]", e.message));
+
+    return res.status(200).json(new ApiResponse(200, booking,
+        "Session marked as done. Student has been notified to confirm and leave a review."));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  STUDENT CONFIRMS COMPLETION + SUBMITS REVIEW (step 2)
+//  POST /api/v1/bookings/:bookingId/confirm-complete
+//  Body: { rating (1-5), comment? }
+//
+//  → status: session_done → completed
+//  → Review created
+//  → Payout released to counsellor
+// ─────────────────────────────────────────────────────────────────────────────
+const studentConfirmComplete = asyncHandler(async (req, res) => {
+    const { bookingId }         = req.params;
+    const { rating, comment }   = req.body;
+
+    if (!rating || rating < 1 || rating > 5)
+        throw new ApiError(400, "Rating must be between 1 and 5");
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    // Only the student who booked can confirm
+    if (booking.student._id.toString() !== req.user._id.toString())
+        throw new ApiError(403, "Only the student can confirm session completion");
+    if (booking.status !== "session_done")
+        throw new ApiError(400, "Session must be in 'session_done' state to confirm");
+
+    // Check for duplicate review
+    const existingReview = await Review.findOne({ bookingId });
+    if (existingReview) throw new ApiError(409, "You have already reviewed this session");
+
+    // Create review
+    const review = await Review.create({
+        bookingId,
+        studentId:    booking.student._id,
+        counsellorId: booking.counselor._id,
+        rating:       Number(rating),
+        comment:      comment?.trim() || "",
+    });
+
+    // Mark booking completed
+    booking.status             = "completed";
+    booking.studentConfirmed   = true;
+    booking.studentConfirmedAt = new Date();
+    booking.reviewId           = review._id;
+    booking.payoutStatus       = "released";
+    booking.payoutReleasedAt   = new Date();
+    await booking.save();
+
+    // Update counsellor's average rating
+    await updateCounsellorRating(booking.counselor._id);
+
+    logAudit(req, "SESSION_COMPLETED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { rating, studentConfirmed: true, counselorId: booking.counselor._id },
+    });
+    logAudit(req, "REVIEW_SUBMITTED", {
+        resourceType: "Review", resourceId: review._id,
+        metadata: { rating, bookingId },
+    });
+
+    // Release payout to counsellor
+    await releasePayout(booking);
+
+    // Thank-you email to student
+    await sendMail({
+        to:      booking.student.email,
+        subject: "✨ Session Completed — Thank you for your review!",
+        html:    sessionCompletedEmailHtml(booking, review),
+    }).catch(e => console.error("[Mail]", e.message));
+
+    return res.status(200).json(new ApiResponse(200, {
+        booking,
+        review,
+    }, "Session confirmed and review submitted. Thank you!"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  DISPUTE SESSION (student disagrees — session_done only)
+//  POST /api/v1/bookings/:bookingId/dispute
+//  Body: { reason }
+//
+//  → status: session_done → disputed (admin reviews)
+// ─────────────────────────────────────────────────────────────────────────────
+const disputeSession = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    const { reason }    = req.body;
+
+    if (!reason?.trim()) throw new ApiError(400, "Please provide a reason for the dispute");
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    if (booking.student._id.toString() !== req.user._id.toString())
+        throw new ApiError(403, "Only the student can raise a dispute");
+    if (booking.status !== "session_done")
+        throw new ApiError(400, "Can only dispute a session that has been marked done by the counsellor");
+
+    // Mark as cancelled with dispute reason — admin will investigate
+    booking.status             = "cancelled";
+    booking.cancellationReason = `DISPUTE: ${reason.trim()}`;
+    await booking.save();
+
+    logAudit(req, "BOOKING_DISPUTED", {
+        resourceType: "Booking", resourceId: booking._id,
+        metadata: { reason, studentId: req.user._id },
+    });
+
+    // Alert admin by email
+    const admin = await User.findOne({ role: "admin" }).select("email fullName");
+    if (admin) {
+        await sendMail({
+            to:      admin.email,
+            subject: "⚠️ Session Dispute Filed — MindCare Admin",
+            html:    disputeAlertEmailHtml(booking, reason),
+        }).catch(e => console.error("[Mail]", e.message));
+    }
+
+    return res.status(200).json(new ApiResponse(200, booking,
+        "Dispute filed. Our team will review within 24 hours and contact you."));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  AUTO-COMPLETE SESSIONS (run by cron job every hour)
+//  Called internally — not an HTTP route
+//
+//  If student hasn't confirmed within 48 hours of counsellor marking done,
+//  auto-complete and release payout.
+// ─────────────────────────────────────────────────────────────────────────────
+export const autoCompleteExpiredSessions = async () => {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours ago
+
+    const expiredBookings = await Booking.find({
+        status:         "session_done",
+        sessionDoneAt:  { $lte: cutoff },
+        studentConfirmed: false,
+    })
+    .populate("student",  "fullName email")
+    .populate("counselor","fullName email");
+
+    console.log(`[AutoComplete] Found ${expiredBookings.length} expired sessions to auto-complete`);
+
+    for (const booking of expiredBookings) {
+        try {
+            booking.status             = "completed";
+            booking.autoConfirmed      = true;
+            booking.studentConfirmedAt = new Date();
+            booking.payoutStatus       = "released";
+            booking.payoutReleasedAt   = new Date();
+            await booking.save();
+
+            logAudit(null, "SESSION_AUTO_COMPLETED", {
+                resourceType: "Booking", resourceId: booking._id,
+                metadata: { sessionDoneAt: booking.sessionDoneAt, cutoffHours: 48 },
+            });
+
+            await releasePayout(booking);
+
+            // Notify student that session was auto-confirmed
+            await sendMail({
+                to:      booking.student.email,
+                subject: "📋 Session Auto-Confirmed — MindCare",
+                html:    autoConfirmEmailHtml(booking),
+            }).catch(e => console.error("[Mail]", e.message));
+
+        } catch (err) {
+            console.error(`[AutoComplete] Failed for booking ${booking._id}:`, err.message);
+        }
+    }
+
+    return expiredBookings.length;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  GET REVIEWS FOR A COUNSELLOR (public)
+//  GET /api/v1/bookings/reviews/:counsellorId
+// ─────────────────────────────────────────────────────────────────────────────
+const getCounsellorReviews = asyncHandler(async (req, res) => {
+    const { counsellorId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    if (!mongoose.isValidObjectId(counsellorId)) throw new ApiError(400, "Invalid counsellor ID");
+
+    const skip = (page - 1) * limit;
+
+    const [reviews, total, ratingAgg] = await Promise.all([
+        Review.find({ counsellorId, isPublic: true, isFlagged: false })
+            .populate("studentId", "fullName avatar")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit)),
+        Review.countDocuments({ counsellorId, isPublic: true, isFlagged: false }),
+        Review.aggregate([
+            { $match: { counsellorId: new mongoose.Types.ObjectId(counsellorId), isPublic: true, isFlagged: false } },
+            { $group: {
+                _id:       null,
+                avgRating: { $avg:   "$rating" },
+                total:     { $sum:   1 },
+                dist:      { $push:  "$rating" },
+            }},
+        ]),
+    ]);
+
+    const agg = ratingAgg[0] || { avgRating: 0, total: 0 };
+    const distribution = [1,2,3,4,5].map(star => ({
+        star,
+        count: reviews.filter(r => r.rating === star).length,
+    }));
+
+    return res.status(200).json(new ApiResponse(200, {
+        reviews,
+        summary: {
+            avgRating:    Math.round((agg.avgRating || 0) * 10) / 10,
+            totalReviews: agg.total,
+            distribution,
+        },
+        pagination: {
+            page: parseInt(page), limit: parseInt(limit), total,
+            totalPages: Math.ceil(total / limit),
+        },
+    }, "Reviews fetched"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  INTERNAL: update counsellor's cached average rating on User model
+// ─────────────────────────────────────────────────────────────────────────────
+const updateCounsellorRating = async (counsellorId) => {
+    try {
+        const agg = await Review.aggregate([
+            { $match: { counsellorId: new mongoose.Types.ObjectId(counsellorId), isPublic: true, isFlagged: false } },
+            { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+        ]);
+        if (agg[0]) {
+            await User.findByIdAndUpdate(counsellorId, {
+                avgRating:    Math.round(agg[0].avg * 10) / 10,
+                totalReviews: agg[0].count,
+            });
+        }
+    } catch (err) {
+        console.error("[Rating] Failed to update counsellor rating:", err.message);
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  EXISTING ENDPOINTS (unchanged logic, updated for new status)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const updateBookingStatus = asyncHandler(async (req, res) => {
+    const { bookingId } = req.params;
+    const { status, cancellationReason, meetingLink, sessionNotes } = req.body;
+
+    if (!mongoose.isValidObjectId(bookingId)) throw new ApiError(400, "Invalid booking ID");
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student","fullName email").populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    const isOwner = booking.student._id.toString() === req.user._id.toString() ||
+                    booking.counselor._id.toString() === req.user._id.toString();
+    if (!isOwner && req.user.role !== "admin") throw new ApiError(403, "Access denied");
+
+    const validTransitions = {
+        payment_pending: ["cancelled"],
+        pending:         ["confirmed", "cancelled"],
+        confirmed:       ["session_done", "cancelled"],
+        session_done:    ["completed", "cancelled"],
+        cancelled:       [],
+        completed:       [],
+    };
+
+    if (!validTransitions[booking.status]?.includes(status))
+        throw new ApiError(400, `Cannot transition from ${booking.status} → ${status}`);
+
+    booking.status = status;
+    if (cancellationReason) booking.cancellationReason = cancellationReason;
+    if (meetingLink  && status === "confirmed")     booking.meetingLink  = meetingLink;
+    if (sessionNotes && status === "session_done")  booking.sessionNotes = sessionNotes;
+    await booking.save();
+
+    return res.status(200).json(new ApiResponse(200, booking, `Booking updated to ${status}`));
+});
+
+const getAvailableSlots = asyncHandler(async (req, res) => {
+    const { counselorId, date } = req.params;
+    if (!mongoose.isValidObjectId(counselorId)) throw new ApiError(400, "Invalid counselor ID");
+
+    const counselor = await User.findOne({ _id: counselorId, role: "counsellor", isApproved: true });
+    if (!counselor) throw new ApiError(404, "Counselor not found");
+
+    const requestedDate = new Date(date);
+    if (isNaN(requestedDate.getTime())) throw new ApiError(400, "Invalid date");
+
+    const ALL_SLOTS = ["09:00-10:00","10:00-11:00","11:00-12:00","14:00-15:00","15:00-16:00","16:00-17:00"];
+
+    const booked = await Booking.find({
+        counselor: counselorId, date: requestedDate,
+        status: { $in: ["payment_pending","pending","confirmed","session_done"] },
+    }).select("timeSlot");
+
+    const bookedSlots = booked.map(b => b.timeSlot);
+
+    return res.status(200).json(new ApiResponse(200, {
+        date:           requestedDate.toISOString().split("T")[0],
+        counselor:      { id: counselor._id, name: counselor.fullName, specialization: counselor.specialization, sessionFee: counselor.sessionFee },
+        availableSlots: ALL_SLOTS.filter(s => !bookedSlots.includes(s)),
+        bookedSlots,
+        totalSlots:     ALL_SLOTS.length,
+    }, "Available slots fetched"));
+});
+
+const getAvailableCounselors = asyncHandler(async (req, res) => {
+    const { specialization, limit = 50 } = req.query;
+    let query = { role: "counsellor", isApproved: true };
+    if (specialization) query.specialization = { $regex: specialization, $options: "i" };
+
+    const counselors = await User.find(query)
+        .select("fullName email avatar specialization institution sessionFee avgRating totalReviews createdAt")
+        .limit(parseInt(limit))
+        .sort({ avgRating: -1, createdAt: -1 }); // top-rated first
+
+    return res.status(200).json(new ApiResponse(200, counselors, "Counsellors fetched"));
+});
+
+const getBookingStats = asyncHandler(async (req, res) => {
+    if (req.user.role !== "admin") throw new ApiError(403, "Admin access required");
+    const [statusStats, monthlyStats, modeStats, upcomingSessions] = await Promise.all([
+        Booking.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+        Booking.aggregate([
+            { $group: { _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } }, count: { $sum: 1 } } },
+            { $sort: { "_id.year": -1, "_id.month": -1 } }, { $limit: 6 },
+        ]),
+        Booking.aggregate([{ $group: { _id: "$mode", count: { $sum: 1 } } }]),
+        Booking.find({ status: "confirmed", date: { $gte: new Date(), $lte: new Date(Date.now() + 7*86400000) } })
+            .populate("student","fullName").populate("counselor","fullName")
+            .sort({ date: 1 }).limit(10),
+    ]);
+    return res.status(200).json(new ApiResponse(200, {
+        statusStats, monthlyStats, modeStats, upcomingSessions,
+        totalBookings: await Booking.countDocuments(),
+    }, "Booking stats fetched"));
+});
+
+const searchBookings = asyncHandler(async (req, res) => {
+    if (req.user.role !== "admin") throw new ApiError(403, "Admin access required");
+    const { query: q, status, mode, dateFrom, dateTo, page = 1, limit = 20 } = req.query;
+    let match = {};
+    if (status) match.status = status;
+    if (mode)   match.mode   = mode;
+    if (dateFrom || dateTo) {
+        match.date = {};
+        if (dateFrom) match.date.$gte = new Date(dateFrom);
+        if (dateTo)   match.date.$lte = new Date(dateTo);
+    }
+    const pipeline = [
+        { $match: match },
+        { $lookup: { from: "users", localField: "student",  foreignField: "_id", as: "student"  } },
+        { $lookup: { from: "users", localField: "counselor",foreignField: "_id", as: "counselor" } },
+        { $unwind: "$student" }, { $unwind: "$counselor" },
+        ...(q ? [{ $match: { $or: [
+            { "student.fullName":   { $regex: q, $options: "i" } },
+            { "counselor.fullName": { $regex: q, $options: "i" } },
+            { reason:               { $regex: q, $options: "i" } },
+        ]}}] : []),
+        { $sort: { createdAt: -1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit) },
+    ];
+    const bookings = await Booking.aggregate(pipeline);
+    return res.status(200).json(new ApiResponse(200, { bookings }, "Search results"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  EMAIL TEMPLATES
+// ─────────────────────────────────────────────────────────────────────────────
+const confirmEmailHtml = (b) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">✅ Session Confirmed!</h1>
+  </div>
+  <p>Hi <strong>${b.student.fullName}</strong>, your session with <strong>${b.counselor.fullName}</strong> is confirmed.</p>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0">
+    <p><strong>Date:</strong> ${new Date(b.date).toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p>
+    <p><strong>Time:</strong> ${b.timeSlot}</p>
+    <p><strong>Mode:</strong> ${b.mode}</p>
+    ${b.meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${b.meetingLink}">${b.meetingLink}</a></p>` : ""}
+  </div>
+</div>`;
+
+const rejectEmailHtml = (b, reason) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:#ef4444;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">❌ Session Request Rejected</h1>
+  </div>
+  <p>Hi <strong>${b.student.fullName}</strong>, <strong>${b.counselor.fullName}</strong> could not accept your request.</p>
+  ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
+  <p style="color:#16a34a">💰 A full refund has been initiated and will be credited in 5–7 business days.</p>
+  <a href="${process.env.FRONTEND_URL}/booking" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px">Book Another Session</a>
+</div>`;
+
+const sessionDoneEmailHtml = (b) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">📋 How Was Your Session?</h1>
+  </div>
+  <p>Hi <strong>${b.student.fullName}</strong>,</p>
+  <p><strong>${b.counselor.fullName}</strong> has marked your session as completed.</p>
+  <p>Please confirm that the session took place and share your feedback. This helps us ensure quality and releases payment to your counsellor.</p>
+  <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:16px;margin:20px 0">
+    <p><strong>Session:</strong> ${new Date(b.date).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}, ${b.timeSlot}</p>
+    <p><strong>Counsellor:</strong> ${b.counselor.fullName}</p>
+  </div>
+  <div style="text-align:center;margin:24px 0">
+    <a href="${process.env.FRONTEND_URL}/all-bookings" style="display:inline-block;background:#6366f1;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">
+      Confirm &amp; Leave Review →
+    </a>
+  </div>
+  <p style="color:#9ca3af;font-size:12px;text-align:center">
+    If you do not respond within 48 hours, the session will be automatically confirmed.
+  </p>
+</div>`;
+
+const sessionCompletedEmailHtml = (b, review) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:linear-gradient(135deg,#10b981,#6366f1);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">🌟 Thank You for Your Review!</h1>
+  </div>
+  <p>Hi <strong>${b.student.fullName}</strong>, thank you for confirming your session and leaving a ${"⭐".repeat(review.rating)} rating for <strong>${b.counselor.fullName}</strong>.</p>
+  <p>Your feedback helps other students find the right support. We hope the session was helpful!</p>
+  <a href="${process.env.FRONTEND_URL}/booking" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px">Book Another Session</a>
+</div>`;
+
+const autoConfirmEmailHtml = (b) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:#f59e0b;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">📋 Session Auto-Confirmed</h1>
+  </div>
+  <p>Hi <strong>${b.student.fullName}</strong>, your session with <strong>${b.counselor.fullName}</strong> on ${new Date(b.date).toLocaleDateString("en-IN")} has been automatically confirmed as 48 hours have passed.</p>
+  <p>You can still leave a review from your bookings page.</p>
+  <a href="${process.env.FRONTEND_URL}/all-bookings" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px">Leave a Review</a>
+</div>`;
+
+const payoutEmailHtml = (counsellorName, b) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">💰 Payout Released</h1>
+  </div>
+  <p>Hi <strong>${counsellorName}</strong>,</p>
+  <p>The student has confirmed the session. A payout of <strong>₹${b.feePaid}</strong> has been released and will be credited to your registered bank account within 3–5 business days.</p>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0">
+    <p><strong>Session Date:</strong> ${new Date(b.date).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
+    <p><strong>Amount:</strong> ₹${b.feePaid}</p>
+  </div>
+  <p style="color:#6b7280;font-size:12px">If you have any questions about payouts, contact support@mindcare.com</p>
+</div>`;
+
+const disputeAlertEmailHtml = (b, reason) => `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:#ef4444;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">⚠️ Dispute Filed</h1>
+  </div>
+  <p>A student has filed a dispute for a completed session.</p>
+  <p><strong>Student:</strong> ${b.student.fullName} (${b.student.email})</p>
+  <p><strong>Counsellor:</strong> ${b.counselor.fullName} (${b.counselor.email})</p>
+  <p><strong>Session Date:</strong> ${new Date(b.date).toLocaleDateString("en-IN")}</p>
+  <p><strong>Booking ID:</strong> ${b._id}</p>
+  <p><strong>Dispute Reason:</strong> ${reason}</p>
+  <p>Please review this case and take appropriate action.</p>
+</div>`;
 
 export {
-  createBooking,
-  getUserBookings,
-  getBookingById,
-  updateBookingStatus,
-  approveBooking,
-  cancelBooking,
-  getAvailableSlots,
-  getAvailableCounselors,
-  getBookingStats,
-  searchBookings
+    createBooking, getUserBookings, getBookingById,
+    updateBookingStatus, approveBooking, rejectBooking,
+    cancelBooking, markSessionDone, studentConfirmComplete,
+    disputeSession, getCounsellorReviews,
+    getAvailableSlots, getAvailableCounselors,
+    getBookingStats, searchBookings,
 };

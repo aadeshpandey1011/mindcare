@@ -5,6 +5,8 @@ import "./utils/googleAuth.js";
 
 import userRouter         from "./routes/user.routes.js";
 import bookingRouter      from "./routes/booking.routes.js";
+import paymentRouter      from "./routes/payment.routes.js";
+import adRouter           from "./routes/ad.routes.js";
 import healthcheckRouter  from "./routes/healthcheck.routes.js";
 import tweetRouter        from "./routes/tweet.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
@@ -25,26 +27,28 @@ export const app = express();
 const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173";
 
 const corsOptions = {
-    origin: FRONTEND_ORIGIN,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
-    exposedHeaders: ["Set-Cookie"],
+    origin:           FRONTEND_ORIGIN,
+    credentials:      true,
+    methods:          ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders:   ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    exposedHeaders:   ["Set-Cookie"],
     optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-// Increased limit for JSON bodies; multipart (media uploads) is handled by multer directly
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/v1/health",        healthcheckRouter);
 app.use("/api/v1/users",         userRouter);
 app.use("/api/v1/bookings",      bookingRouter);
+app.use("/api/v1/payments",      paymentRouter);
+app.use("/api/v1/ads",           adRouter);           // ← forum ads + bank details
 app.use("/api/v1/tweets",        tweetRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/videos",        videoRouter);
@@ -60,6 +64,7 @@ app.use("/api/forum",            postRouter);
 app.use("/api/v1/chat",          chatRouter);
 app.use("/api/v1/verify",        verificationRouter);
 
+// ── Error handler ─────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(err.statusCode || 500).json({

@@ -32,13 +32,19 @@ const maskGovtId = (aadhar, pan) => {
 const registerUser = asyncHandler(async (req, res) => {
     const {
         fullName, email, username, password,
-        role, institution,
+        role, institution, specialization,   // ← specialization added
         phone, dob,
         aadharNumber, panNumber,
     } = req.body;
 
     if ([fullName, email, username, password].some((f) => !f?.trim())) {
         throw new ApiError(400, "Full name, email, username and password are required");
+    }
+
+    // Counsellor must provide specialization
+    const assignedRole = role || "student";
+    if (assignedRole === "counsellor" && !specialization?.trim()) {
+        throw new ApiError(400, "Specialization is required for counsellor registration");
     }
 
     // Phone — optional, validate if provided
@@ -82,11 +88,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!avatar) throw new ApiError(400, "Avatar upload failed. Please try again.");
 
     // Role-based approval logic
-    // NOTE: admin is NOT available in the public signup form.
-    // The first admin is created by directly hitting the API (Postman / seed script).
-    const assignedRole = role || "student";
     let isApproved = false;
-
     if (assignedRole === "student") {
         isApproved = true;
     } else if (assignedRole === "admin") {
@@ -94,7 +96,7 @@ const registerUser = asyncHandler(async (req, res) => {
         if (adminExists) {
             return res.status(403).json({ success: false, message: "Admin already exists. Contact the existing admin." });
         }
-        isApproved = true; // first-ever admin auto-approved
+        isApproved = true;
     } else if (assignedRole === "counsellor") {
         isApproved = false; // needs admin approval
     }
@@ -108,13 +110,15 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const user = await User.create({
         fullName,
-        avatar:      avatar.url,
-        coverImage:  coverImage?.url || "",
+        avatar:         avatar.url,
+        coverImage:     coverImage?.url || "",
         email,
         password,
-        username:    username.toLowerCase(),
-        role:        assignedRole,
-        institution: institution || "",
+        username:       username.toLowerCase(),
+        role:           assignedRole,
+        institution:    institution || "",
+        // ← specialization included — only saved when role is counsellor
+        ...(specialization?.trim() && { specialization: specialization.trim() }),
         isApproved,
         status,
         ...(phone && { phone: String(phone).replace(/[\s\-().]/g, "") }),
@@ -163,13 +167,15 @@ const loginUser = async (req, res) => {
             token: accessToken,
             refreshToken,
             user: {
-                isApproved: user.isApproved,
-                id:         user._id,
-                fullName:   user.fullName,
-                email:      user.email,
-                username:   user.username,
-                avatar:     user.avatar,
-                role:       user.role,
+                isApproved:     user.isApproved,
+                id:             user._id,
+                fullName:       user.fullName,
+                email:          user.email,
+                username:       user.username,
+                avatar:         user.avatar,
+                role:           user.role,
+                specialization: user.specialization,
+                sessionFee:     user.sessionFee,
             },
         });
     } catch (err) {

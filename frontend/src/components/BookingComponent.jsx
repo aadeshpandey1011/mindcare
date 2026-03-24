@@ -1,726 +1,648 @@
-// frontend/src/components/BookingComponent.jsx
-// frontend/src/components/BookingComponent.jsx
-// import React, { useState, useEffect } from 'react';
-// import bookingAPI from '../api/bookingApi';
-
-// const BookingComponent = ({ onBookingCreated }) => {
-//   const [step, setStep] = useState(1);
-//   const [formData, setFormData] = useState({
-//     counselorId: '',
-//     date: '',
-//     timeSlot: '',
-//     mode: 'online',
-//     reason: '',
-//     notes: ''
-//   });
-//   const [counselors, setCounselors] = useState([]);
-//   const [availableSlots, setAvailableSlots] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [errors, setErrors] = useState({});
-
-//   // Load counselors on mount
-//   useEffect(() => {
-//     loadCounselors();
-//   }, []);
-
-//   // Load available slots when counselor or date changes
-//   useEffect(() => {
-//     if (formData.counselorId && formData.date) {
-//       loadAvailableSlots();
-//     }
-//   }, [formData.counselorId, formData.date]);
-
-//   const loadCounselors = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await bookingAPI.getAvailableCounselors();
-//       setCounselors(response.data || []);
-//     } catch (error) {
-//       console.error('Error loading counselors:', error);
-//       setErrors({ general: 'Failed to load counselors. Please refresh the page.' });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const loadAvailableSlots = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await bookingAPI.getAvailableSlots(formData.counselorId, formData.date);
-//       setAvailableSlots(response.data.availableSlots || []);
-//     } catch (error) {
-//       console.error('Error loading slots:', error);
-//       setAvailableSlots([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleInputChange = (field, value) => {
-//     setFormData(prev => ({ ...prev, [field]: value }));
-
-//     // Clear errors when user starts typing
-//     if (errors[field]) {
-//       setErrors(prev => ({ ...prev, [field]: '' }));
-//     }
-//   };
-
-//   const validateStep = (stepNumber) => {
-//     const newErrors = {};
-
-//     switch (stepNumber) {
-//       case 1:
-//         if (!formData.counselorId) newErrors.counselorId = 'Please select a counselor';
-//         break;
-//       case 2:
-//         if (!formData.date) newErrors.date = 'Please select a date';
-//         if (!formData.timeSlot) newErrors.timeSlot = 'Please select a time slot';
-//         break;
-//       case 3:
-//         if (!formData.mode) newErrors.mode = 'Please select a session mode';
-//         if (!formData.reason.trim()) newErrors.reason = 'Please provide a reason for booking';
-//         if (formData.reason.trim().length > 200) newErrors.reason = 'Reason must be less than 200 characters';
-//         if (formData.notes.length > 500) newErrors.notes = 'Notes must be less than 500 characters';
-//         break;
-//     }
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   const nextStep = () => {
-//     if (validateStep(step)) {
-//       setStep(prev => Math.min(prev + 1, 4));
-//     }
-//   };
-
-//   const prevStep = () => {
-//     setStep(prev => Math.max(prev - 1, 1));
-//   };
-
-//   const handleSubmit = async () => {
-//     if (!validateStep(3)) return;
-
-//     try {
-//       setLoading(true);
-//       const response = await bookingAPI.createBooking(formData);
-
-//       if (response.success) {
-//         setStep(4); // Success step
-//         if (onBookingCreated) {
-//           onBookingCreated(response.data);
-//         }
-//       }
-//     } catch (error) {
-//       console.error('Error creating booking:', error);
-//       setErrors({ general: error.message || 'Failed to create booking. Please try again.' });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const resetForm = () => {
-//     setFormData({
-//       counselorId: '',
-//       date: '',
-//       timeSlot: '',
-//       mode: 'online',
-//       reason: '',
-//       notes: ''
-//     });
-//     setStep(1);
-//     setErrors({});
-//     setAvailableSlots([]);
-//   };
-
-//   // Get minimum date (tomorrow)
-//   const getMinDate = () => {
-//     const tomorrow = new Date();
-//     tomorrow.setDate(tomorrow.getDate() + 1);
-//     return tomorrow.toISOString().split('T')[0];
-//   };
-
-//   // Get maximum date (30 days from now)
-//   const getMaxDate = () => {
-//     const maxDate = new Date();
-//     maxDate.setDate(maxDate.getDate() + 30);
-//     return maxDate.toISOString().split('T')[0];
-//   };
-
-//   const renderStepIndicator = () => (
-//     <div className="flex items-center justify-between mb-8">
-//       {[1, 2, 3, 4].map((stepNumber) => (
-//         <React.Fragment key={stepNumber}>
-//           <div
-//             className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors ${
-//               step >= stepNumber ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 text-gray-300'
-//             }`}
-//           >
-//             {stepNumber < step ? '✓' : stepNumber}
-//           </div>
-//           {stepNumber < 4 && (
-//             <div
-//               className={`flex-1 h-1 mx-4 transition-colors ${
-//                 step > stepNumber ? 'bg-blue-500' : 'bg-gray-200'
-//               }`}
-//             />
-//           )}
-//         </React.Fragment>
-//       ))}
-//     </div>
-//   );
-
-//   // --- renderStep1, renderStep2, renderStep3, renderStep4 ---
-//   // (Your original code is already correct, so I won’t repeat them here)
-
-//   return (
-//     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-//       <div className="mb-6">
-//         <h2 className="text-2xl font-bold text-gray-900 text-center">Book a Counseling Session</h2>
-//         <p className="text-gray-600 text-center mt-2">Schedule your mental health support session</p>
-//       </div>
-
-//       {renderStepIndicator()}
-
-//       {errors.general && (
-//         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-//           <p className="text-red-800">{errors.general}</p>
-//         </div>
-//       )}
-
-//       <div className="min-h-[400px]">
-//         {step === 1 && renderStep1()}
-//         {step === 2 && renderStep2()}
-//         {step === 3 && renderStep3()}
-//         {step === 4 && renderStep4()}
-//       </div>
-
-//       {step < 4 && (
-//         <div className="flex justify-between mt-8">
-//           <button
-//             onClick={prevStep}
-//             disabled={step === 1}
-//             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-//           >
-//             Previous
-//           </button>
-
-//           {step < 3 ? (
-//             <button
-//               onClick={nextStep}
-//               disabled={loading}
-//               className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-//             >
-//               {loading ? 'Loading...' : 'Next'}
-//             </button>
-//           ) : (
-//             <button
-//               onClick={handleSubmit}
-//               disabled={loading}
-//               className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-//             >
-//               {loading ? 'Submitting...' : 'Submit Booking'}
-//             </button>
-//           )}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default BookingComponent;
-
-
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Phone, Video, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    Calendar, Clock, Phone, Video, MapPin,
+    CheckCircle, AlertCircle, ChevronRight, IndianRupee, RefreshCw,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-// import bookingAPI from '../api/bookingApi';
+import { createPaymentOrder, verifyPayment, openCashfreeCheckout } from '../api/paymentApi';
 
-import bookingAPI from '../api/bookingApi';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-const BookingComponent = () => {
-  const { user, token } = useAuth();
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [counselors, setCounselors] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
-  
-  // Form data
-  const [formData, setFormData] = useState({
-    counselorId: '',
-    date: '',
-    timeSlot: '',
-    mode: 'online',
-    reason: '',
-    notes: ''
-  });
+const ALL_SLOTS = [
+    '09:00-10:00', '10:00-11:00', '11:00-12:00',
+    '14:00-15:00', '15:00-16:00', '16:00-17:00',
+];
 
-  // Load counselors on mount
-  useEffect(() => {
-    fetchCounselors();
-  }, []);
-
-  // Load available slots when counselor and date are selected
-  useEffect(() => {
-    if (formData.counselorId && formData.date) {
-      fetchAvailableSlots(formData.counselorId, formData.date);
-    }
-  }, [formData.counselorId, formData.date]);
-
-  const fetchCounselors = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/v1/bookings/counselors', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCounselors(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch counselors:', error);
-    }
-  };
-
-  const fetchAvailableSlots = async (counselorId, date) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/v1/bookings/slots/${counselorId}/${date}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setAvailableSlots(data.data.availableSlots);
-      }
-    } catch (error) {
-      console.error('Failed to fetch slots:', error);
-      setAvailableSlots([]);
-    }
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:5000/api/v1/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setBookingSuccess(true);
-        setStep(4);
-      } else {
-        alert(data.message || 'Booking failed. Please try again.');
-      }
-    } catch (error) {
-      console.error('Booking error:', error);
-      alert('Network error. Please check your connection and try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetBooking = () => {
-    setFormData({
-      counselorId: '',
-      date: '',
-      timeSlot: '',
-      mode: 'online',
-      reason: '',
-      notes: ''
-    });
-    setStep(1);
-    setBookingSuccess(false);
-    setAvailableSlots([]);
-  };
-
-  const renderStepIndicator = () => (
-    <div className="flex justify-between items-center mb-8">
-      {[1, 2, 3, 4].map((stepNum) => (
-        <div key={stepNum} className="flex items-center">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-            stepNum <= step ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-          }`}>
-            {stepNum === 4 && bookingSuccess ? <CheckCircle className="w-5 h-5" /> : stepNum}
-          </div>
-          {stepNum < 4 && (
-            <div className={`flex-1 h-1 mx-4 ${stepNum < step ? 'bg-blue-600' : 'bg-gray-200'}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderStep1 = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Select Counselor</h2>
-      <div className="grid gap-4">
-        {counselors.length === 0 ? (
-          <div className="text-center py-8">
-            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No counselors available at the moment.</p>
-          </div>
-        ) : (
-          counselors.map((counselor) => (
-            <div
-              key={counselor._id}
-              onClick={() => handleInputChange('counselorId', counselor._id)}
-              className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                formData.counselorId === counselor._id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-gray-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">{counselor.fullName}</h3>
-                  <p className="text-sm text-gray-600">{counselor.specialization || 'General Counseling'}</p>
-                  <p className="text-xs text-gray-500">{counselor.email}</p>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-      <button
-        onClick={() => setStep(2)}
-        disabled={!formData.counselorId}
-        className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
-      >
-        Next: Select Date & Time
-      </button>
-    </div>
-  );
-
-  const renderStep2 = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 30);
-    const maxDateString = maxDate.toISOString().split('T')[0];
-
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Select Date & Time</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="w-4 h-4 inline mr-2" />
-              Select Date
-            </label>
-            <input
-              type="date"
-              min={today}
-              max={maxDateString}
-              value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          {formData.date && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Clock className="w-4 h-4 inline mr-2" />
-                Available Time Slots
-              </label>
-              {availableSlots.length === 0 ? (
-                <p className="text-gray-600 p-4 bg-gray-50 rounded-lg">
-                  No slots available for this date. Please select another date.
-                </p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {availableSlots.map((slot) => (
-                    <button
-                      key={slot}
-                      onClick={() => handleInputChange('timeSlot', slot)}
-                      className={`p-3 text-center border rounded-lg transition-all ${
-                        formData.timeSlot === slot
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setStep(1)}
-            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-          >
-            Back
-          </button>
-          <button
-            onClick={() => setStep(3)}
-            disabled={!formData.date || !formData.timeSlot}
-            className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
-          >
-            Next: Session Details
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Session Details</h2>
-      
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Session Mode</label>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { value: 'online', label: 'Online', icon: Video },
-              { value: 'phone', label: 'Phone', icon: Phone },
-              { value: 'in-person', label: 'In-Person', icon: MapPin }
-            ].map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => handleInputChange('mode', value)}
-                className={`p-4 border rounded-lg flex flex-col items-center space-y-2 transition-all ${
-                  formData.mode === value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className="w-6 h-6" />
-                <span className="text-sm font-medium">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Reason for Booking <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.reason}
-            onChange={(e) => handleInputChange('reason', e.target.value)}
-            placeholder="Please briefly describe what you'd like to discuss..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            rows={3}
-            maxLength={200}
-          />
-          <p className="text-xs text-gray-500 mt-1">{formData.reason.length}/200 characters</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes (Optional)
-          </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
-            placeholder="Any additional information you'd like the counselor to know..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            rows={3}
-            maxLength={500}
-          />
-          <p className="text-xs text-gray-500 mt-1">{formData.notes.length}/500 characters</p>
-        </div>
-      </div>
-
-      <div className="flex space-x-4">
-        <button
-          onClick={() => setStep(2)}
-          className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-        >
-          Back
-        </button>
-        <button
-          onClick={() => setStep(3.5)} // Go to confirmation step
-          disabled={!formData.reason.trim()}
-          className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
-        >
-          Review Booking
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderConfirmation = () => {
-    const selectedCounselor = counselors.find(c => c._id === formData.counselorId);
-    
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Confirm Your Booking</h2>
-        
-        <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-gray-700">Counselor:</span>
-            <span className="text-gray-900">{selectedCounselor?.fullName}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-gray-700">Date:</span>
-            <span className="text-gray-900">{new Date(formData.date).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-gray-700">Time:</span>
-            <span className="text-gray-900">{formData.timeSlot}</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-gray-700">Mode:</span>
-            <span className="text-gray-900 capitalize flex items-center">
-              {formData.mode === 'online' && <Video className="w-4 h-4 mr-2" />}
-              {formData.mode === 'phone' && <Phone className="w-4 h-4 mr-2" />}
-              {formData.mode === 'in-person' && <MapPin className="w-4 h-4 mr-2" />}
-              {formData.mode}
-            </span>
-          </div>
-          
-          <div className="border-t pt-4">
-            <span className="font-medium text-gray-700 block mb-2">Reason:</span>
-            <p className="text-gray-900 text-sm">{formData.reason}</p>
-          </div>
-          
-          {formData.notes && (
-            <div>
-              <span className="font-medium text-gray-700 block mb-2">Additional Notes:</span>
-              <p className="text-gray-900 text-sm">{formData.notes}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">Please Note:</p>
-              <ul className="space-y-1 text-xs">
-                <li>• Your booking request will be sent to the counselor for approval</li>
-                <li>• You will receive email notifications about your booking status</li>
-                <li>• All sessions are completely confidential</li>
-                <li>• You can cancel your booking up to 2 hours before the session</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setStep(3)}
-            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-          >
-            Back to Edit
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors flex items-center justify-center"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Booking...
-              </>
-            ) : (
-              'Confirm Booking'
-            )}
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderSuccess = () => (
-    <div className="text-center space-y-6">
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-        <CheckCircle className="w-8 h-8 text-green-600" />
-      </div>
-      
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking Request Submitted!</h2>
-        <p className="text-gray-600 mb-4">
-          Your counseling session request has been sent successfully. 
-        </p>
-        <div className="bg-green-50 p-4 rounded-lg text-left">
-          <h3 className="font-medium text-green-800 mb-2">What happens next?</h3>
-          <ul className="text-sm text-green-700 space-y-1">
-            <li>• Your counselor will review and respond to your request within 24 hours</li>
-            <li>• You'll receive email notifications about any status updates</li>
-            <li>• If approved, you'll get session details and meeting links</li>
-            <li>• Check your dashboard to track all your bookings</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <button
-          onClick={() => window.location.href = '/NewHome'}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-        >
-          Go to Home
-        </button>
-        <button
-          onClick={resetBooking}
-          className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-        >
-          Book Another Session
-        </button>
-      </div>
-
-      <div className="text-sm text-gray-500">
-        Need immediate support? Call our crisis helpline: <strong>1-800-XXX-XXXX</strong>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Book a Counseling Session</h1>
-          <p className="text-gray-600">Schedule a confidential session with our qualified counselors</p>
-        </div>
-
-        {/* Step Indicator */}
-        {renderStepIndicator()}
-
-        {/* Step Content */}
-        <div className="min-h-[400px]">
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
-          {step === 3.5 && renderConfirmation()}
-          {step === 4 && renderSuccess()}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-          All bookings are confidential and private. Your information is secure with us.
-        </div>
-      </div>
-    </div>
-  );
+const MODE_SURCHARGE = {
+    'online':    0,
+    'phone':     0,
+    'in-person': 100,
 };
 
-export default BookingComponent;
+const MODE_OPTIONS = [
+    { value: 'online',    label: 'Online',    Icon: Video,  note: 'No extra charge' },
+    { value: 'phone',     label: 'Phone',     Icon: Phone,  note: 'No extra charge' },
+    { value: 'in-person', label: 'In-Person', Icon: MapPin, note: '+₹100 surcharge'  },
+];
+
+const calcFee = (baseFee, mode) => {
+    if (baseFee === 0) return 0;
+    return baseFee + (MODE_SURCHARGE[mode] || 0);
+};
+
+function Row({ label, value }) {
+    return (
+        <div className="flex justify-between items-center py-0.5">
+            <span className="text-gray-500 text-sm">{label}</span>
+            <span className="text-gray-900 font-medium text-sm">{value}</span>
+        </div>
+    );
+}
+
+function StepBar({ step, preselected }) {
+    // If a counsellor was preselected from an ad, step 1 is skipped — show condensed bar
+    const steps = preselected
+        ? ['Counsellor ✓', 'Date & Slot', 'Details', 'Confirm']
+        : ['Counsellor', 'Date & Slot', 'Details', 'Confirm'];
+
+    return (
+        <div className="flex items-center gap-2 mb-8">
+            {steps.map((label, i) => {
+                const n       = i + 1;
+                const done    = step > n;
+                const current = step === n;
+                // Step 1 is auto-done when preselected
+                const autoDone = preselected && n === 1;
+                return (
+                    <React.Fragment key={n}>
+                        <div className="flex flex-col items-center gap-1 min-w-[52px]">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                                done || autoDone ? 'bg-green-500 text-white'  :
+                                current         ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-400'
+                            }`}>
+                                {done || autoDone ? '✓' : n}
+                            </div>
+                            <span className={`text-[10px] font-medium ${current ? 'text-indigo-600' : 'text-gray-400'}`}>{label}</span>
+                        </div>
+                        {i < steps.length - 1 && (
+                            <div className={`flex-1 h-0.5 mb-4 ${(step > n || autoDone) ? 'bg-green-400' : 'bg-gray-200'}`} />
+                        )}
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MAIN COMPONENT
+//
+//  Props:
+//    onBookingCreated       — callback after booking is created
+//    preselectedCounsellorId — when coming from a forum ad, skip step 1
+// ─────────────────────────────────────────────────────────────────────────────
+export default function BookingComponent({ onBookingCreated, preselectedCounsellorId }) {
+    const { user, token } = useAuth();
+
+    // If a counsellor was pre-selected (ad click), start at step 2
+    const initialStep = preselectedCounsellorId ? 2 : 1;
+
+    const [step,       setStep]       = useState(initialStep);
+    const [loading,    setLoading]    = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [payState,   setPayState]   = useState('idle');
+
+    const [counselors,   setCounselors]   = useState([]);
+    const [slotData,     setSlotData]     = useState(null);
+    const [slotsLoading, setSlotsLoading] = useState(false);
+    const [payError,     setPayError]     = useState('');
+
+    const [formData, setFormData] = useState({
+        counselorId: preselectedCounsellorId || '',
+        date:        '',
+        timeSlot:    '',
+        mode:        'online',
+        reason:      '',
+        notes:       '',
+    });
+
+    const minDate = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; })();
+    const maxDate = (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]; })();
+
+    const selectedCounsellor = counselors.find(c => c._id === formData.counselorId);
+    const baseFee  = selectedCounsellor?.sessionFee ?? 299;
+    const totalFee = calcFee(baseFee, formData.mode);
+
+    // ── Load counsellors ───────────────────────────────────────────────────────
+    useEffect(() => {
+        (async () => {
+            setLoading(true);
+            try {
+                const res  = await fetch(`${API_BASE}/bookings/counselors`, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) setCounselors(data.data);
+            } catch (e) { console.error('Counselors fetch failed', e); }
+            finally { setLoading(false); }
+        })();
+    }, [token]);
+
+    // ── If preselected ID but counsellor not yet in list, we still know their
+    //    fee from the step-2 fetch. This is fine — selectedCounsellor may be
+    //    undefined until counselors list loads, but formData.counselorId is set.
+    // ── Also, if the ID changes after load (shouldn't happen), re-sync:
+    useEffect(() => {
+        if (preselectedCounsellorId && formData.counselorId !== preselectedCounsellorId) {
+            setFormData(prev => ({ ...prev, counselorId: preselectedCounsellorId }));
+        }
+    }, [preselectedCounsellorId]);
+
+    // ── Load slots ─────────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!formData.counselorId || !formData.date) { setSlotData(null); return; }
+        (async () => {
+            setSlotsLoading(true);
+            try {
+                const res  = await fetch(`${API_BASE}/bookings/slots/${formData.counselorId}/${formData.date}`, { headers: { Authorization: `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) setSlotData(data.data);
+            } catch (e) { setSlotData(null); }
+            finally { setSlotsLoading(false); }
+        })();
+    }, [formData.counselorId, formData.date, token]);
+
+    const setField         = useCallback((field, value) => setFormData(prev => ({ ...prev, [field]: value })), []);
+    const handleDateChange = useCallback((value) => setFormData(prev => ({ ...prev, date: value, timeSlot: '' })), []);
+    const handleReasonChange = useCallback((e) => setFormData(prev => ({ ...prev, reason: e.target.value })), []);
+    const handleNotesChange  = useCallback((e) => setFormData(prev => ({ ...prev, notes:  e.target.value })), []);
+
+    const reset = () => {
+        const resetCounsellorId = preselectedCounsellorId || '';
+        setFormData({ counselorId: resetCounsellorId, date: '', timeSlot: '', mode: 'online', reason: '', notes: '' });
+        setSlotData(null);
+        setStep(preselectedCounsellorId ? 2 : 1);
+        setPayState('idle');
+        setPayError('');
+    };
+
+    const available = slotData?.availableSlots || [];
+    const booked    = slotData?.bookedSlots    || [];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  SUBMIT + PAYMENT FLOW
+    // ─────────────────────────────────────────────────────────────────────────
+    const handleSubmit = async () => {
+        setSubmitting(true);
+        setPayError('');
+        try {
+            const bookingRes  = await fetch(`${API_BASE}/bookings`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body:    JSON.stringify(formData),
+            });
+            const bookingData = await bookingRes.json();
+            if (!bookingRes.ok) throw new Error(bookingData.message || 'Booking creation failed');
+
+            const booking    = bookingData.data?.booking;
+            const bookingId  = booking?._id;
+            const serverFee  = bookingData.data?.sessionFee ?? 0;
+
+            if (serverFee === 0) {
+                if (onBookingCreated) onBookingCreated(booking);
+                setStep(5);
+                setSubmitting(false);
+                return;
+            }
+
+            setPayState('creating');
+            const orderRes  = await createPaymentOrder(bookingId);
+            const orderData = orderRes.data?.data || orderRes.data;
+
+            if (orderData?.free) {
+                if (onBookingCreated) onBookingCreated(booking);
+                setStep(5);
+                setSubmitting(false);
+                setPayState('done');
+                return;
+            }
+
+            if (!orderData?.paymentSessionId) {
+                throw new Error('Payment gateway not configured yet. Please add CASHFREE_APP_ID and CASHFREE_SECRET_KEY to your .env file and restart the server.');
+            }
+
+            setPayState('paying');
+            setSubmitting(false);
+
+            openCashfreeCheckout(
+                orderData,
+                async () => {
+                    setPayState('verifying');
+                    try {
+                        await verifyPayment({ orderId: orderData.orderId, bookingId });
+                        if (onBookingCreated) onBookingCreated(booking);
+                        setPayState('done');
+                        setStep(5);
+                    } catch (verifyErr) {
+                        setPayError(`Payment verification failed: ${verifyErr.message}`);
+                        setPayState('failed');
+                    }
+                },
+                (err) => {
+                    if (err.message === 'Payment cancelled by user') {
+                        setPayState('idle');
+                        setPayError('Payment was cancelled. Your booking slot is still reserved for 15 minutes — click "Confirm & Pay" to try again.');
+                    } else {
+                        setPayState('failed');
+                        setPayError(`Payment failed: ${err.message}`);
+                    }
+                }
+            );
+        } catch (e) {
+            setPayError(e.message);
+            setPayState('failed');
+            setSubmitting(false);
+        }
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  RENDER
+    // ─────────────────────────────────────────────────────────────────────────
+    return (
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-2xl mx-auto">
+            <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Book a Counselling Session</h1>
+                <p className="text-gray-500 text-sm mt-1">Confidential, professional support — for you</p>
+            </div>
+
+            {step < 5 && <StepBar step={step} preselected={!!preselectedCounsellorId} />}
+
+            {/* ── Pre-selected counsellor banner (shown on step 2+ when coming from ad) ── */}
+            {preselectedCounsellorId && step <= 4 && selectedCounsellor && (
+                <div className="mb-6 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                    {selectedCounsellor.avatar ? (
+                        <img src={selectedCounsellor.avatar} alt={selectedCounsellor.fullName}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-indigo-200" />
+                    ) : (
+                        <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                            {selectedCounsellor.fullName[0]}
+                        </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-indigo-900">{selectedCounsellor.fullName}</p>
+                        <p className="text-xs text-indigo-600">{selectedCounsellor.specialization || 'General Counselling'}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                        {selectedCounsellor.sessionFee === 0
+                            ? <span className="text-sm font-bold text-green-600">Free</span>
+                            : <span className="text-sm font-bold text-indigo-700">from ₹{selectedCounsellor.sessionFee}</span>
+                        }
+                    </div>
+                    {/* Allow switching counsellor */}
+                    <button onClick={() => { setFormData(prev => ({ ...prev, counselorId: '', date: '', timeSlot: '' })); setStep(1); }}
+                        className="ml-2 text-xs text-indigo-500 hover:text-indigo-700 underline flex-shrink-0">
+                        Change
+                    </button>
+                </div>
+            )}
+
+            {/* ── STEP 1 — Choose counsellor ── */}
+            {step === 1 && (
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-1">Choose a Counsellor</h2>
+                    <p className="text-sm text-gray-500 mb-6">Fees shown are base prices — in-person sessions have a ₹100 surcharge</p>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-16 text-gray-400">
+                            <div className="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mr-3" />
+                            Loading counsellors…
+                        </div>
+                    ) : counselors.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400">
+                            <AlertCircle size={32} className="mx-auto mb-3" />
+                            <p>No counsellors available right now.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {counselors.map(c => (
+                                <button key={c._id} onClick={() => setField('counselorId', c._id)}
+                                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                                        formData.counselorId === c._id ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}>
+                                    <div className="flex items-center gap-4">
+                                        {c.avatar ? (
+                                            <img src={c.avatar} alt={c.fullName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                                {c.fullName[0]}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-semibold text-gray-900">{c.fullName}</p>
+                                            <p className="text-sm text-gray-500 truncate">{c.specialization || 'General Counselling'}</p>
+                                        </div>
+                                        <div className="flex-shrink-0 text-right">
+                                            {c.sessionFee === 0 ? (
+                                                <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">Free</span>
+                                            ) : (
+                                                <div>
+                                                    <div className="flex items-center gap-0.5 justify-end text-indigo-700 font-semibold text-sm">
+                                                        <IndianRupee size={12} />{c.sessionFee}<span className="text-gray-400 font-normal ml-0.5">online</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-0.5 justify-end text-orange-600 text-xs mt-0.5">
+                                                        <IndianRupee size={10} />{c.sessionFee + MODE_SURCHARGE['in-person']}<span className="text-gray-400 ml-0.5">in-person</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {formData.counselorId === c._id && <CheckCircle size={18} className="text-indigo-500 flex-shrink-0" />}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                    <button onClick={() => setStep(2)} disabled={!formData.counselorId}
+                        className="w-full mt-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                        Next: Pick Date & Slot <ChevronRight size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* ── STEP 2 — Date + slot grid ── */}
+            {step === 2 && (
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-1">Select Date & Time</h2>
+                    <p className="text-sm text-gray-500 mb-6">
+                        {selectedCounsellor
+                            ? <>Booking with <strong>{selectedCounsellor.fullName}</strong>{baseFee === 0 ? ' · 🟢 Free session' : ` · from ₹${baseFee}`}</>
+                            : 'Loading counsellor details…'
+                        }
+                    </p>
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <Calendar size={14} className="inline mr-1 text-indigo-400" />Select Date
+                        </label>
+                        <input type="date" min={minDate} max={maxDate} value={formData.date}
+                            onChange={e => handleDateChange(e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm" />
+                    </div>
+                    {formData.date && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                <Clock size={14} className="inline mr-1 text-indigo-400" />
+                                Time Slots — {new Date(formData.date).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' })}
+                            </label>
+                            {slotsLoading ? (
+                                <div className="flex items-center gap-2 text-gray-400 text-sm py-4">
+                                    <div className="animate-spin w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full" />Loading slots…
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex gap-4 mb-3 text-xs text-gray-500">
+                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-100 border border-indigo-300 inline-block" />Available</span>
+                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-300 inline-block" />Booked</span>
+                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-600 inline-block" />Selected</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {ALL_SLOTS.map(slot => {
+                                            const isBooked   = booked.includes(slot);
+                                            const isSelected = formData.timeSlot === slot;
+                                            return (
+                                                <button key={slot} type="button" disabled={isBooked}
+                                                    onClick={() => !isBooked && setField('timeSlot', slot)}
+                                                    className={`relative px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                                                        isBooked    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' :
+                                                        isSelected  ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'         :
+                                                        'border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-100'
+                                                    }`}>
+                                                    <span className="flex items-center justify-center gap-2"><Clock size={13} />{slot}</span>
+                                                    {isBooked   && <span className="absolute top-1 right-1.5 text-[9px] font-bold text-gray-400 bg-gray-200 px-1 rounded">TAKEN</span>}
+                                                    {isSelected && <span className="absolute top-1 right-1.5"><CheckCircle size={12} className="text-white" /></span>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {slotData && <p className="mt-3 text-xs text-gray-400">{available.length} of {ALL_SLOTS.length} slots available on this date</p>}
+                                </>
+                            )}
+                        </div>
+                    )}
+                    <div className="flex gap-3">
+                        <button type="button"
+                            onClick={() => {
+                                // Going back: if counsellor was preselected from ad, warn user they'll lose the pre-selection
+                                if (preselectedCounsellorId) {
+                                    setFormData(prev => ({ ...prev, date: '', timeSlot: '' }));
+                                    setStep(1);
+                                } else {
+                                    setStep(1);
+                                }
+                            }}
+                            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
+                            Back
+                        </button>
+                        <button type="button" onClick={() => setStep(3)} disabled={!formData.date || !formData.timeSlot}
+                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            Next: Session Details <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── STEP 3 — Mode + reason + notes ── */}
+            {step === 3 && (
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-1">Session Details</h2>
+                    <p className="text-sm text-gray-500 mb-6">Choose your session mode — pricing varies by mode</p>
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Session Mode</label>
+                        <div className="grid grid-cols-3 gap-3">
+                            {MODE_OPTIONS.map(({ value, label, Icon }) => {
+                                const modeFee      = calcFee(baseFee, value);
+                                const isSelected   = formData.mode === value;
+                                const hasSurcharge = MODE_SURCHARGE[value] > 0;
+                                return (
+                                    <button key={value} type="button" onClick={() => setField('mode', value)}
+                                        className={`flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 transition-all ${
+                                            isSelected
+                                                ? hasSurcharge ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}>
+                                        <Icon size={20} />
+                                        <span className="text-xs font-semibold">{label}</span>
+                                        {baseFee === 0 ? (
+                                            <span className="text-[10px] text-green-600 font-medium">Free</span>
+                                        ) : (
+                                            <>
+                                                <span className="text-[11px] font-bold">₹{modeFee}</span>
+                                                {hasSurcharge && <span className="text-[9px] text-orange-500 font-medium bg-orange-100 px-1.5 py-0.5 rounded-full">+₹{MODE_SURCHARGE[value]}</span>}
+                                            </>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {baseFee > 0 && (
+                            <div className={`mt-3 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-between ${
+                                formData.mode === 'in-person' ? 'bg-orange-50 border border-orange-200 text-orange-800' : 'bg-indigo-50 border border-indigo-200 text-indigo-800'
+                            }`}>
+                                <span>{formData.mode === 'in-person' ? `₹${baseFee} base + ₹${MODE_SURCHARGE['in-person']} surcharge` : `₹${baseFee} for ${formData.mode} session`}</span>
+                                <span className="font-bold text-base flex items-center gap-0.5"><IndianRupee size={14} />{totalFee}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Reason for booking <span className="text-red-400">*</span></label>
+                        <textarea value={formData.reason} onChange={handleReasonChange}
+                            placeholder="Briefly describe what you'd like to discuss…"
+                            rows={3} maxLength={200}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        <p className="text-xs text-gray-400 mt-1 text-right">{formData.reason.length}/200</p>
+                    </div>
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Additional notes <span className="text-gray-400">(optional)</span></label>
+                        <textarea value={formData.notes} onChange={handleNotesChange}
+                            placeholder="Anything else the counsellor should know…"
+                            rows={2} maxLength={500}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        <p className="text-xs text-gray-400 mt-1 text-right">{formData.notes.length}/500</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button type="button" onClick={() => setStep(2)} className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">Back</button>
+                        <button type="button" onClick={() => setStep(4)} disabled={!formData.reason.trim()}
+                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            Review Booking <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── STEP 4 — Confirm + Pay ── */}
+            {step === 4 && (
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-1">Confirm Booking</h2>
+                    <p className="text-sm text-gray-500 mb-6">Please review the details before proceeding</p>
+
+                    <div className="bg-gray-50 rounded-2xl p-5 space-y-2 mb-5">
+                        <Row label="Counsellor"     value={selectedCounsellor?.fullName} />
+                        <Row label="Specialisation" value={selectedCounsellor?.specialization || 'General'} />
+                        <Row label="Date"           value={new Date(formData.date).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })} />
+                        <Row label="Time"           value={formData.timeSlot} />
+                        <Row label="Mode"           value={
+                            <span className="flex items-center gap-1.5 capitalize">
+                                {formData.mode === 'online'    && <Video  size={13} />}
+                                {formData.mode === 'phone'     && <Phone  size={13} />}
+                                {formData.mode === 'in-person' && <MapPin size={13} />}
+                                {formData.mode}
+                                {MODE_SURCHARGE[formData.mode] > 0 && (
+                                    <span className="text-[10px] text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full font-medium ml-1">
+                                        +₹{MODE_SURCHARGE[formData.mode]} surcharge
+                                    </span>
+                                )}
+                            </span>
+                        } />
+                        <div className="border-t pt-2 mt-2">
+                            {baseFee > 0 ? (
+                                <>
+                                    {MODE_SURCHARGE[formData.mode] > 0 && (
+                                        <>
+                                            <Row label="Base fee"            value={`₹${baseFee}`} />
+                                            <Row label="In-person surcharge" value={`+₹${MODE_SURCHARGE[formData.mode]}`} />
+                                        </>
+                                    )}
+                                    <Row label="Total fee" value={
+                                        <span className="flex items-center gap-0.5 text-indigo-700 font-bold text-base">
+                                            <IndianRupee size={14} />{totalFee}
+                                        </span>
+                                    } />
+                                </>
+                            ) : (
+                                <Row label="Session fee" value={<span className="text-green-600 font-semibold">Free</span>} />
+                            )}
+                        </div>
+                        <div className="border-t pt-2 mt-2">
+                            <p className="text-gray-500 text-xs mb-0.5 font-medium">Reason</p>
+                            <p className="text-gray-800 text-sm">{formData.reason}</p>
+                        </div>
+                        {formData.notes && (
+                            <div>
+                                <p className="text-gray-500 text-xs mb-0.5 font-medium">Notes</p>
+                                <p className="text-gray-800 text-sm">{formData.notes}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {payState === 'creating' && (
+                        <div className="flex items-center gap-3 p-4 bg-indigo-50 border border-indigo-200 rounded-xl mb-4 text-sm text-indigo-800">
+                            <RefreshCw size={16} className="animate-spin flex-shrink-0" />Creating payment order…
+                        </div>
+                    )}
+                    {payState === 'verifying' && (
+                        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl mb-4 text-sm text-green-800">
+                            <RefreshCw size={16} className="animate-spin flex-shrink-0" />Verifying payment…
+                        </div>
+                    )}
+                    {payError && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl mb-4 text-sm text-red-800">
+                            <p className="font-medium mb-1">⚠️ {payState === 'failed' ? 'Payment Failed' : 'Notice'}</p>
+                            <p>{payError}</p>
+                            {payState === 'failed' && (
+                                <button onClick={() => { setPayError(''); setPayState('idle'); }}
+                                    className="mt-2 text-xs underline text-red-700">Try again</button>
+                            )}
+                        </div>
+                    )}
+
+                    {totalFee > 0 && payState === 'idle' && (
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4 text-sm text-indigo-800">
+                            <p className="font-semibold mb-1">💳 Payment required</p>
+                            <p>After confirming, a secure Cashfree checkout will open to pay <strong>₹{totalFee}</strong>.</p>
+                            {formData.mode === 'in-person' && <p className="mt-1 text-orange-700 text-xs">🏢 Includes ₹{MODE_SURCHARGE['in-person']} in-person facility surcharge.</p>}
+                        </div>
+                    )}
+                    {totalFee === 0 && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 text-sm text-green-800">
+                            <p className="font-semibold">🎉 This is a free session — no payment required!</p>
+                        </div>
+                    )}
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-xs text-amber-800">
+                        <p className="font-semibold mb-1">📋 Important</p>
+                        <ul className="space-y-1 list-disc list-inside">
+                            <li>Your request goes to the counsellor for confirmation</li>
+                            <li>Cancellations are free if made more than 24 hours before the session</li>
+                            <li>All sessions are completely confidential</li>
+                        </ul>
+                    </div>
+
+                    <div className="flex gap-3">
+                        <button type="button" onClick={() => setStep(3)}
+                            disabled={submitting || payState === 'creating' || payState === 'verifying'}
+                            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 disabled:opacity-40">
+                            Edit
+                        </button>
+                        <button type="button" onClick={handleSubmit}
+                            disabled={submitting || payState === 'creating' || payState === 'paying' || payState === 'verifying'}
+                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:opacity-60 hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            {(submitting || payState === 'creating' || payState === 'verifying') && (
+                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                            )}
+                            {payState === 'creating'  ? 'Creating order…'         :
+                             payState === 'verifying' ? 'Verifying…'               :
+                             totalFee > 0             ? `Confirm & Pay ₹${totalFee} →` : 'Confirm Booking'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── STEP 5 — Success ── */}
+            {step === 5 && (
+                <div className="text-center py-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle size={32} className="text-green-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking Submitted!</h2>
+                    <p className="text-gray-500 mb-6">
+                        {baseFee === 0
+                            ? 'Your free session request has been sent to the counsellor.'
+                            : 'Payment confirmed! Your booking is awaiting counsellor approval.'}
+                    </p>
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-left text-sm text-green-800 mb-6 space-y-1">
+                        <p>✅ Counsellor will approve within 24 hours</p>
+                        <p>✅ You will receive a confirmation email</p>
+                        <p>✅ Check My Bookings to track status</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button type="button" onClick={() => window.location.href = '/newhome'}
+                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">
+                            Go to Home
+                        </button>
+                        <button type="button" onClick={reset}
+                            className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
+                            Book Another
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <p className="text-center text-xs text-gray-400 mt-6">🔒 All bookings are confidential and secure.</p>
+        </div>
+    );
+}

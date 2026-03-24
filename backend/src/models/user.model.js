@@ -27,10 +27,7 @@ const userSchema = new Schema(
             trim: true,
             index: true,
         },
-        avatar: {
-            type: String,
-            required: function () { return !this.googleId; },
-        },
+        avatar:     { type: String, required: function () { return !this.googleId; } },
         coverImage: { type: String },
         password: {
             type: String,
@@ -60,9 +57,9 @@ const userSchema = new Schema(
             type: Boolean,
             default: function () { return this.role === "student"; },
         },
-        institution: { type: String },
-        resetPasswordToken: String,
-        resetPasswordExpires: Date,
+        institution:          { type: String },
+        resetPasswordToken:   { type: String },
+        resetPasswordExpires: { type: Date },
         status: {
             type: String,
             enum: ["pending", "approved", "rejected"],
@@ -72,6 +69,48 @@ const userSchema = new Schema(
             type: String,
             required: function () { return this.role === "counsellor"; },
         },
+
+        // ── Counsellor session fee ─────────────────────────────────────────
+        // Stored in RUPEES. Default ₹299.
+        sessionFee: {
+            type:    Number,
+            default: 299,
+            min:     [0,    "Session fee cannot be negative"],
+            max:     [5000, "Maximum session fee is ₹5000"],
+        },
+
+        // ── Counsellor ratings (updated after each review) ────────────────
+        avgRating:    { type: Number, default: 0, min: 0, max: 5 },
+        totalReviews: { type: Number, default: 0, min: 0 },
+
+        // ── Bank details for payouts (counsellors only) ───────────────────
+        // Stored as plain text — in production encrypt these fields.
+        // select: false keeps them out of all normal queries.
+        bankDetails: {
+            accountHolderName: { type: String, trim: true,      select: false },
+            accountNumber:     { type: String, trim: true,      select: false },
+            ifscCode:          {
+                type: String, trim: true, uppercase: true, select: false,
+                validate: {
+                    validator: (v) => !v || /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v),
+                    message: "IFSC must be in format ABCD0123456",
+                },
+            },
+            bankName:          { type: String, trim: true,      select: false },
+            accountType: {
+                type:    String,
+                enum:    ["savings", "current", ""],
+                default: "",
+                select:  false,
+            },
+            isVerified:        { type: Boolean, default: false, select: false },
+            // When admin verified the bank details
+            verifiedAt:        { type: Date,    default: null,  select: false },
+            // Whether bank details have been saved at all
+            hasDetails:        { type: Boolean, default: false },
+        },
+
+        // ── Phone / DOB ───────────────────────────────────────────────────
         phone: {
             type: String,
             trim: true,
@@ -86,7 +125,7 @@ const userSchema = new Schema(
             validate: {
                 validator: function (v) {
                     if (!v) return true;
-                    const now = new Date();
+                    const now    = new Date();
                     const minAge = new Date(now.getFullYear() - 100, now.getMonth(), now.getDate());
                     const maxAge = new Date(now.getFullYear() - 5,   now.getMonth(), now.getDate());
                     return v >= minAge && v <= maxAge;
@@ -94,6 +133,8 @@ const userSchema = new Schema(
                 message: "Date of birth must be between 5 and 100 years ago",
             },
         },
+
+        // ── Govt ID ───────────────────────────────────────────────────────
         govtId: {
             aadharNumber: {
                 type: String, trim: true, select: false,
@@ -103,9 +144,9 @@ const userSchema = new Schema(
                 type: String, trim: true, uppercase: true, select: false,
                 validate: { validator: (v) => !v || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v), message: "PAN must be ABCDE1234F" },
             },
-            otpHash:       { type: String, select: false },
-            otpExpiry:     { type: Date,   select: false },
-            otpAttempts:   { type: Number, default: 0, select: false },
+            otpHash:       { type: String,  select: false },
+            otpExpiry:     { type: Date,    select: false },
+            otpAttempts:   { type: Number,  default: 0,     select: false },
             phoneVerified: { type: Boolean, default: false },
             isVerified:    { type: Boolean, default: false },
             verifiedAt:    { type: Date },
@@ -114,28 +155,29 @@ const userSchema = new Schema(
         // ── Forum moderation ───────────────────────────────────────────────
         forumWarnings: [
             {
-                reason:     { type: String, required: true },
-                postId:     { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
-                issuedBy:   { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-                issuedAt:   { type: Date, default: Date.now },
-            }
+                reason:   { type: String, required: true },
+                postId:   { type: Schema.Types.ObjectId, ref: "Post" },
+                issuedBy: { type: Schema.Types.ObjectId, ref: "User" },
+                issuedAt: { type: Date, default: Date.now },
+            },
         ],
-        forumWarningCount: { type: Number, default: 0 },
+        forumWarningCount: { type: Number,  default: false },
         isBannedFromForum: { type: Boolean, default: false },
         bannedAt:          { type: Date },
-        bannedBy:          { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        bannedBy:          { type: Schema.Types.ObjectId, ref: "User" },
         banReason:         { type: String },
-        // ── End Forum moderation ───────────────────────────────────────────
     },
     { timestamps: true }
 );
 
+// ── Hooks ─────────────────────────────────────────────────────────────────────
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password") || !this.password) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
+// ── Methods ───────────────────────────────────────────────────────────────────
 userSchema.methods.isPasswordCorrect = async function (password) {
     if (!this.password) return false;
     return await bcrypt.compare(password, this.password);
@@ -159,7 +201,7 @@ userSchema.methods.generateRefreshToken = function () {
 
 userSchema.methods.getResetPasswordToken = function () {
     const resetToken = crypto.randomBytes(20).toString("hex");
-    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordToken  = crypto.createHash("sha256").update(resetToken).digest("hex");
     this.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
     return resetToken;
 };

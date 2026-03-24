@@ -1,758 +1,285 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import BookingCard from "../components/BookingCard";
 import BookingFilters from "../components/BookingFilters";
 import {
-  Calendar,
-  Search,
-  Filter,
-  ArrowLeft,
-  Loader2,
-  AlertCircle,
+    Calendar, Search, Filter, ArrowLeft,
+    Loader2, AlertCircle, RefreshCw,
 } from "lucide-react";
 
-const AllBookings = () => {
-  const { user, token, loading, authChecked, isStudent } = useAuth();
-  const navigate = useNavigate();
+const API_BASE = "http://localhost:5000/api/v1";
 
-  const [bookings, setBookings] = useState([]);
-  const [filteredBookings, setFilteredBookings] = useState([]);
-  const [bookingsLoading, setBookingsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    totalPages: 1,
-  });
+// Status display config for the stat pills
+const STAT_CONFIG = [
+    { key: "all",             label: "Total",           cls: "border-gray-200 bg-white" },
+    { key: "payment_pending", label: "Awaiting Payment", cls: "border-purple-200 bg-purple-50 text-purple-800" },
+    { key: "pending",         label: "Pending",          cls: "border-yellow-200 bg-yellow-50 text-yellow-800" },
+    { key: "confirmed",       label: "Confirmed",        cls: "border-green-200  bg-green-50  text-green-800"  },
+    { key: "completed",       label: "Completed",        cls: "border-blue-200   bg-blue-50   text-blue-800"   },
+    { key: "cancelled",       label: "Cancelled",        cls: "border-red-200    bg-red-50    text-red-800"    },
+];
 
-  // Filter states
-  const [filters, setFilters] = useState({
-    status: "all",
-    mode: "all",
-    dateRange: "all",
-  });
+export default function AllBookings() {
+    const { user, token, loading, authChecked, isStudent } = useAuth();
+    const navigate = useNavigate();
 
-  // ✅ Only redirect AFTER auth is fully checked
-  useEffect(() => {
-    // Wait for auth to be fully resolved
-    if (!authChecked || loading) return;
+    const [bookings,        setBookings]        = useState([]);
+    const [filteredBookings,setFilteredBookings] = useState([]);
+    const [bookingsLoading, setBookingsLoading]  = useState(false);
+    const [error,           setError]            = useState("");
+    const [searchTerm,      setSearchTerm]       = useState("");
+    const [showFilters,     setShowFilters]      = useState(false);
+    const [pagination,      setPagination]       = useState({ page: 1, limit: 10, totalPages: 1 });
+    const [filters, setFilters] = useState({ status: "all", mode: "all", dateRange: "all" });
 
-    // If not authenticated, redirect to login
-    if (!user || !token) {
-      navigate('/login');
-      return;
-    }
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (!authChecked || loading) return;
+        if (!user || !token) { navigate('/login'); return; }
+        if (user.role !== 'student') { navigate('/login'); return; }
+        loadBookings();
+    }, [authChecked, loading, user, token, navigate, pagination.page]);
 
-    // If not a student, redirect to login
-    if (user.role !== 'student') {
-      navigate('/login');
-      return;
-    }
+    // ── Apply client-side filters ─────────────────────────────────────────────
+    useEffect(() => { applyFilters(); }, [bookings, searchTerm, filters]);
 
-    // If we reach here, user is authenticated and is a student
-    loadBookings();
-  }, [authChecked, loading, user, token, navigate, pagination.page]);
-
-  // ✅ Apply filters when data changes
-  useEffect(() => {
-    applyFilters();
-  }, [bookings, searchTerm, filters]);
-
-  // Load bookings from API
-  const loadBookings = async () => {
-    setBookingsLoading(true);
-    try {
-      const queryParams = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      });
-
-      const response = await fetch(
-        `http://localhost:5000/api/v1/bookings?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+    // ── Load bookings ─────────────────────────────────────────────────────────
+    const loadBookings = useCallback(async () => {
+        setBookingsLoading(true);
+        try {
+            const params = new URLSearchParams({
+                page:      pagination.page,
+                limit:     pagination.limit,
+                sortBy:    "createdAt",
+                sortOrder: "desc",
+            });
+            const res  = await fetch(`${API_BASE}/bookings?${params}`, {
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+            if (!res.ok) throw new Error("Failed to fetch bookings");
+            const data = await res.json();
+            if (data.success) {
+                setBookings(data.data.bookings || []);
+                setPagination(prev => ({ ...prev, totalPages: data.data.pagination?.totalPages || 1 }));
+                setError("");
+            } else {
+                setError(data.message || "Failed to load bookings");
+            }
+        } catch (err) {
+            setError("Failed to load bookings. Please try again.");
+        } finally {
+            setBookingsLoading(false);
         }
-      );
+    }, [token, pagination.page, pagination.limit]);
 
-      if (!response.ok) throw new Error("Failed to fetch bookings");
+    const applyFilters = () => {
+        let f = [...bookings];
 
-      const data = await response.json();
-
-      if (data.success) {
-        setBookings(data.data.bookings || []);
-        setPagination((prev) => ({
-          ...prev,
-          totalPages: data.data.pagination?.totalPages || 1,
-        }));
-        setError("");
-      } else {
-        setError(data.message || "Failed to load bookings");
-      }
-    } catch (err) {
-      console.error("Error loading bookings:", err);
-      setError("Failed to load bookings. Please try again.");
-    } finally {
-      setBookingsLoading(false);
-    }
-  };
-
-  // Apply filters + search on client side
-  const applyFilters = () => {
-    let filtered = [...bookings];
-
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (b) =>
-          b.counselor?.fullName
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          b.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          b.status?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (filters.status !== "all") {
-      filtered = filtered.filter((b) => b.status === filters.status);
-    }
-
-    if (filters.mode !== "all") {
-      filtered = filtered.filter((b) => b.mode === filters.mode);
-    }
-
-    if (filters.dateRange !== "all") {
-      const now = new Date();
-      filtered = filtered.filter((b) => {
-        const bookingDate = new Date(b.date);
-        switch (filters.dateRange) {
-          case "upcoming":
-            return bookingDate >= now;
-          case "past":
-            return bookingDate < now;
-          case "thisWeek": {
-            const start = new Date(now);
-            start.setDate(now.getDate() - now.getDay());
-            const end = new Date(start);
-            end.setDate(start.getDate() + 6);
-            return bookingDate >= start && bookingDate <= end;
-          }
-          case "thisMonth":
-            return (
-              bookingDate.getMonth() === now.getMonth() &&
-              bookingDate.getFullYear() === now.getFullYear()
+        if (searchTerm.trim()) {
+            const q = searchTerm.toLowerCase();
+            f = f.filter(b =>
+                b.counselor?.fullName?.toLowerCase().includes(q) ||
+                b.reason?.toLowerCase().includes(q) ||
+                b.status?.toLowerCase().includes(q)
             );
-          default:
-            return true;
         }
-      });
-    }
 
-    setFilteredBookings(filtered);
-  };
+        if (filters.status !== "all") f = f.filter(b => b.status === filters.status);
+        if (filters.mode   !== "all") f = f.filter(b => b.mode   === filters.mode);
 
-  // Status update (cancel/confirm)
-  const handleStatusUpdate = async (bookingId, newStatus, reason = "") => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/v1/bookings/${bookingId}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            status: newStatus,
-            ...(reason && { cancellationReason: reason }),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Failed to update booking");
-      }
-
-      const data = await response.json();
-      setBookings((prev) =>
-        prev.map((b) => (b._id === bookingId ? data.data : b))
-      );
-    } catch (err) {
-      console.error("Error updating booking:", err);
-      alert(err.message);
-    }
-  };
-
-  // Status counts for dashboard
-  const getStatusCounts = () =>
-    bookings.reduce(
-      (acc, b) => {
-        acc[b.status] = (acc[b.status] || 0) + 1;
-        acc.all++;
-        return acc;
-      },
-      { all: 0, pending: 0, confirmed: 0, cancelled: 0, completed: 0 }
-    );
-
-  const statusCounts = getStatusCounts();
-
-  // ✅ Show loading spinner while auth is being checked
-  if (loading || !authChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ✅ Access control - only show after auth is confirmed
-  if (!isStudent) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Access Denied
-          </h2>
-          <p className="text-gray-600">
-            Only students can view booking history.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate("/booking")}
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Booking
-            </button>
-
-            <button
-              onClick={() => navigate("/booking")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Book New Session
-            </button>
-          </div>
-
-          <h1 className="text-3xl font-bold text-gray-900 mt-6">My Bookings</h1>
-          <p className="text-gray-600 mt-2">
-            View and manage all your counseling session bookings
-          </p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-            {Object.entries(statusCounts).map(([status, count]) => (
-              <div
-                key={status}
-                className="bg-white p-4 rounded-lg shadow-sm border"
-              >
-                <div className="text-2xl font-bold text-gray-900">{count}</div>
-                <div className="text-sm text-gray-600 capitalize">
-                  {status === "all" ? "Total" : status}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Search + Filters */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search by counselor, reason, or status..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </button>
-          </div>
-
-          {showFilters && (
-            <BookingFilters filters={filters} onFiltersChange={setFilters} />
-          )}
-        </div>
-
-        {/* Bookings Loading */}
-        {bookingsLoading && (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Loading bookings...</span>
-          </div>
-        )}
-
-        {/* Error */}
-        {!bookingsLoading && error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              {error}
-            </div>
-          </div>
-        )}
-
-        {/* Bookings */}
-        {!bookingsLoading && !error && (
-          <>
-            {filteredBookings.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No bookings found
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {searchTerm ||
-                  filters.status !== "all" ||
-                  filters.mode !== "all" ||
-                  filters.dateRange !== "all"
-                    ? "No bookings match your current filters."
-                    : "You haven't made any booking requests yet."}
-                </p>
-                <button
-                  onClick={() => navigate("/booking")}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                >
-                  Book Your First Session
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredBookings.map((b) => (
-                  <BookingCard
-                    key={b._id}
-                    booking={b}
-                    onStatusUpdate={handleStatusUpdate}
-                    userRole={user.role}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {filteredBookings.length > 0 && pagination.totalPages > 1 && (
-              <div className="mt-8 flex justify-center space-x-2">
-                {Array.from({ length: pagination.totalPages }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() =>
-                      setPagination((prev) => ({ ...prev, page: i + 1 }))
+        if (filters.dateRange !== "all") {
+            const now = new Date();
+            f = f.filter(b => {
+                const d = new Date(b.date);
+                switch (filters.dateRange) {
+                    case "upcoming":   return d >= now;
+                    case "past":       return d < now;
+                    case "thisWeek": {
+                        const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+                        const end   = new Date(start); end.setDate(start.getDate() + 6);
+                        return d >= start && d <= end;
                     }
-                    className={`px-3 py-2 rounded-lg ${
-                      pagination.page === i + 1
-                        ? "bg-blue-600 text-white"
-                        : "bg-white border text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
+                    case "thisMonth":
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    default: return true;
+                }
+            });
+        }
 
-export default AllBookings;
+        setFilteredBookings(f);
+    };
 
+    // ── Status counts (includes payment_pending) ──────────────────────────────
+    const statusCounts = bookings.reduce((acc, b) => {
+        acc.all++;
+        acc[b.status] = (acc[b.status] || 0) + 1;
+        return acc;
+    }, { all: 0, payment_pending: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
 
+    // ── Status update callback passed to BookingCard ──────────────────────────
+    const handleStatusUpdate = (bookingId, newStatus) => {
+        setBookings(prev => prev.map(b =>
+            b._id === bookingId ? { ...b, status: newStatus } : b
+        ));
+    };
 
+    // ── Loading / access guard ────────────────────────────────────────────────
+    if (loading || !authChecked) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading…</p>
+                </div>
+            </div>
+        );
+    }
 
-// // frontend/src/pages/AllBookings.jsx
-// import React, { useState, useEffect } from "react";
-// import { useAuth } from "../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
-// import BookingCard from "../components/BookingCard";
-// import BookingFilters from "../components/BookingFilters";
-// import {
-//   Calendar,
-//   Search,
-//   Filter,
-//   ArrowLeft,
-//   Loader2,
-//   AlertCircle,
-// } from "lucide-react";
+    if (!isStudent) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+                    <p className="text-gray-600">Only students can view booking history.</p>
+                </div>
+            </div>
+        );
+    }
 
-// const AllBookings = () => {
-//   const { user, token } = useAuth();
-//   const navigate = useNavigate();
+    return (
+        <div className="min-h-screen bg-gray-50 py-8">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-//   const [bookings, setBookings] = useState([]);
-//   const [filteredBookings, setFilteredBookings] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [showFilters, setShowFilters] = useState(false);
-//   const [pagination, setPagination] = useState({
-//     page: 1,
-//     limit: 10,
-//     totalPages: 1,
-//   });
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <button onClick={() => navigate("/booking")}
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">
+                            <ArrowLeft className="h-4 w-4" /> Back to Booking
+                        </button>
+                        <button onClick={() => navigate("/booking")}
+                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
+                            <Calendar className="h-4 w-4" /> Book New Session
+                        </button>
+                    </div>
 
-//   // filter states
-//   const [filters, setFilters] = useState({
-//     status: "all",
-//     mode: "all",
-//     dateRange: "all",
-//   });
+                    <h1 className="text-3xl font-bold text-gray-900">My Bookings</h1>
+                    <p className="text-gray-500 mt-1">View, manage and track all your counselling sessions</p>
 
-//   // 🔹 Load bookings from API
-//   const loadBookings = async () => {
-//     setLoading(true);
-//     try {
-//       const queryParams = new URLSearchParams({
-//         page: pagination.page,
-//         limit: pagination.limit,
-//         sortBy: "createdAt",
-//         sortOrder: "desc",
-//       });
+                    {/* Stat pills */}
+                    <div className="flex flex-wrap gap-3 mt-6">
+                        {STAT_CONFIG.map(({ key, label, cls }) => {
+                            const count = statusCounts[key] || 0;
+                            if (key !== 'all' && count === 0) return null;
+                            return (
+                                <button key={key}
+                                    onClick={() => setFilters(f => ({ ...f, status: key === 'all' ? 'all' : key }))}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all ${cls} ${
+                                        filters.status === key || (key === 'all' && filters.status === 'all')
+                                            ? 'ring-2 ring-indigo-400 ring-offset-1'
+                                            : 'hover:opacity-80'
+                                    }`}>
+                                    <span className="font-bold text-base">{count}</span>
+                                    <span>{label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
 
-//       const response = await fetch(
-//         `http://localhost:5000/api/v1/bookings?${queryParams}`,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
+                {/* Search + filter bar */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+                            <input type="text" placeholder="Search by counsellor, reason, or status…"
+                                value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        </div>
+                        <button onClick={() => setShowFilters(s => !s)}
+                            className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
+                                showFilters ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                            }`}>
+                            <Filter className="h-4 w-4" /> Filters
+                        </button>
+                        <button onClick={loadBookings} title="Refresh"
+                            className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                            <RefreshCw className={`h-4 w-4 ${bookingsLoading ? 'animate-spin' : ''}`} />
+                        </button>
+                    </div>
 
-//       if (!response.ok) throw new Error("Failed to fetch bookings");
+                    {showFilters && <BookingFilters filters={filters} onFiltersChange={setFilters} />}
+                </div>
 
-//       const data = await response.json();
+                {/* Loading */}
+                {bookingsLoading && (
+                    <div className="flex items-center justify-center py-16">
+                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                        <span className="ml-3 text-gray-600">Loading bookings…</span>
+                    </div>
+                )}
 
-//       if (data.success) {
-//         setBookings(data.data.bookings || []);
-//         setPagination((prev) => ({
-//           ...prev,
-//           totalPages: data.data.pagination?.totalPages || 1,
-//         }));
-//         setError("");
-//       } else {
-//         setError(data.message || "Failed to load bookings");
-//       }
-//     } catch (err) {
-//       console.error("Error loading bookings:", err);
-//       setError("Failed to load bookings. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+                {/* Error */}
+                {!bookingsLoading && error && (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                        <span className="text-red-800 text-sm">{error}</span>
+                        <button onClick={loadBookings} className="ml-auto text-red-600 underline text-sm">Retry</button>
+                    </div>
+                )}
 
-//   // 🔹 Apply filters + search on client side
-//   const applyFilters = () => {
-//     let filtered = [...bookings];
+                {/* Bookings list */}
+                {!bookingsLoading && !error && (
+                    <>
+                        {filteredBookings.length === 0 ? (
+                            <div className="text-center py-16">
+                                <Calendar className="h-16 w-16 text-gray-200 mx-auto mb-4" />
+                                <h3 className="text-lg font-semibold text-gray-700 mb-2">No bookings found</h3>
+                                <p className="text-gray-500 mb-6 text-sm">
+                                    {searchTerm || filters.status !== "all" || filters.mode !== "all" || filters.dateRange !== "all"
+                                        ? "No bookings match your current filters."
+                                        : "You haven't made any booking requests yet."}
+                                </p>
+                                <button onClick={() => navigate("/booking")}
+                                    className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                                    Book Your First Session
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {filteredBookings.map(b => (
+                                    <BookingCard
+                                        key={b._id}
+                                        booking={b}
+                                        onStatusUpdate={handleStatusUpdate}
+                                        onRefresh={loadBookings}
+                                        userRole={user.role}
+                                    />
+                                ))}
+                            </div>
+                        )}
 
-//     if (searchTerm.trim()) {
-//       filtered = filtered.filter(
-//         (b) =>
-//           b.counselor?.fullName
-//             ?.toLowerCase()
-//             .includes(searchTerm.toLowerCase()) ||
-//           b.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//           b.status?.toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-//     }
-
-//     if (filters.status !== "all") {
-//       filtered = filtered.filter((b) => b.status === filters.status);
-//     }
-
-//     if (filters.mode !== "all") {
-//       filtered = filtered.filter((b) => b.mode === filters.mode);
-//     }
-
-//     if (filters.dateRange !== "all") {
-//       const now = new Date();
-//       filtered = filtered.filter((b) => {
-//         const bookingDate = new Date(b.date);
-//         switch (filters.dateRange) {
-//           case "upcoming":
-//             return bookingDate >= now;
-//           case "past":
-//             return bookingDate < now;
-//           case "thisWeek": {
-//             const start = new Date(now);
-//             start.setDate(now.getDate() - now.getDay());
-//             const end = new Date(start);
-//             end.setDate(start.getDate() + 6);
-//             return bookingDate >= start && bookingDate <= end;
-//           }
-//           case "thisMonth":
-//             return (
-//               bookingDate.getMonth() === now.getMonth() &&
-//               bookingDate.getFullYear() === now.getFullYear()
-//             );
-//           default:
-//             return true;
-//         }
-//       });
-//     }
-
-//     setFilteredBookings(filtered);
-//   };
-
-//   // 🔹 Status update (cancel/confirm)
-//   const handleStatusUpdate = async (bookingId, newStatus, reason = "") => {
-//     try {
-//       const response = await fetch(
-//         `http://localhost:5000/api/v1/bookings/${bookingId}/status`,
-//         {
-//           method: "PATCH",
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             "Content-Type": "application/json",
-//           },
-//           body: JSON.stringify({
-//             status: newStatus,
-//             ...(reason && { cancellationReason: reason }),
-//           }),
-//         }
-//       );
-
-//       if (!response.ok) {
-//         const errData = await response.json();
-//         throw new Error(errData.message || "Failed to update booking");
-//       }
-
-//       const data = await response.json();
-//       setBookings((prev) =>
-//         prev.map((b) => (b._id === bookingId ? data.data : b))
-//       );
-//     } catch (err) {
-//       console.error("Error updating booking:", err);
-//       alert(err.message);
-//     }
-//   };
-
-//   // 🔹 Status counts for dashboard
-//   const getStatusCounts = () =>
-//     bookings.reduce(
-//       (acc, b) => {
-//         acc[b.status] = (acc[b.status] || 0) + 1;
-//         acc.all++;
-//         return acc;
-//       },
-//       { all: 0, pending: 0, confirmed: 0, cancelled: 0, completed: 0 }
-//     );
-
-//   const statusCounts = getStatusCounts();
-
-//   // 🔹 Effects
-//   useEffect(() => {
-//     if (!user) return;
-//     if (user.role !== "student") {
-//       navigate("/login");
-//       return;
-//     }
-//     loadBookings();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [pagination.page, user]);
-
-//   useEffect(() => {
-//     applyFilters();
-//   }, [bookings, searchTerm, filters]);
-
-//   // 🔹 Guard if not student
-//   if (!user || user.role !== "student") {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-//         <div className="text-center">
-//           <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-//           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-//             Access Denied
-//           </h2>
-//           <p className="text-gray-600">
-//             Only students can view booking history.
-//           </p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-50 py-8">
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//         {/* Header */}
-//         <div className="mb-8">
-//           <div className="flex items-center justify-between">
-//             <button
-//               onClick={() => navigate("/booking")}
-//               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-//             >
-//               <ArrowLeft className="h-5 w-5 mr-2" />
-//               Back to Booking
-//             </button>
-
-//             <button
-//               onClick={() => navigate("/booking")}
-//               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-//             >
-//               <Calendar className="h-4 w-4 mr-2" />
-//               Book New Session
-//             </button>
-//           </div>
-
-//           <h1 className="text-3xl font-bold text-gray-900 mt-6">My Bookings</h1>
-//           <p className="text-gray-600 mt-2">
-//             View and manage all your counseling session bookings
-//           </p>
-
-//           {/* Stats */}
-//           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-//             {Object.entries(statusCounts).map(([status, count]) => (
-//               <div
-//                 key={status}
-//                 className="bg-white p-4 rounded-lg shadow-sm border"
-//               >
-//                 <div className="text-2xl font-bold text-gray-900">{count}</div>
-//                 <div className="text-sm text-gray-600 capitalize">
-//                   {status === "all" ? "Total" : status}
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Search + Filters */}
-//         <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-//           <div className="flex flex-col md:flex-row gap-4">
-//             <div className="flex-1 relative">
-//               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-//               <input
-//                 type="text"
-//                 placeholder="Search by counselor, reason, or status..."
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-//               />
-//             </div>
-//             <button
-//               onClick={() => setShowFilters(!showFilters)}
-//               className="flex items-center px-4 py-2 border rounded-lg hover:bg-gray-50"
-//             >
-//               <Filter className="h-4 w-4 mr-2" />
-//               Filters
-//             </button>
-//           </div>
-
-//           {showFilters && (
-//             <BookingFilters filters={filters} onFiltersChange={setFilters} />
-//           )}
-//         </div>
-
-//         {/* Loading */}
-//         {loading && (
-//           <div className="flex items-center justify-center py-12">
-//             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-//             <span className="ml-2 text-gray-600">Loading bookings...</span>
-//           </div>
-//         )}
-
-//         {/* Error */}
-//         {!loading && error && (
-//           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-//             <div className="flex items-center text-red-800">
-//               <AlertCircle className="h-5 w-5 mr-2" />
-//               {error}
-//             </div>
-//           </div>
-//         )}
-
-//         {/* Bookings */}
-//         {!loading && !error && (
-//           <>
-//             {filteredBookings.length === 0 ? (
-//               <div className="text-center py-12">
-//                 <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-//                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-//                   No bookings found
-//                 </h3>
-//                 <p className="text-gray-600 mb-6">
-//                   {searchTerm ||
-//                   filters.status !== "all" ||
-//                   filters.mode !== "all" ||
-//                   filters.dateRange !== "all"
-//                     ? "No bookings match your current filters."
-//                     : "You haven't made any booking requests yet."}
-//                 </p>
-//                 <button
-//                   onClick={() => navigate("/booking")}
-//                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-//                 >
-//                   Book Your First Session
-//                 </button>
-//               </div>
-//             ) : (
-//               <div className="space-y-4">
-//                 {filteredBookings.map((b) => (
-//                   <BookingCard
-//                     key={b._id}
-//                     booking={b}
-//                     onStatusUpdate={handleStatusUpdate}
-//                     userRole={user.role}
-//                   />
-//                 ))}
-//               </div>
-//             )}
-
-//             {/* Pagination */}
-//             {filteredBookings.length > 0 && pagination.totalPages > 1 && (
-//               <div className="mt-8 flex justify-center space-x-2">
-//                 {Array.from({ length: pagination.totalPages }, (_, i) => (
-//                   <button
-//                     key={i + 1}
-//                     onClick={() =>
-//                       setPagination((prev) => ({ ...prev, page: i + 1 }))
-//                     }
-//                     className={`px-3 py-2 rounded-lg ${
-//                       pagination.page === i + 1
-//                         ? "bg-blue-600 text-white"
-//                         : "bg-white border text-gray-700 hover:bg-gray-50"
-//                     }`}
-//                   >
-//                     {i + 1}
-//                   </button>
-//                 ))}
-//               </div>
-//             )}
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AllBookings;
+                        {/* Pagination */}
+                        {pagination.totalPages > 1 && (
+                            <div className="mt-8 flex justify-center gap-2">
+                                {Array.from({ length: pagination.totalPages }, (_, i) => (
+                                    <button key={i + 1}
+                                        onClick={() => setPagination(p => ({ ...p, page: i + 1 }))}
+                                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                                            pagination.page === i + 1
+                                                ? "bg-indigo-600 text-white"
+                                                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                        }`}>
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}

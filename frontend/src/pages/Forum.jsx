@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import {
     getPosts, createPost, deletePost, toggleSupport, addReply, reportPost,
     adminDeletePost, adminDeleteReply, restorePost, dismissReports,
     warnUser, banUser, unbanUser,
 } from '../api/forumApi';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 // ── constants ─────────────────────────────────────────────────────────────────
 const CATEGORIES = [
@@ -18,17 +21,6 @@ const CATEGORIES = [
 
 const MAX_MEDIA = 4;
 const ACCEPTED  = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime';
-
-// ── Ad data ───────────────────────────────────────────────────────────────────
-const LEFT_ADS = [
-    { name: 'Dr. Priya Sharma', title: 'Licensed Psychologist', tagline: 'Specialising in anxiety, stress & exam pressure. Confidential sessions.', specialty: 'Anxiety & Stress', rating: '4.9', sessions: '340+', badge: '⭐ Top Rated', accent: '#6366f1', light: '#eef2ff', initials: 'PS', ctaText: 'Book Free Consult' },
-    { name: 'Dr. Arjun Mehta',  title: 'CBT Therapist',         tagline: 'Cognitive Behavioural Therapy for depression, burnout & relationship issues.', specialty: 'CBT & Depression', rating: '4.8', sessions: '210+', badge: '✓ Verified',  accent: '#0ea5e9', light: '#f0f9ff', initials: 'AM', ctaText: 'Book a Session' },
-];
-
-const RIGHT_ADS = [
-    { name: 'Dr. Kavya Nair',  title: 'Sleep & Mindfulness Expert',  tagline: 'Evidence-based sleep coaching and mindfulness programmes for students.', specialty: 'Sleep & Mindfulness', rating: '4.9', sessions: '180+', badge: '🌙 Sleep Specialist', accent: '#8b5cf6', light: '#f5f3ff', initials: 'KN', ctaText: 'Book Free Consult' },
-    { name: 'Dr. Rohan Verma', title: 'Relationship Counsellor',     tagline: 'Individual and couples counselling. Safe, judgement-free environment.',  specialty: 'Relationships',      rating: '4.7', sessions: '290+', badge: '🤝 Highly Trusted',  accent: '#ec4899', light: '#fdf2f8', initials: 'RV', ctaText: 'Book a Session' },
-];
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const initials = (n) => (n || 'A').split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
@@ -50,26 +42,19 @@ function Avatar({ src, name, size = 40, accent = '#6366f1', isAnon = false }) {
     return <div style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 600, fontSize: size * 0.35 }}>{initials(name)}</div>;
 }
 
-// ── Media Gallery (displayed inside post cards) ───────────────────────────────
+// ── Media Gallery ─────────────────────────────────────────────────────────────
 function MediaGallery({ media }) {
-    const [lightbox, setLightbox] = useState(null); // url of full-size item
+    const [lightbox, setLightbox] = useState(null);
     if (!media || media.length === 0) return null;
-
     const gridCols = media.length === 1 ? '1fr' : media.length === 2 ? '1fr 1fr' : media.length === 3 ? '1fr 1fr 1fr' : '1fr 1fr';
-
     return (
         <>
             <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: 4, borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
                 {media.map((m, i) => (
-                    <div key={i} style={{ position: 'relative', cursor: 'pointer', background: '#f1f5f9', aspectRatio: media.length === 1 ? '16/9' : '1' }}
-                        onClick={() => setLightbox(m)}>
+                    <div key={i} style={{ position: 'relative', cursor: 'pointer', background: '#f1f5f9', aspectRatio: media.length === 1 ? '16/9' : '1' }} onClick={() => setLightbox(m)}>
                         {m.type === 'video' ? (
                             <>
-                                {m.thumbnail
-                                    ? <img src={m.thumbnail} alt="video" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
-                                }
-                                {/* play icon overlay */}
+                                {m.thumbnail ? <img src={m.thumbnail} alt="video" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />}
                                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -79,25 +64,18 @@ function MediaGallery({ media }) {
                         ) : (
                             <img src={m.url} alt="post media" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                         )}
-                        {/* +N overlay on last tile when more than 4 */}
                         {i === 3 && media.length > 4 && (
-                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 22, fontWeight: 700 }}>
-                                +{media.length - 4}
-                            </div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 22, fontWeight: 700 }}>+{media.length - 4}</div>
                         )}
                     </div>
                 ))}
             </div>
-
-            {/* Lightbox */}
             {lightbox && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    onClick={() => setLightbox(null)}>
-                    {lightbox.type === 'video' ? (
-                        <video src={lightbox.url} controls autoPlay style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 10 }} onClick={e => e.stopPropagation()} />
-                    ) : (
-                        <img src={lightbox.url} alt="full size" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 10, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
-                    )}
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.88)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setLightbox(null)}>
+                    {lightbox.type === 'video'
+                        ? <video src={lightbox.url} controls autoPlay style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 10 }} onClick={e => e.stopPropagation()} />
+                        : <img src={lightbox.url} alt="full size" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 10, objectFit: 'contain' }} onClick={e => e.stopPropagation()} />
+                    }
                     <button onClick={() => setLightbox(null)} style={{ position: 'fixed', top: 20, right: 24, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 22, width: 40, height: 40, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                 </div>
             )}
@@ -105,7 +83,7 @@ function MediaGallery({ media }) {
     );
 }
 
-// ── Media preview strip (compose box — before posting) ────────────────────────
+// ── Media preview strip ───────────────────────────────────────────────────────
 function MediaPreview({ files, onRemove }) {
     if (!files || files.length === 0) return null;
     return (
@@ -116,9 +94,7 @@ function MediaPreview({ files, onRemove }) {
                 return (
                     <div key={i} style={{ position: 'relative', width: 80, height: 80, borderRadius: 8, overflow: 'hidden', background: '#f1f5f9', flexShrink: 0 }}>
                         {isVideo
-                            ? <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                              </div>
+                            ? <div style={{ width: '100%', height: '100%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
                             : <img src={objUrl} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         }
                         <button onClick={() => onRemove(i)} style={{ position: 'absolute', top: 2, right: 2, width: 20, height: 20, borderRadius: '50%', background: 'rgba(0,0,0,.6)', border: 'none', color: '#fff', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>✕</button>
@@ -131,18 +107,46 @@ function MediaPreview({ files, onRemove }) {
 }
 
 // ── Counsellor Ad Card ────────────────────────────────────────────────────────
+// Uses useNavigate so clicking the CTA takes the student directly to
+// /booking?counsellor=<counsellorId> — skipping the counsellor-picker
+// and landing straight on the date/slot step for that specific counsellor.
 function CounsellorAd({ ad }) {
     const [hov, setHov] = useState(false);
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        // Track click fire-and-forget
+        if (ad.adId) {
+            fetch(`${API_BASE}/ads/${ad.adId}/click`, { method: 'POST' }).catch(() => {});
+        }
+        // Navigate to booking with this counsellor pre-selected
+        navigate(`/booking?counsellor=${ad.counsellorId}`);
+    };
+
     return (
-        <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-            style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: hov ? `0 8px 28px ${ad.accent}22, 0 0 0 1px ${ad.accent}30` : '0 1px 4px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.05)', transition: 'box-shadow .2s, transform .2s', transform: hov ? 'translateY(-2px)' : 'none', marginBottom: 14 }}>
-            <div style={{ height: 4, background: ad.accent }} />
-            <div style={{ padding: '6px 12px 0', display: 'flex', justifyContent: 'flex-end' }}>
+        <div
+            onMouseEnter={() => setHov(true)}
+            onMouseLeave={() => setHov(false)}
+            style={{
+                background: '#fff', borderRadius: 14, overflow: 'hidden',
+                boxShadow: hov ? `0 8px 28px ${ad.accent}22, 0 0 0 1px ${ad.accent}30` : '0 1px 4px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.05)',
+                transition: 'box-shadow .2s, transform .2s',
+                transform: hov ? 'translateY(-2px)' : 'none',
+                marginBottom: 14,
+                ...(ad.highlight ? { border: `2px solid ${ad.accent}` } : {}),
+            }}
+        >
+            <div style={{ height: ad.highlight ? 5 : 4, background: ad.accent }} />
+            <div style={{ padding: '6px 12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.06em', color: '#94a3b8', textTransform: 'uppercase' }}>Sponsored</span>
+                {ad.plan === 'premium' && <span style={{ fontSize: 9, fontWeight: 700, color: ad.accent, background: ad.light, padding: '1px 6px', borderRadius: 10 }}>PREMIUM</span>}
             </div>
             <div style={{ padding: '10px 14px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: ad.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>{ad.initials}</div>
+                    {ad.avatar
+                        ? <img src={ad.avatar} alt={ad.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${ad.accent}30` }} />
+                        : <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: ad.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>{ad.initials}</div>
+                    }
                     <div>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{ad.name}</p>
                         <p style={{ margin: 0, fontSize: 11, color: '#64748b' }}>{ad.title}</p>
@@ -157,9 +161,29 @@ function CounsellorAd({ ad }) {
                     <div style={{ width: 1, background: '#f1f5f9' }} />
                     <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 600, fontSize: 11, color: ad.accent }}>{ad.specialty}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Focus</p></div>
                 </div>
-                <button onClick={() => window.location.href = '/booking'} style={{ width: '100%', padding: '9px 0', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, background: hov ? ad.accent : ad.light, color: hov ? '#fff' : ad.accent, transition: 'all .2s' }}>
+                <button onClick={handleClick} style={{ width: '100%', padding: '9px 0', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, background: hov ? ad.accent : ad.light, color: hov ? '#fff' : ad.accent, transition: 'all .2s' }}>
                     {ad.ctaText} →
                 </button>
+            </div>
+        </div>
+    );
+}
+
+function AdSkeleton() {
+    return (
+        <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
+            <div style={{ height: 4, background: '#e2e8f0' }} />
+            <div style={{ padding: 14 }}>
+                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f1f5f9' }} />
+                    <div style={{ flex: 1 }}>
+                        <div style={{ height: 12, background: '#f1f5f9', borderRadius: 6, marginBottom: 6, width: '70%' }} />
+                        <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, width: '50%' }} />
+                    </div>
+                </div>
+                <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, marginBottom: 6 }} />
+                <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, width: '80%', marginBottom: 12 }} />
+                <div style={{ height: 34, background: '#f1f5f9', borderRadius: 9 }} />
             </div>
         </div>
     );
@@ -186,13 +210,15 @@ function WellnessTip() {
     );
 }
 
-function AdvertiseCard({ accent }) {
+function AdvertiseCard({ accent, isCounsellor }) {
     return (
         <div style={{ background: '#f8fafc', borderRadius: 14, padding: '18px 16px', textAlign: 'center', border: '1.5px dashed #cbd5e1', marginBottom: 14 }}>
             <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#64748b' }}>📢 Advertise here</p>
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>Reach students who need mental health support.</p>
-            <button onClick={() => window.location.href = '/contact'} style={{ padding: '7px 16px', borderRadius: 8, border: `1.5px solid ${accent}`, background: 'transparent', color: accent, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                Get in touch
+            <p style={{ margin: '0 0 12px', fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
+                {isCounsellor ? 'Promote your practice to students who need support.' : 'Reach students who need mental health support.'}
+            </p>
+            <button onClick={() => window.location.href = isCounsellor ? '/counsellor-settings' : '/contact'} style={{ padding: '7px 16px', borderRadius: 8, border: `1.5px solid ${accent}`, background: 'transparent', color: accent, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                {isCounsellor ? 'Set up your ad →' : 'Get in touch'}
             </button>
         </div>
     );
@@ -242,27 +268,78 @@ function AdminItem({ icon, label, color, onClick }) {
     );
 }
 
+// ── Compose Box Identity Header ───────────────────────────────────────────────
+function ComposeIdentityHeader({ user, postAnon, onToggleAnon, accent, light }) {
+    const roleLabel = { student: null, counsellor: 'Counsellor', admin: 'Admin' }[user?.role] || null;
+
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginBottom: 16, padding: '12px 14px', borderRadius: 12,
+            background: postAnon ? 'linear-gradient(135deg, #f1f5f9, #e2e8f0)' : `linear-gradient(135deg, ${light}, ${accent}0a)`,
+            border: `1px solid ${postAnon ? '#e2e8f0' : accent + '25'}`,
+            transition: 'all .25s',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <Avatar src={postAnon ? null : user?.avatar} name={user?.fullName} size={40} accent={accent} isAnon={postAnon} />
+                    {!postAnon && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff' }} />}
+                </div>
+                <div>
+                    {postAnon ? (
+                        <>
+                            <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#475569', lineHeight: 1.2 }}>Anonymous</p>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#94a3b8', lineHeight: 1 }}>Your identity is hidden from others</p>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: '#0f172a', lineHeight: 1.2 }}>{user?.fullName}</p>
+                                {roleLabel && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: accent, color: '#fff', letterSpacing: '.02em' }}>{roleLabel}</span>}
+                            </div>
+                            <p style={{ margin: '2px 0 0', fontSize: 11, color: '#94a3b8', lineHeight: 1 }}>Posting publicly · visible to all members</p>
+                        </>
+                    )}
+                </div>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}>
+                <div style={{ width: 40, height: 22, borderRadius: 11, position: 'relative', background: postAnon ? '#6366f1' : '#cbd5e1', transition: 'background .2s', boxShadow: postAnon ? '0 0 0 3px #6366f120' : 'none' }}>
+                    <div style={{ position: 'absolute', top: 3, left: postAnon ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }} />
+                    <input type="checkbox" checked={postAnon} onChange={e => onToggleAnon(e.target.checked)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }} />
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: postAnon ? '#6366f1' : '#64748b', lineHeight: 1.1 }}>🎭 Anonymous</p>
+                    <p style={{ margin: 0, fontSize: 10, color: '#94a3b8', lineHeight: 1.1 }}>{postAnon ? 'On' : 'Off'}</p>
+                </div>
+            </label>
+        </div>
+    );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  MAIN
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Forum() {
     const { user } = useAuth();
-    const isAdmin  = user?.role === 'admin';
-    const uid      = user?._id || user?.id;
+    const isAdmin      = user?.role === 'admin';
+    const isCounsellor = user?.role === 'counsellor';
+    const uid          = user?._id || user?.id;
 
     const [category,       setCategory]       = useState('Stress');
     const [posts,          setPosts]           = useState([]);
     const [loading,        setLoading]         = useState(false);
     const [showDeleted,    setShowDeleted]     = useState(false);
 
-    // compose
+    const [leftAds,        setLeftAds]         = useState([]);
+    const [rightAds,       setRightAds]        = useState([]);
+    const [adsLoading,     setAdsLoading]      = useState(true);
+
     const [newPost,        setNewPost]         = useState({ title: '', description: '', tags: '' });
     const [postAnon,       setPostAnon]        = useState(false);
-    const [mediaFiles,     setMediaFiles]      = useState([]);  // File[] — local files before upload
+    const [mediaFiles,     setMediaFiles]      = useState([]);
     const [posting,        setPosting]         = useState(false);
     const fileInputRef     = useRef(null);
 
-    // per-post UI state
     const [expanded,       setExpanded]        = useState({});
     const [replyText,      setReplyText]       = useState({});
     const [replyAnon,      setReplyAnon]       = useState({});
@@ -275,6 +352,24 @@ export default function Forum() {
     const cat      = CATEGORIES.find(c => c.name === category) || CATEGORIES[0];
     const dropRef  = useRef({});
     const rdropRef = useRef({});
+
+    useEffect(() => {
+        (async () => {
+            setAdsLoading(true);
+            try {
+                const res  = await fetch(`${API_BASE}/ads/forum`);
+                const data = await res.json();
+                if (data.success) {
+                    setLeftAds(data.data.leftAds   || []);
+                    setRightAds(data.data.rightAds || []);
+                }
+            } catch (e) {
+                console.error('Failed to load forum ads:', e);
+            } finally {
+                setAdsLoading(false);
+            }
+        })();
+    }, []);
 
     useEffect(() => {
         const handler = (e) => {
@@ -296,35 +391,20 @@ export default function Forum() {
 
     const showToast = (msg, type = 'info') => setToast({ msg, type });
 
-    // ── file picker ───────────────────────────────────────────────────────────
     const handleFileChange = (e) => {
         const selected = Array.from(e.target.files || []);
-        if (mediaFiles.length + selected.length > MAX_MEDIA) {
-            showToast(`Maximum ${MAX_MEDIA} files per post`, 'error');
-            e.target.value = '';
-            return;
-        }
+        if (mediaFiles.length + selected.length > MAX_MEDIA) { showToast(`Maximum ${MAX_MEDIA} files per post`, 'error'); e.target.value = ''; return; }
         setMediaFiles(prev => [...prev, ...selected]);
-        e.target.value = ''; // reset so same file can be re-picked
+        e.target.value = '';
     };
-
     const removeMedia = (idx) => setMediaFiles(prev => prev.filter((_, i) => i !== idx));
 
-    // ── create post ───────────────────────────────────────────────────────────
     const handlePost = async () => {
         if (!newPost.title.trim() || !newPost.description.trim()) { showToast('Title and description required', 'error'); return; }
         if (!uid) { showToast('Please log in to post', 'error'); return; }
         setPosting(true);
         try {
-            await createPost({
-                title:       newPost.title.trim(),
-                description: newPost.description.trim(),
-                tags:        newPost.tags,
-                category,
-                userId:      uid,
-                isAnonymous: postAnon,
-                mediaFiles,
-            });
+            await createPost({ title: newPost.title.trim(), description: newPost.description.trim(), tags: newPost.tags, category, userId: uid, isAnonymous: postAnon, mediaFiles });
             setNewPost({ title: '', description: '', tags: '' });
             setPostAnon(false);
             setMediaFiles([]);
@@ -357,55 +437,21 @@ export default function Forum() {
         } catch { showToast('Failed to reply', 'error'); }
     };
 
-    const handleReportConfirm = async (reason) => {
-        try { await reportPost(modal.postId, uid, reason); setReported(r => ({ ...r, [modal.postId]: true })); setModal(null); showToast('Report submitted. Thank you for keeping the forum safe.', 'success'); }
-        catch (err) { showToast(err?.response?.data?.message || 'Failed to report', 'error'); setModal(null); }
-    };
-
-    const handleAdminDeleteConfirm = async (reason) => {
-        try { await adminDeletePost(modal.postId, reason); if (!showDeleted) setPosts(p => p.filter(x => x._id !== modal.postId)); else fetchPosts(); setModal(null); showToast('Post removed', 'info'); }
-        catch { showToast('Failed to remove', 'error'); setModal(null); }
-    };
-
-    const handleRestore = async (postId) => {
-        try { await restorePost(postId); fetchPosts(); showToast('Post restored', 'success'); }
-        catch { showToast('Failed to restore', 'error'); }
-    };
-
-    const handleDismissReports = async (postId) => {
-        try { await dismissReports(postId); fetchPosts(); showToast('Reports cleared', 'success'); }
-        catch { showToast('Failed', 'error'); }
-    };
-
-    const handleWarnConfirm = async (reason) => {
-        try { const res = await warnUser(modal.postId, reason); setModal(null); showToast(res.data.autoBanned ? `User auto-banned after ${res.data.warningCount} warnings` : `Warning issued (${res.data.warningCount} total)`, 'warn'); fetchPosts(); }
-        catch { showToast('Failed to warn', 'error'); setModal(null); }
-    };
-
-    const handleBanConfirm = async (reason) => {
-        try { await banUser(modal.userId, reason); setModal(null); showToast('User banned from forum', 'error'); fetchPosts(); }
-        catch { showToast('Failed to ban', 'error'); setModal(null); }
-    };
-
-    const handleUnban = async (userId) => {
-        try { await unbanUser(userId); showToast('User unbanned', 'success'); fetchPosts(); }
-        catch { showToast('Failed to unban', 'error'); }
-    };
-
-    const handleAdminDeleteReplyConfirm = async () => {
-        try { await adminDeleteReply(modal.postId, modal.replyId); setModal(null); showToast('Reply removed', 'info'); fetchPosts(); }
-        catch { showToast('Failed to remove reply', 'error'); setModal(null); }
-    };
+    const handleReportConfirm      = async (reason) => { try { await reportPost(modal.postId, uid, reason); setReported(r => ({ ...r, [modal.postId]: true })); setModal(null); showToast('Report submitted. Thank you for keeping the forum safe.', 'success'); } catch (err) { showToast(err?.response?.data?.message || 'Failed to report', 'error'); setModal(null); } };
+    const handleAdminDeleteConfirm = async (reason) => { try { await adminDeletePost(modal.postId, reason); if (!showDeleted) setPosts(p => p.filter(x => x._id !== modal.postId)); else fetchPosts(); setModal(null); showToast('Post removed', 'info'); } catch { showToast('Failed to remove', 'error'); setModal(null); } };
+    const handleRestore            = async (postId) => { try { await restorePost(postId); fetchPosts(); showToast('Post restored', 'success'); } catch { showToast('Failed to restore', 'error'); } };
+    const handleDismissReports     = async (postId) => { try { await dismissReports(postId); fetchPosts(); showToast('Reports cleared', 'success'); } catch { showToast('Failed', 'error'); } };
+    const handleWarnConfirm        = async (reason) => { try { const res = await warnUser(modal.postId, reason); setModal(null); showToast(res.data.autoBanned ? `User auto-banned after ${res.data.warningCount} warnings` : `Warning issued (${res.data.warningCount} total)`, 'warn'); fetchPosts(); } catch { showToast('Failed to warn', 'error'); setModal(null); } };
+    const handleBanConfirm         = async (reason) => { try { await banUser(modal.userId, reason); setModal(null); showToast('User banned from forum', 'error'); fetchPosts(); } catch { showToast('Failed to ban', 'error'); setModal(null); } };
+    const handleUnban              = async (userId) => { try { await unbanUser(userId); showToast('User unbanned', 'success'); fetchPosts(); } catch { showToast('Failed to unban', 'error'); } };
+    const handleAdminDeleteReplyConfirm = async () => { try { await adminDeleteReply(modal.postId, modal.replyId); setModal(null); showToast('Reply removed', 'info'); fetchPosts(); } catch { showToast('Failed to remove reply', 'error'); setModal(null); } };
 
     const isOwner = (post) => uid && post.userId?._id === uid;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  RENDER
-    // ─────────────────────────────────────────────────────────────────────────
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
 
-            {/* Header */}
+            {/* ── Page Header ── */}
             <div style={{ background: `linear-gradient(135deg, ${cat.accent}18, ${cat.accent}06)`, borderBottom: `1px solid ${cat.accent}22`, padding: '32px 0 0' }}>
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
@@ -425,17 +471,17 @@ export default function Forum() {
                 </div>
             </div>
 
-            {/* 3-column layout */}
+            {/* ── 3-column layout ── */}
             <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px 60px', display: 'grid', gridTemplateColumns: '220px 1fr 220px', gap: 24, alignItems: 'start' }}>
 
                 {/* LEFT sidebar */}
                 <aside style={{ position: 'sticky', top: 20 }}>
                     <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.07em' }}>Featured Counsellors</p>
-                    {LEFT_ADS.map((ad, i) => <CounsellorAd key={i} ad={ad} />)}
+                    {adsLoading ? <><AdSkeleton /><AdSkeleton /></> : leftAds.length > 0 ? leftAds.map((ad, i) => <CounsellorAd key={i} ad={ad} />) : <AdvertiseCard accent={cat.accent} isCounsellor={isCounsellor} />}
                     <WellnessTip />
                 </aside>
 
-                {/* CENTRE */}
+                {/* ── CENTRE ── */}
                 <main>
                     {user?.isBannedFromForum && (
                         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 10, fontSize: 14, color: '#991b1b', alignItems: 'center' }}>
@@ -444,58 +490,42 @@ export default function Forum() {
                         </div>
                     )}
 
-                    {/* Compose box */}
-                    {!user?.isBannedFromForum && user && (
-                        <div style={{ background: '#fff', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)' }}>
-                            {/* header row */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <Avatar src={postAnon ? null : user?.avatar} name={user?.fullName} size={38} accent={cat.accent} isAnon={postAnon} />
-                                    <span style={{ fontSize: 14, color: '#64748b' }}>{postAnon ? 'Posting anonymously' : `Posting as ${user?.fullName}`}</span>
-                                </div>
-                                {/* anonymous toggle */}
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', userSelect: 'none' }}>
-                                    <div style={{ width: 36, height: 20, borderRadius: 10, position: 'relative', background: postAnon ? '#6366f1' : '#cbd5e1', transition: 'background .2s' }}>
-                                        <div style={{ position: 'absolute', top: 2, left: postAnon ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
-                                        <input type="checkbox" checked={postAnon} onChange={e => setPostAnon(e.target.checked)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }} />
-                                    </div>
-                                    <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>🎭 Anonymous</span>
-                                </label>
+                    {/* Counsellor promo banner */}
+                    {isCounsellor && (
+                        <div style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 14, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                            <div>
+                                <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: 14, color: '#fff' }}>📢 Advertise your practice on this forum</p>
+                                <p style={{ margin: 0, fontSize: 12, color: '#c7d2fe' }}>Plans from ₹499/month · Reach students in your niche · Live within 24 hours of approval</p>
                             </div>
+                            <button onClick={() => window.location.href = '/counsellor-settings'} style={{ padding: '8px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#fff', color: '#6366f1', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                Set up my ad →
+                            </button>
+                        </div>
+                    )}
 
+                    {/* ── Compose box ── */}
+                    {!user?.isBannedFromForum && user && (
+                        <div style={{ background: '#fff', borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)' }}>
+                            <ComposeIdentityHeader user={user} postAnon={postAnon} onToggleAnon={setPostAnon} accent={cat.accent} light={cat.light} />
                             <input type="text" placeholder="What's on your mind?" value={newPost.title} onChange={e => setNewPost(p => ({ ...p, title: e.target.value }))}
                                 style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', outline: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
                             <textarea rows={3} placeholder="Share more details — you are among friends here." value={newPost.description} onChange={e => setNewPost(p => ({ ...p, description: e.target.value }))}
                                 style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
-
-                            {/* media preview */}
                             <MediaPreview files={mediaFiles} onRemove={removeMedia} />
-
-                            {/* bottom row: tags + media button + post button */}
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: mediaFiles.length > 0 ? 10 : 0 }}>
                                 <input type="text" placeholder="Tags: anxiety, exams, sleep" value={newPost.tags} onChange={e => setNewPost(p => ({ ...p, tags: e.target.value }))}
                                     style={{ flex: 1, minWidth: 120, padding: '8px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', color: '#0f172a', background: '#f8fafc' }} />
-
-                                {/* Media attach button */}
                                 <input ref={fileInputRef} type="file" accept={ACCEPTED} multiple style={{ display: 'none' }} onChange={handleFileChange} />
                                 <button onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= MAX_MEDIA}
-                                    title={mediaFiles.length >= MAX_MEDIA ? `Max ${MAX_MEDIA} files` : 'Attach images or videos'}
                                     style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${cat.accent}40`, background: cat.light, color: cat.accent, fontSize: 13, fontWeight: 600, cursor: mediaFiles.length >= MAX_MEDIA ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: mediaFiles.length >= MAX_MEDIA ? 0.5 : 1, whiteSpace: 'nowrap' }}>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                                    </svg>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                                     {mediaFiles.length > 0 ? `${mediaFiles.length}/${MAX_MEDIA}` : 'Photo/Video'}
                                 </button>
-
                                 <button onClick={handlePost} disabled={posting} style={{ padding: '9px 24px', borderRadius: 10, border: 'none', cursor: 'pointer', background: cat.accent, color: '#fff', fontSize: 14, fontWeight: 600, opacity: posting ? .6 : 1 }}>
                                     {posting ? 'Posting...' : 'Post'}
                                 </button>
                             </div>
-
-                            {/* upload hint */}
-                            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8' }}>
-                                Images (JPEG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV) — max {MAX_MEDIA} files, 50 MB each
-                            </p>
+                            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8' }}>Images (JPEG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV) — max {MAX_MEDIA} files, 50 MB each</p>
                         </div>
                     )}
 
@@ -513,7 +543,7 @@ export default function Forum() {
                         </div>
                     )}
 
-                    {/* Feed */}
+                    {/* ── Feed ── */}
                     {loading ? (
                         <div style={{ textAlign: 'center', padding: 60 }}>
                             <div style={{ width: 36, height: 36, borderRadius: '50%', margin: '0 auto 12px', border: `3px solid ${cat.accent}30`, borderTopColor: cat.accent, animation: 'spin .8s linear infinite' }} />
@@ -551,9 +581,7 @@ export default function Forum() {
                                         <button onClick={() => handleRestore(post._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}>Restore</button>
                                     </div>
                                 )}
-
                                 <div style={{ padding: '20px 22px' }}>
-                                    {/* post header */}
                                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                                             <Avatar src={avatar} name={name} size={44} accent={cat.accent} isAnon={post.isAnonymous} />
@@ -581,11 +609,11 @@ export default function Forum() {
                                                     </button>
                                                     {adminOpen[post._id] && (
                                                         <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 200, background: '#fff', borderRadius: 12, minWidth: 210, boxShadow: '0 8px 32px rgba(0,0,0,.14)', border: '1px solid #f1f5f9', padding: 6 }}>
-                                                            {!isDeleted && <AdminItem icon="🗑️" label="Remove post" color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'adminDelete', postId: post._id }); }} />}
-                                                            {isDeleted  && <AdminItem icon="♻️" label="Restore post" color="#10b981" onClick={() => { setAdminOpen({}); handleRestore(post._id); }} />}
+                                                            {!isDeleted && <AdminItem icon="🗑️" label="Remove post"     color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'adminDelete', postId: post._id }); }} />}
+                                                            {isDeleted  && <AdminItem icon="♻️" label="Restore post"    color="#10b981" onClick={() => { setAdminOpen({}); handleRestore(post._id); }} />}
                                                             {isFlagged  && <AdminItem icon="✅" label="Dismiss reports" color="#6366f1" onClick={() => { setAdminOpen({}); handleDismissReports(post._id); }} />}
                                                             {!post.isAnonymous && (<>
-                                                                <AdminItem icon="⚠️" label="Warn user" color="#f59e0b" onClick={() => { setAdminOpen({}); setModal({ type: 'warn', postId: post._id }); }} />
+                                                                <AdminItem icon="⚠️" label="Warn user"      color="#f59e0b" onClick={() => { setAdminOpen({}); setModal({ type: 'warn', postId: post._id }); }} />
                                                                 {isBanned ? <AdminItem icon="✅" label="Unban user" color="#10b981" onClick={() => { setAdminOpen({}); handleUnban(authorId); }} /> : <AdminItem icon="🚫" label="Ban from forum" color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'ban', postId: post._id, userId: authorId }); }} />}
                                                             </>)}
                                                             {post.isAnonymous && <div style={{ padding: '7px 12px', fontSize: 11, color: '#94a3b8' }}>Warn/ban unavailable for anonymous posts</div>}
@@ -595,22 +623,14 @@ export default function Forum() {
                                             )}
                                         </div>
                                     </div>
-
-                                    {/* post body */}
                                     <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{post.title}</h2>
                                     <p style={{ margin: '0 0 12px', fontSize: 14, color: '#374151', lineHeight: 1.75 }}>{post.description}</p>
-
-                                    {/* ── Media gallery ── */}
                                     <MediaGallery media={post.media} />
-
-                                    {/* tags */}
                                     {post.tags?.length > 0 && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
                                             {post.tags.map((t, i) => <span key={i} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: '#f1f5f9', color: '#475569', fontWeight: 500 }}>#{t}</span>)}
                                         </div>
                                     )}
-
-                                    {/* action bar */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 2, borderTop: '1px solid #f1f5f9', paddingTop: 10, flexWrap: 'wrap' }}>
                                         <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill={post.hasSupported ? cat.accent : 'none'} stroke={post.hasSupported ? cat.accent : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>} label={`${post.supportCount || 0} support`} active={post.hasSupported} color={cat.accent} onClick={() => handleSupport(post._id)} disabled={isDeleted} />
                                         <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>} label={`${post.replies?.length || 0} replies`} active={repliesOpen} color={cat.accent} onClick={() => setExpanded(p => ({ ...p, [post._id]: !p[post._id] }))} />
@@ -619,8 +639,6 @@ export default function Forum() {
                                         )}
                                         {isAdmin && post.reportCount > 0 && <span style={{ marginLeft: 'auto', fontSize: 12, color: '#ef4444', fontWeight: 600 }}>🚩 {post.reportCount} report{post.reportCount !== 1 ? 's' : ''}</span>}
                                     </div>
-
-                                    {/* replies */}
                                     {repliesOpen && (
                                         <div style={{ marginTop: 16 }}>
                                             {user && !isDeleted && (
@@ -683,7 +701,7 @@ export default function Forum() {
                         );
                     })}
 
-                    {/* community guidelines */}
+                    {/* Community guidelines */}
                     <div style={{ marginTop: 32, background: '#fff', borderRadius: 14, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,.04)', display: 'flex', gap: 12 }}>
                         <span style={{ fontSize: 18 }}>🌱</span>
                         <div>
@@ -696,17 +714,15 @@ export default function Forum() {
                 {/* RIGHT sidebar */}
                 <aside style={{ position: 'sticky', top: 20 }}>
                     <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.07em' }}>More Counsellors</p>
-                    {RIGHT_ADS.map((ad, i) => <CounsellorAd key={i} ad={ad} />)}
-                    <AdvertiseCard accent={cat.accent} />
+                    {adsLoading ? <><AdSkeleton /><AdSkeleton /></> : rightAds.length > 0 ? rightAds.map((ad, i) => <CounsellorAd key={i} ad={ad} />) : <AdvertiseCard accent={cat.accent} isCounsellor={isCounsellor} />}
                 </aside>
-
             </div>
 
             {/* Modals */}
-            {modal?.type === 'report'       && <ReasonModal title="Report this post"     subtitle="Reports are anonymous. Our team will review within 24 hours." placeholder="What is wrong with this post? (e.g. harmful advice, hate speech, spam)" confirmLabel="Submit Report" danger={false} onConfirm={handleReportConfirm}      onCancel={() => setModal(null)} />}
-            {modal?.type === 'adminDelete'  && <ReasonModal title="Remove this post"     subtitle="The post will be soft-deleted. You can restore it later from the admin view." placeholder="Reason for removal..." confirmLabel="Remove Post"     danger={true}  onConfirm={handleAdminDeleteConfirm} onCancel={() => setModal(null)} />}
-            {modal?.type === 'warn'         && <ReasonModal title="Issue a warning"      subtitle="Warning will be recorded. After 3 warnings the user is automatically banned." placeholder="Reason (e.g. inappropriate language, misinformation)..." confirmLabel="Issue Warning" danger={false} onConfirm={handleWarnConfirm} onCancel={() => setModal(null)} />}
-            {modal?.type === 'ban'          && <ReasonModal title="Ban user from forum"  placeholder="Reason for ban..." confirmLabel="Ban User" danger={true} onConfirm={handleBanConfirm} onCancel={() => setModal(null)} />}
+            {modal?.type === 'report'          && <ReasonModal title="Report this post"    subtitle="Reports are anonymous. Our team will review within 24 hours." placeholder="What is wrong with this post?" confirmLabel="Submit Report" danger={false} onConfirm={handleReportConfirm}       onCancel={() => setModal(null)} />}
+            {modal?.type === 'adminDelete'      && <ReasonModal title="Remove this post"    subtitle="The post will be soft-deleted. You can restore it later."    placeholder="Reason for removal..."          confirmLabel="Remove Post"   danger={true}  onConfirm={handleAdminDeleteConfirm}  onCancel={() => setModal(null)} />}
+            {modal?.type === 'warn'             && <ReasonModal title="Issue a warning"     subtitle="After 3 warnings the user is automatically banned."          placeholder="Reason for warning..."         confirmLabel="Issue Warning" danger={false} onConfirm={handleWarnConfirm}         onCancel={() => setModal(null)} />}
+            {modal?.type === 'ban'              && <ReasonModal title="Ban user from forum" placeholder="Reason for ban..."                                        confirmLabel="Ban User"      danger={true}  onConfirm={handleBanConfirm}          onCancel={() => setModal(null)} />}
             {modal?.type === 'adminDeleteReply' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setModal(null)}>
                     <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: 380, maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,.2)' }} onClick={e => e.stopPropagation()}>
