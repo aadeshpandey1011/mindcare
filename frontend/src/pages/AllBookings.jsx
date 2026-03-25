@@ -8,9 +8,9 @@ import {
     Loader2, AlertCircle, RefreshCw,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api/v1";
+// ✅ Uses env variable — no hardcoded localhost
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
-// Status display config for the stat pills
 const STAT_CONFIG = [
     { key: "all",             label: "Total",           cls: "border-gray-200 bg-white" },
     { key: "payment_pending", label: "Awaiting Payment", cls: "border-purple-200 bg-purple-50 text-purple-800" },
@@ -33,7 +33,6 @@ export default function AllBookings() {
     const [pagination,      setPagination]       = useState({ page: 1, limit: 10, totalPages: 1 });
     const [filters, setFilters] = useState({ status: "all", mode: "all", dateRange: "all" });
 
-    // ── Auth guard ────────────────────────────────────────────────────────────
     useEffect(() => {
         if (!authChecked || loading) return;
         if (!user || !token) { navigate('/login'); return; }
@@ -41,10 +40,8 @@ export default function AllBookings() {
         loadBookings();
     }, [authChecked, loading, user, token, navigate, pagination.page]);
 
-    // ── Apply client-side filters ─────────────────────────────────────────────
     useEffect(() => { applyFilters(); }, [bookings, searchTerm, filters]);
 
-    // ── Load bookings ─────────────────────────────────────────────────────────
     const loadBookings = useCallback(async () => {
         setBookingsLoading(true);
         try {
@@ -75,7 +72,6 @@ export default function AllBookings() {
 
     const applyFilters = () => {
         let f = [...bookings];
-
         if (searchTerm.trim()) {
             const q = searchTerm.toLowerCase();
             f = f.filter(b =>
@@ -84,10 +80,8 @@ export default function AllBookings() {
                 b.status?.toLowerCase().includes(q)
             );
         }
-
         if (filters.status !== "all") f = f.filter(b => b.status === filters.status);
         if (filters.mode   !== "all") f = f.filter(b => b.mode   === filters.mode);
-
         if (filters.dateRange !== "all") {
             const now = new Date();
             f = f.filter(b => {
@@ -106,25 +100,21 @@ export default function AllBookings() {
                 }
             });
         }
-
         setFilteredBookings(f);
     };
 
-    // ── Status counts (includes payment_pending) ──────────────────────────────
     const statusCounts = bookings.reduce((acc, b) => {
         acc.all++;
         acc[b.status] = (acc[b.status] || 0) + 1;
         return acc;
     }, { all: 0, payment_pending: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
 
-    // ── Status update callback passed to BookingCard ──────────────────────────
     const handleStatusUpdate = (bookingId, newStatus) => {
         setBookings(prev => prev.map(b =>
             b._id === bookingId ? { ...b, status: newStatus } : b
         ));
     };
 
-    // ── Loading / access guard ────────────────────────────────────────────────
     if (loading || !authChecked) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -151,8 +141,6 @@ export default function AllBookings() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-6">
                         <button onClick={() => navigate("/booking")}
@@ -164,11 +152,8 @@ export default function AllBookings() {
                             <Calendar className="h-4 w-4" /> Book New Session
                         </button>
                     </div>
-
                     <h1 className="text-3xl font-bold text-gray-900">My Bookings</h1>
                     <p className="text-gray-500 mt-1">View, manage and track all your counselling sessions</p>
-
-                    {/* Stat pills */}
                     <div className="flex flex-wrap gap-3 mt-6">
                         {STAT_CONFIG.map(({ key, label, cls }) => {
                             const count = statusCounts[key] || 0;
@@ -178,8 +163,7 @@ export default function AllBookings() {
                                     onClick={() => setFilters(f => ({ ...f, status: key === 'all' ? 'all' : key }))}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all ${cls} ${
                                         filters.status === key || (key === 'all' && filters.status === 'all')
-                                            ? 'ring-2 ring-indigo-400 ring-offset-1'
-                                            : 'hover:opacity-80'
+                                            ? 'ring-2 ring-indigo-400 ring-offset-1' : 'hover:opacity-80'
                                     }`}>
                                     <span className="font-bold text-base">{count}</span>
                                     <span>{label}</span>
@@ -189,7 +173,6 @@ export default function AllBookings() {
                     </div>
                 </div>
 
-                {/* Search + filter bar */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
                     <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1 relative">
@@ -209,11 +192,9 @@ export default function AllBookings() {
                             <RefreshCw className={`h-4 w-4 ${bookingsLoading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
-
                     {showFilters && <BookingFilters filters={filters} onFiltersChange={setFilters} />}
                 </div>
 
-                {/* Loading */}
                 {bookingsLoading && (
                     <div className="flex items-center justify-center py-16">
                         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
@@ -221,7 +202,6 @@ export default function AllBookings() {
                     </div>
                 )}
 
-                {/* Error */}
                 {!bookingsLoading && error && (
                     <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
                         <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
@@ -230,7 +210,6 @@ export default function AllBookings() {
                     </div>
                 )}
 
-                {/* Bookings list */}
                 {!bookingsLoading && !error && (
                     <>
                         {filteredBookings.length === 0 ? (
@@ -250,9 +229,7 @@ export default function AllBookings() {
                         ) : (
                             <div className="space-y-4">
                                 {filteredBookings.map(b => (
-                                    <BookingCard
-                                        key={b._id}
-                                        booking={b}
+                                    <BookingCard key={b._id} booking={b}
                                         onStatusUpdate={handleStatusUpdate}
                                         onRefresh={loadBookings}
                                         userRole={user.role}
@@ -261,7 +238,6 @@ export default function AllBookings() {
                             </div>
                         )}
 
-                        {/* Pagination */}
                         {pagination.totalPages > 1 && (
                             <div className="mt-8 flex justify-center gap-2">
                                 {Array.from({ length: pagination.totalPages }, (_, i) => (

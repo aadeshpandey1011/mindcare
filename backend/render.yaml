@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mindcare-backend
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: node -r dotenv/config --experimental-json-modules src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000

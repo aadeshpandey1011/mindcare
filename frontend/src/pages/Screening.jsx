@@ -6,12 +6,14 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  ASSESSMENT DEFINITIONS
+//  FIX: renamed numeric "questions: N" to "questionCount: N" in all 5
+//       assessments to eliminate the duplicate key esbuild error.
 // ─────────────────────────────────────────────────────────────────────────────
 const ASSESSMENTS = {
   PHQ9: {
     id: "PHQ9", label: "PHQ-9", fullName: "Depression Scale",
     color: "#8b5cf6", bg: "#f5f3ff", badge: "bg-purple-100 text-purple-700",
-    icon: "💜", emoji: "🧠", duration: "3–5 min", questions: 9,
+    icon: "💜", emoji: "🧠", duration: "3–5 min", questionCount: 9,
     description: "Clinically validated 9-item scale for detecting and measuring depression severity.",
     timeframe: "Over the LAST 2 WEEKS, how often have you been bothered by:",
     questions: [
@@ -33,17 +35,17 @@ const ASSESSMENTS = {
     ],
     maxScore: 27,
     scoring: [
-      { max: 4,  label: "None–Minimal",     color: "#10b981", bg: "#ecfdf5", text: "green" },
-      { max: 9,  label: "Mild",             color: "#f59e0b", bg: "#fffbeb", text: "yellow" },
-      { max: 14, label: "Moderate",         color: "#f97316", bg: "#fff7ed", text: "orange" },
-      { max: 19, label: "Moderately Severe",color: "#ef4444", bg: "#fef2f2", text: "red" },
-      { max: 27, label: "Severe",           color: "#dc2626", bg: "#fff1f2", text: "red" },
+      { max: 4,  label: "None–Minimal",      color: "#10b981", bg: "#ecfdf5", text: "green"  },
+      { max: 9,  label: "Mild",              color: "#f59e0b", bg: "#fffbeb", text: "yellow" },
+      { max: 14, label: "Moderate",          color: "#f97316", bg: "#fff7ed", text: "orange" },
+      { max: 19, label: "Moderately Severe", color: "#ef4444", bg: "#fef2f2", text: "red"    },
+      { max: 27, label: "Severe",            color: "#dc2626", bg: "#fff1f2", text: "red"    },
     ],
   },
   GAD7: {
     id: "GAD7", label: "GAD-7", fullName: "Anxiety Scale",
     color: "#0ea5e9", bg: "#f0f9ff", badge: "bg-blue-100 text-blue-700",
-    icon: "💙", emoji: "😰", duration: "2–4 min", questions: 7,
+    icon: "💙", emoji: "😰", duration: "2–4 min", questionCount: 7,
     description: "7-item scale for measuring generalised anxiety disorder severity.",
     timeframe: "Over the LAST 2 WEEKS, how often have you been bothered by:",
     questions: [
@@ -72,7 +74,7 @@ const ASSESSMENTS = {
   PSS10: {
     id: "PSS10", label: "PSS-10", fullName: "Perceived Stress Scale",
     color: "#f59e0b", bg: "#fffbeb", badge: "bg-amber-100 text-amber-700",
-    icon: "🧡", emoji: "🔥", duration: "3–4 min", questions: 10,
+    icon: "🧡", emoji: "🔥", duration: "3–4 min", questionCount: 10,
     description: "Measures your perception of stress over the past month. Widely used in research and clinical settings.",
     timeframe: "In the LAST MONTH, how often have you:",
     questions: [
@@ -104,7 +106,7 @@ const ASSESSMENTS = {
   WEMWBS: {
     id: "WEMWBS", label: "WEMWBS", fullName: "Wellbeing Scale",
     color: "#10b981", bg: "#ecfdf5", badge: "bg-green-100 text-green-700",
-    icon: "💚", emoji: "🌱", duration: "3–4 min", questions: 14,
+    icon: "💚", emoji: "🌱", duration: "3–4 min", questionCount: 14,
     description: "Warwick-Edinburgh Mental Wellbeing Scale — measures positive mental health and flourishing.",
     timeframe: "Thinking about the LAST 2 WEEKS, how much of the time:",
     higherIsBetter: true,
@@ -142,37 +144,37 @@ const ASSESSMENTS = {
   AUDIT: {
     id: "AUDIT", label: "AUDIT", fullName: "Alcohol Use Screening",
     color: "#ef4444", bg: "#fef2f2", badge: "bg-red-100 text-red-700",
-    icon: "❤️", emoji: "⚠️", duration: "3–5 min", questions: 10,
+    icon: "❤️", emoji: "⚠️", duration: "3–5 min", questionCount: 10,
     description: "WHO's Alcohol Use Disorders Identification Test — screens for hazardous and harmful alcohol use.",
     timeframe: "Please answer the following questions honestly:",
     questions: [
-      { id: "Q1", text: "How often do you have a drink containing alcohol?",
+      { id: "Q1",  text: "How often do you have a drink containing alcohol?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Monthly or less" },{ value: 2, label: "2–4 times/month" },{ value: 3, label: "2–3 times/week" },{ value: 4, label: "4+ times/week" }] },
-      { id: "Q2", text: "How many standard drinks do you have on a typical day when you drink?",
+      { id: "Q2",  text: "How many standard drinks do you have on a typical day when you drink?",
         options: [{ value: 0, label: "1–2" },{ value: 1, label: "3–4" },{ value: 2, label: "5–6" },{ value: 3, label: "7–9" },{ value: 4, label: "10 or more" }] },
-      { id: "Q3", text: "How often do you have 6 or more drinks on one occasion?",
+      { id: "Q3",  text: "How often do you have 6 or more drinks on one occasion?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q4", text: "How often in the last year have you found that you were not able to stop drinking once you had started?",
+      { id: "Q4",  text: "How often in the last year have you found that you were not able to stop drinking once you had started?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q5", text: "How often in the last year have you failed to do what was normally expected of you because of drinking?",
+      { id: "Q5",  text: "How often in the last year have you failed to do what was normally expected of you because of drinking?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q6", text: "How often in the last year have you needed a drink in the morning to get yourself going after a heavy drinking session?",
+      { id: "Q6",  text: "How often in the last year have you needed a drink in the morning to get yourself going after a heavy drinking session?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q7", text: "How often in the last year have you had a feeling of guilt or remorse after drinking?",
+      { id: "Q7",  text: "How often in the last year have you had a feeling of guilt or remorse after drinking?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q8", text: "How often in the last year have you been unable to remember what happened the night before because of drinking?",
+      { id: "Q8",  text: "How often in the last year have you been unable to remember what happened the night before because of drinking?",
         options: [{ value: 0, label: "Never" },{ value: 1, label: "Less than monthly" },{ value: 2, label: "Monthly" },{ value: 3, label: "Weekly" },{ value: 4, label: "Daily or almost daily" }] },
-      { id: "Q9", text: "Have you or someone else been injured because of your drinking?",
+      { id: "Q9",  text: "Have you or someone else been injured because of your drinking?",
         options: [{ value: 0, label: "No" },{ value: 2, label: "Yes, but not in the last year" },{ value: 4, label: "Yes, during the last year" }] },
       { id: "Q10", text: "Has a relative, friend, doctor, or other health worker been concerned about your drinking or suggested you cut down?",
         options: [{ value: 0, label: "No" },{ value: 2, label: "Yes, but not in the last year" },{ value: 4, label: "Yes, during the last year" }] },
     ],
     maxScore: 40,
     scoring: [
-      { max: 7,  label: "Low Risk",           color: "#10b981", bg: "#ecfdf5", text: "green"  },
-      { max: 15, label: "Hazardous Use",       color: "#f59e0b", bg: "#fffbeb", text: "yellow" },
-      { max: 19, label: "Harmful Use",         color: "#f97316", bg: "#fff7ed", text: "orange" },
-      { max: 40, label: "Likely Dependence",   color: "#ef4444", bg: "#fef2f2", text: "red"    },
+      { max: 7,  label: "Low Risk",         color: "#10b981", bg: "#ecfdf5", text: "green"  },
+      { max: 15, label: "Hazardous Use",     color: "#f59e0b", bg: "#fffbeb", text: "yellow" },
+      { max: 19, label: "Harmful Use",       color: "#f97316", bg: "#fff7ed", text: "orange" },
+      { max: 40, label: "Likely Dependence", color: "#ef4444", bg: "#fef2f2", text: "red"    },
     ],
   },
 };
@@ -198,7 +200,6 @@ const RESOURCE_CARDS = {
   "22": { title: "Stress Diary — Trigger Tracker",           type: "tool",    url: "https://www.mindtools.com/pages/article/newTCS_01.htm",                      emoji: "🛠️" },
   "23": { title: "WHO Workplace Stress Guidelines",          type: "article", url: "https://www.who.int/news-room/fact-sheets/detail/mental-health-at-work",     emoji: "📖" },
   "24": { title: "Progressive Muscle Relaxation — 15 min",  type: "audio",   url: "https://www.youtube.com/watch?v=ihO02wUzgkc",                                emoji: "🎧" },
-  "25": { title: "Huberman Lab: Physiological Sigh",         type: "video",   url: "https://www.youtube.com/watch?v=kSZKIupBUuc",                                emoji: "🎬" },
   "34": { title: "Mindfulness Changes the Brain — 60 Min",  type: "video",   url: "https://www.youtube.com/watch?v=_DPn57gQAhE",                                emoji: "🎬" },
   "39": { title: "7-Day Mindfulness Programme",              type: "article", url: "https://www.mindful.org/meditation/mindfulness-getting-started/",            emoji: "📖" },
   "40": { title: "MBSR Body Scan — 45 min",                  type: "audio",   url: "https://www.youtube.com/watch?v=u4gZgnmkXNs",                                emoji: "🎧" },
@@ -226,12 +227,12 @@ const TYPE_COLORS = {
 function DoctorWarning({ text, urgency }) {
   if (!text) return null;
   const cfg = urgency >= 4
-    ? { border: "border-red-500",   bg: "bg-red-50",    icon: "🆘", titleColor: "text-red-700",    ring: "ring-2 ring-red-400" }
+    ? { border: "border-red-500",    bg: "bg-red-50",    icon: "🆘", titleColor: "text-red-700",    ring: "ring-2 ring-red-400" }
     : urgency >= 3
-    ? { border: "border-red-400",   bg: "bg-red-50",    icon: "🚨", titleColor: "text-red-700",    ring: "ring-1 ring-red-300" }
+    ? { border: "border-red-400",    bg: "bg-red-50",    icon: "🚨", titleColor: "text-red-700",    ring: "ring-1 ring-red-300" }
     : urgency >= 2
-    ? { border: "border-orange-400",bg: "bg-orange-50", icon: "⚠️", titleColor: "text-orange-700", ring: "" }
-    : { border: "border-yellow-400",bg: "bg-yellow-50", icon: "🩺", titleColor: "text-yellow-700", ring: "" };
+    ? { border: "border-orange-400", bg: "bg-orange-50", icon: "⚠️", titleColor: "text-orange-700", ring: "" }
+    : { border: "border-yellow-400", bg: "bg-yellow-50", icon: "🩺", titleColor: "text-yellow-700", ring: "" };
 
   return (
     <div className={`rounded-xl border-2 ${cfg.border} ${cfg.bg} ${cfg.ring} p-4 mb-4`}>
@@ -250,9 +251,9 @@ function CrisisBanner() {
       <div>
         <p className="font-bold text-sm mb-1">If you are in immediate danger, please reach out now:</p>
         <div className="flex flex-wrap gap-3">
-          <a href="tel:112" className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">Emergency: 112</a>
-          <a href="tel:9152987821" className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">iCall: 9152987821</a>
-          <a href="tel:18602662345" className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">Vandrevala: 1860-2662-345</a>
+          <a href="tel:112"          className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">Emergency: 112</a>
+          <a href="tel:9152987821"   className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">iCall: 9152987821</a>
+          <a href="tel:18602662345"  className="text-sm font-black bg-white text-red-700 px-3 py-1 rounded-full hover:bg-red-50">Vandrevala: 1860-2662-345</a>
         </div>
       </div>
     </div>
@@ -262,7 +263,7 @@ function CrisisBanner() {
 function ProgressBar({ value, color = "#6366f1", height = "h-2.5" }) {
   return (
     <div className={`w-full ${height} bg-gray-200 rounded-full overflow-hidden`}>
-      <div className={`h-full rounded-full transition-all duration-700`}
+      <div className="h-full rounded-full transition-all duration-700"
         style={{ width: `${Math.max(0, Math.min(100, value))}%`, background: color }} />
     </div>
   );
@@ -294,11 +295,10 @@ function ScoreGauge({ score, maxScore, color, label }) {
 function TrendBadge({ trend, delta }) {
   if (!trend || trend === "first") return null;
   const cfg = {
-    improving: { icon: "📈", label: "Improving",  cls: "bg-green-100 text-green-700" },
-    stable:    { icon: "➡️", label: "Stable",     cls: "bg-gray-100  text-gray-600"  },
-    worsening: { icon: "📉", label: "Worsening",  cls: "bg-red-100   text-red-700"   },
+    improving: { icon: "📈", label: "Improving", cls: "bg-green-100 text-green-700" },
+    stable:    { icon: "➡️", label: "Stable",    cls: "bg-gray-100  text-gray-600"  },
+    worsening: { icon: "📉", label: "Worsening", cls: "bg-red-100   text-red-700"   },
   }[trend] || { icon: "➡️", label: "—", cls: "bg-gray-100 text-gray-500" };
-
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}>
       {cfg.icon} {cfg.label} {delta !== null && delta !== undefined ? `(${delta > 0 ? "+" : ""}${delta} pts)` : ""}
@@ -423,10 +423,9 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
   const severityEntry = cfg.scoring.find(s => result.totalScore <= s.max) || cfg.scoring[cfg.scoring.length - 1];
   const urgency = result.urgency ?? 0;
   const isSuicidal = result.flags?.suicidalIdeation;
-  const [activeGoalTab, setActiveGoalTab] = useState("goals");
   const goals = result.sessionPlan?.goals || [];
-
   const [localGoals, setLocalGoals] = useState(goals);
+
   const overallProgress = localGoals.length
     ? Math.round(localGoals.reduce((s, g) => s + (g.progress || 0), 0) / localGoals.length)
     : 0;
@@ -445,11 +444,8 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
 
   return (
     <div className="space-y-5">
-
-      {/* Crisis resources always top if suicidal ideation */}
       {isSuicidal && <CrisisBanner />}
 
-      {/* Doctor warning — at EVERY level ≥ 1 */}
       {result.resultMeta?.doctorWarning && (
         <DoctorWarning text={result.resultMeta.doctorWarning} urgency={urgency} />
       )}
@@ -461,19 +457,15 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
           <h3 className="font-bold text-gray-900">{cfg.label} — {cfg.fullName}</h3>
           <TrendBadge trend={result.trend} delta={result.scoreDelta} />
         </div>
-
         <div className="flex items-center gap-6 flex-wrap">
           <ScoreGauge score={result.totalScore} maxScore={result.maxScore || cfg.maxScore}
             color={severityEntry.color} label={severityEntry.label} />
-
           <div className="flex-1 min-w-[200px]">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold mb-3"
               style={{ background: severityEntry.bg, color: severityEntry.color }}>
               {severityEntry.label} {cfg.higherIsBetter ? "Wellbeing" : "Symptoms"}
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              {result.resultMeta?.recommended}
-            </p>
+            <p className="text-sm text-gray-600 leading-relaxed mb-3">{result.resultMeta?.recommended}</p>
             {result.resultMeta?.estimatedRecoveryTime && (
               <p className="text-xs text-gray-400 flex items-center gap-1">
                 🕐 {result.resultMeta.estimatedRecoveryTime}
@@ -481,21 +473,15 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
             )}
           </div>
         </div>
-
-        {/* Trend chart */}
         {history && history.length >= 2 && (
-          <div className="mt-4">
-            <MiniTrendChart history={history} />
-          </div>
+          <div className="mt-4"><MiniTrendChart history={history} /></div>
         )}
       </div>
 
       {/* Self-care actions */}
       {result.resultMeta?.selfCareActions?.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h4 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
-            ✅ Do These Today
-          </h4>
+          <h4 className="font-bold text-gray-900 text-sm mb-3">✅ Do These Today</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {result.resultMeta.selfCareActions.map((action, i) => (
               <div key={i} className="flex items-start gap-2 bg-gray-50 rounded-lg p-3">
@@ -510,9 +496,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
       {/* Coping strategies */}
       {result.resultMeta?.copingStrategies?.length > 0 && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-5">
-          <h4 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
-            🧠 Evidence-Based Coping Strategies for Your Score
-          </h4>
+          <h4 className="font-bold text-gray-900 text-sm mb-3">🧠 Evidence-Based Coping Strategies</h4>
           <ul className="space-y-2">
             {result.resultMeta.copingStrategies.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -526,12 +510,8 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
       {/* Personalised resources */}
       {personalizedResources.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h4 className="font-bold text-gray-900 text-sm mb-1 flex items-center gap-2">
-            📚 Resources Personalised to Your Score
-          </h4>
-          <p className="text-xs text-gray-400 mb-4">
-            Curated specifically for {severityEntry.label.toLowerCase()} symptoms
-          </p>
+          <h4 className="font-bold text-gray-900 text-sm mb-1">📚 Resources Personalised to Your Score</h4>
+          <p className="text-xs text-gray-400 mb-4">Curated for {severityEntry.label.toLowerCase()} symptoms</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {personalizedResources.map(r => {
               const tc = TYPE_COLORS[r.type] || TYPE_COLORS.article;
@@ -539,16 +519,12 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
                 <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer"
                   className="flex items-start gap-3 border border-gray-200 rounded-xl p-3.5 hover:shadow-md transition-shadow group">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
-                    style={{ background: tc.bg }}>
-                    {r.emoji}
-                  </div>
+                    style={{ background: tc.bg }}>{r.emoji}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 group-hover:underline leading-snug">{r.title}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: tc.bg, color: tc.color }}>
-                        {tc.label}
-                      </span>
+                        style={{ background: tc.bg, color: tc.color }}>{tc.label}</span>
                       {r.reason && <span className="text-[10px] text-gray-400 truncate">{r.reason}</span>}
                     </div>
                   </div>
@@ -558,7 +534,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
             })}
           </div>
           <a href="/resources" className="mt-4 flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
-            Browse all resources → 
+            Browse all resources →
           </a>
         </div>
       )}
@@ -569,9 +545,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-5 py-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h4 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                  🎯 Your Recovery Progress Plan
-                </h4>
+                <h4 className="font-bold text-gray-900 text-sm">🎯 Your Recovery Progress Plan</h4>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {result.sessionPlan?.targetWeeks}-week plan · {localGoals.length} personalised goals
                 </p>
@@ -585,7 +559,6 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
               <ProgressBar value={overallProgress} color="#6366f1" height="h-3" />
             </div>
           </div>
-
           <div className="p-5">
             {!token && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-xs text-amber-800 text-center">
@@ -595,8 +568,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {localGoals.map(goal => (
                 <GoalCard key={goal._id} goal={goal}
-                  screeningId={result.id} token={token}
-                  onUpdate={handleGoalUpdate} />
+                  screeningId={result.id} token={token} onUpdate={handleGoalUpdate} />
               ))}
             </div>
           </div>
@@ -606,12 +578,8 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
       {/* Check-in dates */}
       {result.sessionPlan?.checkInDates?.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <h4 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
-            🗓️ Recommended Check-In Dates
-          </h4>
-          <p className="text-xs text-gray-400 mb-3">
-            Re-take this assessment on these dates to track your progress and adjust your plan.
-          </p>
+          <h4 className="font-bold text-gray-900 text-sm mb-3">🗓️ Recommended Check-In Dates</h4>
+          <p className="text-xs text-gray-400 mb-3">Re-take this assessment on these dates to track progress.</p>
           <div className="flex flex-wrap gap-2">
             {result.sessionPlan.checkInDates.map((d, i) => (
               <div key={i} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
@@ -625,17 +593,13 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
         </div>
       )}
 
-      {/* Always-visible doctor reminder */}
       <div className="border-2 border-indigo-200 bg-indigo-50 rounded-xl p-4">
-        <p className="text-sm font-bold text-indigo-800 mb-1">
-          🩺 Remember: These results do not replace a clinical diagnosis
-        </p>
+        <p className="text-sm font-bold text-indigo-800 mb-1">🩺 Remember: These results do not replace a clinical diagnosis</p>
         <p className="text-xs text-indigo-700 leading-relaxed">
-          This screening is a self-report tool, not a diagnostic test. Only a qualified doctor, psychiatrist, or clinical psychologist can diagnose a mental health condition. If you are concerned about your results, please book a session with one of our counsellors or visit a doctor.
+          This screening is a self-report tool, not a diagnostic test. Only a qualified doctor or clinical psychologist can diagnose a mental health condition.
         </p>
       </div>
 
-      {/* CTA buttons */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button onClick={() => navigate("/booking")}
           className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all">
@@ -646,7 +610,6 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
           📚 Browse All Resources
         </button>
       </div>
-
     </div>
   );
 }
@@ -654,7 +617,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  HISTORY PAGE
 // ─────────────────────────────────────────────────────────────────────────────
-function HistoryPage({ history, assessmentType }) {
+function HistoryPage({ history }) {
   const byType = {};
   for (const s of history) {
     if (!byType[s.type]) byType[s.type] = [];
@@ -714,11 +677,11 @@ function HistoryPage({ history, assessmentType }) {
 //  QUESTION SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, onBack, submitting, onSubmit }) {
-  const q = assessment.questions[questionIndex];
+  const q    = assessment.questions[questionIndex];
   const opts = q.options || assessment.options;
   const current = answers[questionIndex];
-  const total = assessment.questions.length;
-  const pct = Math.round((questionIndex / total) * 100);
+  const total   = assessment.questions.length;
+  const pct     = Math.round((questionIndex / total) * 100);
 
   return (
     <div className="space-y-4">
@@ -738,7 +701,7 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
         </div>
       </div>
 
-      {/* Doctor warning on Q9 PHQ9 (suicide question) */}
+      {/* Sensitive question warning */}
       {q.sensitive && (
         <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-3">
           <p className="text-red-200 text-xs leading-relaxed">
@@ -746,7 +709,6 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
             <a href="tel:9152987821" className="font-black underline">iCall: 9152987821</a>{" "}
             or{" "}
             <a href="tel:112" className="font-black underline">Emergency: 112</a>.
-            This question is for screening purposes only and your safety matters most.
           </p>
         </div>
       )}
@@ -755,7 +717,6 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
       <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
         <p className="text-white/60 text-xs mb-3">{assessment.timeframe}</p>
         <h2 className="text-white text-lg font-semibold leading-relaxed mb-6">{q.text}</h2>
-
         <div className="space-y-2.5">
           {opts.map(opt => (
             <button key={opt.value}
@@ -767,7 +728,7 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
               }`}>
               <span className="text-2xl flex-shrink-0">{opt.emoji || "●"}</span>
               <div className="flex-1">
-                <span className={`font-medium text-white text-sm`}>{opt.label}</span>
+                <span className="font-medium text-white text-sm">{opt.label}</span>
                 {opt.value !== undefined && (
                   <span className="block text-white/40 text-xs">Score: {opt.value}</span>
                 )}
@@ -780,8 +741,6 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
             </button>
           ))}
         </div>
-
-        {/* Always-present mild doctor reminder on every 3rd question */}
         {(questionIndex + 1) % 3 === 0 && questionIndex > 0 && (
           <p className="text-white/30 text-[11px] text-center mt-4">
             🩺 Reminder: If your symptoms are impacting daily life, please consider speaking to a doctor.
@@ -827,21 +786,20 @@ function QuestionScreen({ assessment, questionIndex, answers, onAnswer, onNext, 
 //  MAIN EXPORT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Screening() {
-  const { token, user } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
+  const navigate  = useNavigate();
 
-  const [screen, setScreen]       = useState("welcome");  // welcome | test | result | history
-  const [activeType, setActiveType] = useState("PHQ9");
+  const [screen,      setScreen]      = useState("welcome");
+  const [activeType,  setActiveType]  = useState("PHQ9");
   const [questionIdx, setQuestionIdx] = useState(0);
-  const [answers, setAnswers]     = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult]       = useState(null);
-  const [history, setHistory]     = useState([]);
+  const [answers,     setAnswers]     = useState({});
+  const [submitting,  setSubmitting]  = useState(false);
+  const [result,      setResult]      = useState(null);
+  const [history,     setHistory]     = useState([]);
   const [histLoading, setHistLoading] = useState(false);
 
   const assessment = ASSESSMENTS[activeType];
 
-  // Load history when user is logged in
   useEffect(() => {
     if (!token) return;
     setHistLoading(true);
@@ -850,10 +808,10 @@ export default function Screening() {
       .then(d => { if (d.success) setHistory(d.data.screenings || []); })
       .catch(() => {})
       .finally(() => setHistLoading(false));
-  }, [token, result]); // reload after new result
+  }, [token, result]);
 
   const currentAnswers = useMemo(
-    () => assessment.questions.map((q, i) => answers[`${activeType}_${i}`] ?? null),
+    () => assessment.questions.map((_, i) => answers[`${activeType}_${i}`] ?? null),
     [answers, activeType, assessment]
   );
 
@@ -875,10 +833,7 @@ export default function Screening() {
 
     const payload = assessment.questions.map((q, i) => {
       let score = currentAnswers[i];
-      // PSS-10 reverse scoring
-      if (assessment.id === "PSS10" && q.reverse) {
-        score = 4 - score;
-      }
+      if (assessment.id === "PSS10" && q.reverse) score = 4 - score;
       return { questionId: q.id, score };
     });
 
@@ -898,7 +853,6 @@ export default function Screening() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (e) {
-      // Fallback: compute client-side
       const total = payload.reduce((s, a) => s + a.score, 0);
       const sev = assessment.scoring.find(s => total <= s.max) || assessment.scoring[assessment.scoring.length - 1];
       setResult({
@@ -915,12 +869,10 @@ export default function Screening() {
 
   const historyForType = history.filter(s => s.type === activeType);
 
-  // ── WELCOME SCREEN ─────────────────────────────────────────────────────────
+  // ── WELCOME ────────────────────────────────────────────────────────────────
   if (screen === "welcome") return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-10 px-4">
       <div className="max-w-3xl mx-auto">
-
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-4 shadow-2xl">
             <span className="text-3xl">🧠</span>
@@ -928,7 +880,6 @@ export default function Screening() {
           <h1 className="text-4xl font-extrabold text-white mb-2">Mental Health Screening</h1>
           <p className="text-white/60 max-w-lg mx-auto text-sm leading-relaxed">
             Five clinically validated assessments to understand your mental wellbeing.
-            Results are personalised with resources, a recovery plan, and doctor guidance.
           </p>
           <div className="mt-3 inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 rounded-full px-4 py-2">
             <span className="text-amber-300 text-sm">⚕️</span>
@@ -938,7 +889,6 @@ export default function Screening() {
           </div>
         </div>
 
-        {/* Assessment cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {Object.values(ASSESSMENTS).map(a => (
             <button key={a.id} onClick={() => startTest(a.id)}
@@ -958,7 +908,8 @@ export default function Screening() {
               </div>
               <p className="text-white/50 text-xs leading-relaxed">{a.description}</p>
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
-                <span className="text-white/40 text-xs">{a.questions.length || Object.keys(a.questions).length} questions</span>
+                {/* FIX: use a.questions.length (the array) — no more .questionCount needed here */}
+                <span className="text-white/40 text-xs">{a.questions.length} questions</span>
                 <span className="text-xs font-semibold group-hover:translate-x-1 transition-transform"
                   style={{ color: a.color }}>
                   Start →
@@ -968,7 +919,6 @@ export default function Screening() {
           ))}
         </div>
 
-        {/* History & info */}
         <div className="flex flex-col sm:flex-row gap-3">
           {token && (
             <button onClick={() => setScreen("history")}
@@ -982,17 +932,14 @@ export default function Screening() {
             </p>
           </div>
         </div>
-
       </div>
     </div>
   );
 
-  // ── TEST SCREEN ────────────────────────────────────────────────────────────
+  // ── TEST ───────────────────────────────────────────────────────────────────
   if (screen === "test") return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-
-        {/* Back + type switcher */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <button onClick={() => setScreen("welcome")}
             className="flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors">
@@ -1000,8 +947,7 @@ export default function Screening() {
           </button>
           <div className="flex gap-2 flex-wrap">
             {Object.values(ASSESSMENTS).map(a => (
-              <button key={a.id}
-                onClick={() => { setActiveType(a.id); setQuestionIdx(0); }}
+              <button key={a.id} onClick={() => { setActiveType(a.id); setQuestionIdx(0); }}
                 className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-all border ${
                   activeType === a.id
                     ? "text-white border-transparent"
@@ -1014,7 +960,6 @@ export default function Screening() {
           </div>
         </div>
 
-        {/* Title */}
         <div className="flex items-center gap-3 mb-5">
           <span className="text-3xl">{assessment.icon}</span>
           <div>
@@ -1023,9 +968,8 @@ export default function Screening() {
           </div>
         </div>
 
-        {/* Persistent crisis line */}
         <div className="bg-red-900/20 border border-red-500/30 rounded-xl px-4 py-2 mb-5 flex items-center gap-2">
-          <span className="text-red-400 text-xs">🆘 Crisis line (always available):</span>
+          <span className="text-red-400 text-xs">🆘 Crisis line:</span>
           <a href="tel:9152987821" className="text-red-300 font-bold text-xs hover:text-red-200">iCall: 9152987821</a>
           <span className="text-red-600 text-xs">·</span>
           <a href="tel:112" className="text-red-300 font-bold text-xs hover:text-red-200">Emergency: 112</a>
@@ -1041,24 +985,21 @@ export default function Screening() {
           submitting={submitting}
           onSubmit={handleSubmit}
         />
-
       </div>
     </div>
   );
 
-  // ── RESULT SCREEN ──────────────────────────────────────────────────────────
+  // ── RESULT ─────────────────────────────────────────────────────────────────
   if (screen === "result" && result) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-
         <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-          <button onClick={() => setScreen("welcome")} className="text-white/60 hover:text-white text-sm">← Back to assessments</button>
+          <button onClick={() => setScreen("welcome")} className="text-white/60 hover:text-white text-sm">← Back</button>
           <div className="flex gap-2">
             <button onClick={() => setScreen("history")} className="text-white/60 hover:text-white text-xs border border-white/20 px-3 py-1.5 rounded-lg">📊 History</button>
             <button onClick={() => startTest(activeType)} className="text-white/60 hover:text-white text-xs border border-white/20 px-3 py-1.5 rounded-lg">🔄 Retake</button>
           </div>
         </div>
-
         <div className="flex items-center gap-3 mb-5">
           <span className="text-3xl">{assessment.icon}</span>
           <div>
@@ -1066,32 +1007,25 @@ export default function Screening() {
             <p className="text-white/50 text-xs">{assessment.label} — {assessment.fullName}</p>
           </div>
         </div>
-
-        <ResultsPage
-          result={result}
-          assessmentType={activeType}
-          history={historyForType}
-          token={token}
-          navigate={navigate}
-        />
+        <ResultsPage result={result} assessmentType={activeType}
+          history={historyForType} token={token} navigate={navigate} />
       </div>
     </div>
   );
 
-  // ── HISTORY SCREEN ──────────────────────────────────────────────────────────
+  // ── HISTORY ────────────────────────────────────────────────────────────────
   if (screen === "history") return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <button onClick={() => setScreen("welcome")} className="text-white/60 hover:text-white text-sm">← Back</button>
           <h2 className="text-white font-bold">My Screening History</h2>
-          <button onClick={() => startTest("PHQ9")} className="text-white/60 hover:text-white text-xs border border-white/20 px-3 py-1.5 rounded-lg">+ New Assessment</button>
+          <button onClick={() => startTest("PHQ9")} className="text-white/60 hover:text-white text-xs border border-white/20 px-3 py-1.5 rounded-lg">+ New</button>
         </div>
-        {histLoading ? (
-          <div className="text-center py-16 text-white/40">Loading history…</div>
-        ) : (
-          <HistoryPage history={history} assessmentType={activeType} />
-        )}
+        {histLoading
+          ? <div className="text-center py-16 text-white/40">Loading history…</div>
+          : <HistoryPage history={history} assessmentType={activeType} />
+        }
       </div>
     </div>
   );
