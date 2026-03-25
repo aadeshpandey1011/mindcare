@@ -21,6 +21,8 @@ import postRouter         from "./routes/post.routes.js";
 import chatRouter         from "./routes/chat.routes.js";
 import verificationRouter from "./routes/verification.routes.js";
 import googleAuthRouter   from "./routes/auth.google.routes.js";
+import resourceRouter     from "./routes/resource.routes.js";
+import wellnessRouter     from "./routes/wellness.routes.js";
 
 export const app = express();
 
@@ -48,7 +50,9 @@ app.use("/api/v1/health",        healthcheckRouter);
 app.use("/api/v1/users",         userRouter);
 app.use("/api/v1/bookings",      bookingRouter);
 app.use("/api/v1/payments",      paymentRouter);
-app.use("/api/v1/ads",           adRouter);           // ← forum ads + bank details
+app.use("/api/v1/ads",           adRouter);
+app.use("/api/v1/resources",     resourceRouter);
+app.use("/api/v1/wellness",      wellnessRouter);   // mood, onboarding, journal
 app.use("/api/v1/tweets",        tweetRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/videos",        videoRouter);

@@ -3,18 +3,26 @@ import {
     Calendar, Clock, Video, Phone, MapPin, ExternalLink,
     X, AlertCircle, CheckCircle, ChevronDown, ChevronUp,
     CreditCard, RefreshCw, IndianRupee, Ban, Star,
-    ThumbsUp, AlertTriangle, Banknote,
+    ThumbsUp, AlertTriangle, Banknote, Scale, ShieldAlert,
 } from 'lucide-react';
-import { createPaymentOrder, openCashfreeCheckout, verifyPayment } from '../api/paymentApi';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-}) : '—';
+const fmtDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-IN', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+    });
+};
 const fmtSlot = (s) => s?.replace('-', ' – ') || '—';
+
+// ── Detect dispute bookings ───────────────────────────────────────────────────
+const isDispute     = (b) => /^DISPUTE:/i.test(b.cancellationReason || '');
+const disputeReason = (b) => (b.cancellationReason || '').replace(/^DISPUTE:\s*/i, '').trim();
+const isDisputeResolved = (b) => !!(b.adminDisputeResolution?.decision);
 
 const STATUS_META = {
     payment_pending: {
@@ -55,28 +63,47 @@ const STATUS_META = {
     },
 };
 
+// ── Dispute status meta (overrides the normal "Cancelled" when it's a dispute)
+const getDisputeMeta = (booking) => {
+    const resolved  = isDisputeResolved(booking);
+    const decision  = booking.adminDisputeResolution?.decision;
+
+    if (!resolved) {
+        return {
+            label: 'Dispute Under Review',
+            cls:   'bg-orange-100 text-orange-800 border-orange-300',
+            icon:  <ShieldAlert className="h-3.5 w-3.5" />,
+            tip:   'You raised a dispute. Our admin team is reviewing this case and will contact both parties within 24 hours.',
+        };
+    }
+    if (decision === 'refund_student') {
+        return {
+            label: 'Dispute — Refunded',
+            cls:   'bg-green-100 text-green-800 border-green-200',
+            icon:  <Scale className="h-3.5 w-3.5" />,
+            tip:   'Dispute resolved in your favour. A refund has been initiated to your original payment method.',
+        };
+    }
+    return {
+        label: 'Dispute — Closed',
+        cls:   'bg-gray-100 text-gray-700 border-gray-200',
+        icon:  <Scale className="h-3.5 w-3.5" />,
+        tip:   'Dispute reviewed. The admin decided to release payment to the counsellor. Contact support@mindcare.com for further queries.',
+    };
+};
+
 // ── Star Rating ───────────────────────────────────────────────────────────────
 function StarRating({ value, onChange, size = 28 }) {
     const [hovered, setHovered] = useState(0);
     return (
         <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map(star => (
-                <button
-                    key={star}
-                    type="button"
+                <button key={star} type="button"
                     onMouseEnter={() => setHovered(star)}
                     onMouseLeave={() => setHovered(0)}
                     onClick={() => onChange(star)}
-                    className="focus:outline-none transition-transform hover:scale-110"
-                >
-                    <Star
-                        size={size}
-                        className={`transition-colors ${
-                            star <= (hovered || value)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
-                        }`}
-                    />
+                    className="focus:outline-none transition-transform hover:scale-110">
+                    <Star size={size} className={`transition-colors ${star <= (hovered || value) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                 </button>
             ))}
             {value > 0 && (
@@ -93,7 +120,7 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
     const [rating,   setRating]   = useState(0);
     const [comment,  setComment]  = useState('');
     const [showDisputeForm, setShowDisputeForm] = useState(false);
-    const [disputeReason,   setDisputeReason]   = useState('');
+    const [disputeReason_,  setDisputeReason_]  = useState('');
 
     const counsellorName = booking.counselor?.fullName || 'your counsellor';
     const autoConfirmIn  = booking.sessionDoneAt
@@ -112,7 +139,6 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                         <p className="text-xs text-gray-500">Our team will review within 24 hours</p>
                     </div>
                 </div>
-
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
                     <p className="font-semibold mb-1">⚠️ What happens when you dispute:</p>
                     <ul className="space-y-1">
@@ -121,24 +147,15 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                         <li>• Refund will be issued if the dispute is valid</li>
                     </ul>
                 </div>
-
-                <textarea
-                    autoFocus
-                    value={disputeReason}
-                    onChange={e => setDisputeReason(e.target.value)}
+                <textarea autoFocus value={disputeReason_} onChange={e => setDisputeReason_(e.target.value)}
                     placeholder="Describe what happened (e.g. session did not take place, counsellor was unhelpful)…"
                     rows={4} maxLength={500}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300 mb-4"
-                />
-
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300 mb-4" />
                 <div className="flex gap-3">
                     <button onClick={() => setShowDisputeForm(false)}
-                        className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Back
-                    </button>
-                    <button
-                        onClick={() => disputeReason.trim() && onDispute(disputeReason.trim())}
-                        disabled={loading || !disputeReason.trim()}
+                        className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
+                    <button onClick={() => disputeReason_.trim() && onDispute(disputeReason_.trim())}
+                        disabled={loading || !disputeReason_.trim()}
                         className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
                         {loading ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
                         Submit Dispute
@@ -151,7 +168,6 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900">Confirm Session & Review</h3>
@@ -159,21 +175,10 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
                 </div>
-
-                {/* Session summary */}
                 <div className="bg-gray-50 rounded-xl p-4 mb-5 text-sm space-y-1.5">
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">Counsellor</span>
-                        <span className="font-medium">{counsellorName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">Date</span>
-                        <span className="font-medium">{fmtDate(booking.date)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-500">Time</span>
-                        <span className="font-medium">{booking.timeSlot}</span>
-                    </div>
+                    <div className="flex justify-between"><span className="text-gray-500">Counsellor</span><span className="font-medium">{counsellorName}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="font-medium">{fmtDate(booking.date)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Time</span><span className="font-medium">{booking.timeSlot}</span></div>
                     {booking.feePaid > 0 && (
                         <div className="flex justify-between border-t pt-2 mt-2">
                             <span className="text-gray-500">Fee paid</span>
@@ -181,61 +186,37 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                         </div>
                     )}
                 </div>
-
-                {/* Auto-confirm notice */}
                 {autoConfirmIn !== null && autoConfirmIn > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
                         ⏰ If you don't respond within <strong>{autoConfirmIn} hour{autoConfirmIn !== 1 ? 's' : ''}</strong>, the session will be automatically confirmed and payment released.
                     </div>
                 )}
-
-                {/* Payout notice */}
                 {booking.feePaid > 0 && (
                     <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 mb-5">
                         <Banknote size={13} className="flex-shrink-0" />
                         <span>Confirming will release <strong>₹{booking.feePaid}</strong> to {counsellorName}.</span>
                     </div>
                 )}
-
-                {/* Star rating */}
                 <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Rate your session <span className="text-red-400">*</span>
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Rate your session <span className="text-red-400">*</span></label>
                     <StarRating value={rating} onChange={setRating} size={32} />
-                    {rating === 0 && (
-                        <p className="text-xs text-red-400 mt-1">Please select a rating to continue</p>
-                    )}
+                    {rating === 0 && <p className="text-xs text-red-400 mt-1">Please select a rating to continue</p>}
                 </div>
-
-                {/* Written review */}
                 <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Write a review <span className="text-gray-400">(optional)</span>
-                    </label>
-                    <textarea
-                        value={comment}
-                        onChange={e => setComment(e.target.value)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Write a review <span className="text-gray-400">(optional)</span></label>
+                    <textarea value={comment} onChange={e => setComment(e.target.value)}
                         placeholder="How was the session? Was it helpful? Would you recommend this counsellor?"
                         rows={3} maxLength={500}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    />
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
                     <p className="text-xs text-gray-400 text-right mt-1">{comment.length}/500</p>
                 </div>
-
-                {/* Action buttons */}
                 <div className="space-y-2">
-                    <button
-                        onClick={() => rating > 0 && onConfirm(rating, comment)}
-                        disabled={loading || rating === 0}
+                    <button onClick={() => rating > 0 && onConfirm(rating, comment)} disabled={loading || rating === 0}
                         className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle size={15} />}
                         Confirm Session & Submit Review
                     </button>
-
-                    <button
-                        onClick={() => setShowDisputeForm(true)}
-                        disabled={loading}
+                    <button onClick={() => setShowDisputeForm(true)} disabled={loading}
                         className="w-full py-2.5 text-red-600 text-sm font-medium hover:bg-red-50 rounded-xl border border-red-200 flex items-center justify-center gap-2 transition-colors">
                         <AlertTriangle size={14} /> Session didn't happen / I have a dispute
                     </button>
@@ -249,7 +230,6 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
 function CancelModal({ booking, onConfirm, onClose, loading }) {
     const [reason, setReason] = useState('');
     const isPaid = ['pending', 'confirmed', 'session_done'].includes(booking.status);
-
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
@@ -264,18 +244,13 @@ function CancelModal({ booking, onConfirm, onClose, loading }) {
                     </div>
                 )}
                 <textarea autoFocus value={reason} onChange={e => setReason(e.target.value)}
-                    placeholder="Reason for cancellation…"
-                    rows={3} maxLength={200}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300"
-                />
+                    placeholder="Reason for cancellation…" rows={3} maxLength={200}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300" />
                 <p className="text-xs text-gray-400 text-right mt-1">{reason.length}/200</p>
                 <div className="flex gap-3 mt-4">
                     <button onClick={onClose} disabled={loading}
-                        className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-                        Keep Booking
-                    </button>
-                    <button onClick={() => reason.trim() && onConfirm(reason.trim())}
-                        disabled={loading || !reason.trim()}
+                        className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50">Keep Booking</button>
+                    <button onClick={() => reason.trim() && onConfirm(reason.trim())} disabled={loading || !reason.trim()}
                         className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
                         {loading ? <RefreshCw size={14} className="animate-spin" /> : <Ban size={14} />}
                         Cancel Booking
@@ -287,33 +262,46 @@ function CancelModal({ booking, onConfirm, onClose, loading }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  BOOKING CARD
+//  BOOKING CARD  (student view)
 // ─────────────────────────────────────────────────────────────────────────────
 export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
     const { token } = useAuth();
-    const [expanded,  setExpanded]  = useState(false);
-    const [showReview,  setShowReview]  = useState(false);
-    const [showCancel,  setShowCancel]  = useState(false);
+    const [expanded,      setExpanded]      = useState(false);
+    const [showReview,    setShowReview]    = useState(false);
+    const [showCancel,    setShowCancel]    = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
-    const [payState,  setPayState]  = useState('idle');
-    const [payError,  setPayError]  = useState('');
+    const [payState,      setPayState]      = useState('idle');
+    const [payError,      setPayError]      = useState('');
 
-    const meta       = STATUS_META[booking.status] || STATUS_META.pending;
-    const isUpcoming = new Date(booking.date) > new Date();
-    const canCancel  = ['payment_pending', 'pending', 'confirmed'].includes(booking.status);
-    const needsPayment   = booking.status === 'payment_pending';
-    const needsReview    = booking.status === 'session_done';
+    // ── Determine if this is a dispute booking ─────────────────────────────────
+    const isDisputeBooking  = isDispute(booking);
+    const disputeResolved   = isDisputeResolved(booking);
+    const resolution        = booking.adminDisputeResolution;
 
-    const accentColor = {
-        payment_pending: '#a855f7',
-        pending:         '#f59e0b',
-        confirmed:       '#10b981',
-        session_done:    '#6366f1',
-        completed:       '#3b82f6',
-        cancelled:       '#ef4444',
-    }[booking.status] || '#6b7280';
+    // ── Pick the right status meta ─────────────────────────────────────────────
+    const meta = isDisputeBooking
+        ? getDisputeMeta(booking)
+        : (STATUS_META[booking.status] || STATUS_META.cancelled);
 
-    // ── Retry payment ──────────────────────────────────────────────────────────
+    const isUpcoming     = new Date(booking.date) > new Date();
+    const canCancel      = ['payment_pending', 'pending', 'confirmed'].includes(booking.status) && !isDisputeBooking;
+    const needsPayment   = booking.status === 'payment_pending' && !isDisputeBooking;
+    const needsReview    = booking.status === 'session_done' && !isDisputeBooking;
+
+    const accentColor = isDisputeBooking
+        ? (disputeResolved
+            ? (resolution?.decision === 'refund_student' ? '#10b981' : '#6b7280')
+            : '#f97316')
+        : ({
+            payment_pending: '#a855f7',
+            pending:         '#f59e0b',
+            confirmed:       '#10b981',
+            session_done:    '#6366f1',
+            completed:       '#3b82f6',
+            cancelled:       '#ef4444',
+        }[booking.status] || '#6b7280');
+
+    // ── Payment ────────────────────────────────────────────────────────────────
     const handleRetryPayment = async () => {
         setPayError(''); setPayState('creating');
         try {
@@ -345,14 +333,12 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
         } catch (e) { setPayError(e.message); setPayState('failed'); }
     };
 
-    // ── Confirm + review ───────────────────────────────────────────────────────
     const handleConfirmReview = async (rating, comment) => {
         setActionLoading(true);
         try {
             const res  = await fetch(`${API_BASE}/bookings/${booking._id}/confirm-complete`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body:    JSON.stringify({ rating, comment }),
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ rating, comment }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to confirm session');
@@ -362,14 +348,12 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
         finally { setActionLoading(false); }
     };
 
-    // ── Dispute ────────────────────────────────────────────────────────────────
     const handleDispute = async (reason) => {
         setActionLoading(true);
         try {
             const res  = await fetch(`${API_BASE}/bookings/${booking._id}/dispute`, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body:    JSON.stringify({ reason }),
+                method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ reason }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to file dispute');
@@ -379,14 +363,12 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
         finally { setActionLoading(false); }
     };
 
-    // ── Cancel ─────────────────────────────────────────────────────────────────
     const handleCancelConfirm = async (reason) => {
         setActionLoading(true);
         try {
             const res  = await fetch(`${API_BASE}/bookings/${booking._id}/cancel`, {
-                method:  'PUT',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body:    JSON.stringify({ cancellationReason: reason }),
+                method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ cancellationReason: reason }),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Cancellation failed');
@@ -444,6 +426,9 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
 
                     {/* Status tip */}
                     <div className={`rounded-xl px-3 py-2 text-xs mb-4 ${
+                        isDisputeBooking && !disputeResolved ? 'bg-orange-50 border border-orange-200 text-orange-800' :
+                        isDisputeBooking && resolution?.decision === 'refund_student' ? 'bg-green-50 border border-green-200 text-green-800' :
+                        isDisputeBooking ? 'bg-gray-50 border border-gray-200 text-gray-700' :
                         booking.status === 'payment_pending' ? 'bg-purple-50 border border-purple-200 text-purple-800' :
                         booking.status === 'pending'         ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
                         booking.status === 'confirmed'       ? 'bg-green-50  border border-green-200  text-green-800'  :
@@ -453,6 +438,77 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                     }`}>
                         {meta.tip}
                     </div>
+
+                    {/* ── DISPUTE SECTION ── */}
+                    {isDisputeBooking && (
+                        <div className={`rounded-xl border p-4 mb-4 space-y-3 ${
+                            disputeResolved
+                                ? resolution?.decision === 'refund_student'
+                                    ? 'bg-green-50 border-green-200'
+                                    : 'bg-gray-50 border-gray-200'
+                                : 'bg-orange-50 border-orange-300'
+                        }`}>
+                            {/* Dispute filed reason */}
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wide mb-1 text-orange-600">
+                                    ⚖️ Your Dispute Reason
+                                </p>
+                                <p className="text-xs text-gray-700 leading-relaxed italic">
+                                    "{disputeReason(booking)}"
+                                </p>
+                            </div>
+
+                            {/* Admin resolution (if resolved) */}
+                            {disputeResolved && (
+                                <div className="border-t pt-3 space-y-2">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Admin Decision</p>
+
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-600">Outcome</span>
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                            resolution.decision === 'refund_student'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-gray-200 text-gray-700'
+                                        }`}>
+                                            {resolution.decision === 'refund_student'
+                                                ? '💰 Refund Issued to You'
+                                                : '📤 Payment Released to Counsellor'}
+                                        </span>
+                                    </div>
+
+                                    {resolution.note && (
+                                        <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Admin Note</p>
+                                            <p className="text-xs text-gray-700 leading-relaxed">"{resolution.note}"</p>
+                                        </div>
+                                    )}
+
+                                    <p className="text-[10px] text-gray-400">
+                                        Resolved on {fmtDate(resolution.resolvedAt)}
+                                    </p>
+
+                                    {resolution.decision === 'refund_student' && (
+                                        <p className="text-xs text-green-700 font-medium">
+                                            ✅ Refund of ₹{booking.feePaid} will be credited in 5–7 business days.
+                                        </p>
+                                    )}
+                                    {resolution.decision === 'release_counsellor' && (
+                                        <p className="text-xs text-gray-600">
+                                            Contact <a href="mailto:support@mindcare.com" className="text-indigo-600 underline">support@mindcare.com</a> if you have further questions.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Pending review notice */}
+                            {!disputeResolved && (
+                                <div className="flex items-center gap-2 text-xs text-orange-700">
+                                    <RefreshCw size={11} className="animate-spin flex-shrink-0"/>
+                                    <span>Admin is reviewing your case — typically resolved within 24 hours.</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* session_done — prominent CTA */}
                     {needsReview && (
@@ -470,7 +526,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                         </div>
                     )}
 
-                    {/* Completed — show rating if available */}
+                    {/* Completed — show rating */}
                     {booking.status === 'completed' && booking.reviewId && (
                         <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 mb-4">
                             <div className="flex items-center gap-1 mb-0.5">
@@ -521,7 +577,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                     {expanded && (
                         <div className="border-t border-gray-100 pt-4 mb-4 space-y-3 text-sm">
                             <div>
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Reason</p>
+                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Reason for booking</p>
                                 <p className="text-gray-700">{booking.reason}</p>
                             </div>
                             {booking.notes && (
@@ -536,7 +592,8 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                                     <span>Fee paid: <strong className="text-gray-800">₹{booking.feePaid}</strong></span>
                                 </div>
                             )}
-                            {booking.cancellationReason && (
+                            {/* Only show raw cancellation reason if it's not a dispute (disputes show the pretty UI above) */}
+                            {booking.cancellationReason && !isDisputeBooking && (
                                 <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                                     <p className="text-xs text-red-500 font-medium mb-0.5">Cancellation reason</p>
                                     <p className="text-red-800 text-sm">{booking.cancellationReason}</p>
@@ -581,19 +638,12 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
             </div>
 
             {showReview && (
-                <ReviewModal booking={booking}
-                    onConfirm={handleConfirmReview}
-                    onDispute={handleDispute}
-                    onClose={() => setShowReview(false)}
-                    loading={actionLoading}
-                />
+                <ReviewModal booking={booking} onConfirm={handleConfirmReview} onDispute={handleDispute}
+                    onClose={() => setShowReview(false)} loading={actionLoading} />
             )}
             {showCancel && (
-                <CancelModal booking={booking}
-                    onConfirm={handleCancelConfirm}
-                    onClose={() => setShowCancel(false)}
-                    loading={actionLoading}
-                />
+                <CancelModal booking={booking} onConfirm={handleCancelConfirm}
+                    onClose={() => setShowCancel(false)} loading={actionLoading} />
             )}
         </>
     );

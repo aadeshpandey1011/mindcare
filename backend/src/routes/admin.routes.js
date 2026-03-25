@@ -1,7 +1,6 @@
-// routes/admin.routes.js
-import express            from "express";
-import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js";
+import { Router }        from "express";
 import { verifyJWT }      from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/authoriseRoles.middleware.js";
 import {
     getPendingUsers,
     approveUser,
@@ -11,23 +10,29 @@ import {
     terminateUser,
     restoreUser,
     getAllPayments,
+    getDisputes,
+    resolveDispute,
 } from "../controllers/adminController.js";
 
-const router = express.Router();
+const router = Router();
 router.use(verifyJWT, authorizeRoles("admin"));
 
 // ── Counsellor approval ───────────────────────────────────────────────────────
-router.get("/pending-users",       getPendingUsers);
-router.put("/approve/:id",         approveUser);
-router.put("/reject/:id",          rejectUser);
+router.get("/pending-users",              getPendingUsers);
+router.put("/approve/:id",                approveUser);
+router.put("/reject/:id",                 rejectUser);
 
 // ── Full user management ──────────────────────────────────────────────────────
-router.get("/users",               getAllUsers);
-router.get("/users/:id",           getUserDetail);
-router.delete("/users/:id/terminate", terminateUser);
-router.put("/users/:id/restore",   restoreUser);
+router.get("/users",                      getAllUsers);
+router.get("/users/:id",                  getUserDetail);
+router.delete("/users/:id/terminate",     terminateUser);
+router.put("/users/:id/restore",          restoreUser);
 
-// ── Payment logs (admin view) ─────────────────────────────────────────────────
-router.get("/payments",            getAllPayments);
+// ── Payment logs ──────────────────────────────────────────────────────────────
+router.get("/payments",                   getAllPayments);
+
+// ── Disputes ──────────────────────────────────────────────────────────────────
+router.get("/disputes",                   getDisputes);
+router.patch("/disputes/:bookingId/resolve", resolveDispute);
 
 export default router;

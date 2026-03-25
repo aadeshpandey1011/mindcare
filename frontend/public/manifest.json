@@ -1,0 +1,52 @@
+{
+  "name": "MindCare — Mental Health Platform",
+  "short_name": "MindCare",
+  "description": "Confidential mental health support for students — AI chat, counsellor booking, screening & resources.",
+  "theme_color": "#6366f1",
+  "background_color": "#f8fafc",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "start_url": "/newhome",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "AI Chat",
+      "short_name": "Chat",
+      "url": "/chat",
+      "description": "Talk to Mia, your mental health companion"
+    },
+    {
+      "name": "Screening Test",
+      "short_name": "Screening",
+      "url": "/screening",
+      "description": "Check your mental wellbeing"
+    },
+    {
+      "name": "Book Session",
+      "short_name": "Book",
+      "url": "/booking",
+      "description": "Book a counsellor session"
+    },
+    {
+      "name": "Journal",
+      "short_name": "Journal",
+      "url": "/journal",
+      "description": "Write in your private journal"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { logAudit }    from "../utils/auditLog.js";
 import sendMail        from "../utils/mail.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  GET PENDING COUNSELLORS  (existing — keep working)
+//  GET PENDING COUNSELLORS
 // ─────────────────────────────────────────────────────────────────────────────
 export const getPendingUsers = asyncHandler(async (req, res) => {
     const users = await User.find({ role: "counsellor", isApproved: false })
@@ -18,7 +18,7 @@ export const getPendingUsers = asyncHandler(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  APPROVE COUNSELLOR  (existing — keep working)
+//  APPROVE COUNSELLOR
 // ─────────────────────────────────────────────────────────────────────────────
 export const approveUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -29,20 +29,14 @@ export const approveUser = asyncHandler(async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  REJECT COUNSELLOR
-//  PUT /api/v1/admin/reject/:id
 // ─────────────────────────────────────────────────────────────────────────────
 export const rejectUser = asyncHandler(async (req, res) => {
-    const { id }    = req.params;
+    const { id }     = req.params;
     const { reason } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-        id,
-        { isApproved: false, status: "rejected" },
-        { new: true }
-    );
+    const user = await User.findByIdAndUpdate(id, { isApproved: false, status: "rejected" }, { new: true });
     if (!user) throw new ApiError(404, "User not found");
 
-    // Email the counsellor
     await sendMail({
         to:      user.email,
         subject: "Your MindCare Application Update",
@@ -51,30 +45,19 @@ export const rejectUser = asyncHandler(async (req, res) => {
           <p>Hi <strong>${user.fullName}</strong>,</p>
           <p>After review, we are unable to approve your counsellor application at this time.</p>
           ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
-          <p>You may reapply after addressing the concerns. Contact support@mindcare.com for more information.</p>
+          <p>Contact support@mindcare.com for more information.</p>
         </div>`,
     }).catch(e => console.error("[Mail]", e.message));
 
-    logAudit(req, "COUNSELLOR_REJECTED", {
-        resourceType: "User", resourceId: id,
-        metadata: { reason },
-    });
-
+    logAudit(req, "COUNSELLOR_REJECTED", { resourceType: "User", resourceId: id, metadata: { reason } });
     res.json(new ApiResponse(200, { user }, "User rejected"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  GET ALL USERS  (with filters, pagination, search)
-//  GET /api/v1/admin/users?role=&search=&page=&limit=&status=
+//  GET ALL USERS
 // ─────────────────────────────────────────────────────────────────────────────
 export const getAllUsers = asyncHandler(async (req, res) => {
-    const {
-        role, search, status,
-        page  = 1,
-        limit = 20,
-        sortBy    = "createdAt",
-        sortOrder = "desc",
-    } = req.query;
+    const { role, search, status, page = 1, limit = 20, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
     const filter = {};
     if (role)   filter.role   = role;
@@ -95,13 +78,10 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     const [users, total] = await Promise.all([
         User.find(filter)
             .select("fullName email username avatar role specialization institution isApproved status isBannedFromForum avgRating totalReviews sessionFee createdAt bankDetails.hasDetails")
-            .sort(sort)
-            .skip(skip)
-            .limit(Number(limit)),
+            .sort(sort).skip(skip).limit(Number(limit)),
         User.countDocuments(filter),
     ]);
 
-    // Quick stats
     const [totalStudents, totalCounsellors, totalAdmins, pendingApprovals] = await Promise.all([
         User.countDocuments({ role: "student" }),
         User.countDocuments({ role: "counsellor" }),
@@ -111,137 +91,72 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
     res.json(new ApiResponse(200, {
         users,
-        pagination: {
-            page: Number(page), limit: Number(limit), total,
-            totalPages: Math.ceil(total / Number(limit)),
-            hasNext: page * limit < total,
-            hasPrev: page > 1,
-        },
+        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / Number(limit)), hasNext: page * limit < total, hasPrev: page > 1 },
         stats: { totalStudents, totalCounsellors, totalAdmins, pendingApprovals },
     }, "Users fetched"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  GET SINGLE USER DETAIL
-//  GET /api/v1/admin/users/:id
 // ─────────────────────────────────────────────────────────────────────────────
 export const getUserDetail = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id)
-        .select("-password -refreshToken -govtId.otpHash -govtId.otpExpiry");
+    const user = await User.findById(req.params.id).select("-password -refreshToken -govtId.otpHash -govtId.otpExpiry");
     if (!user) throw new ApiError(404, "User not found");
 
-    // Fetch their booking count + payment total
     const [bookingCount, paymentAgg] = await Promise.all([
-        Booking.countDocuments({
-            $or: [{ student: user._id }, { counselor: user._id }],
-        }),
-        Payment.aggregate([
-            { $match: { userId: user._id, status: "success" } },
-            { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-        ]),
+        Booking.countDocuments({ $or: [{ student: user._id }, { counselor: user._id }] }),
+        Payment.aggregate([{ $match: { userId: user._id, status: "success" } }, { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } }]),
     ]);
 
     const paymentSummary = paymentAgg[0] || { total: 0, count: 0 };
-
-    res.json(new ApiResponse(200, {
-        user,
-        activity: {
-            totalBookings: bookingCount,
-            totalPaid:     paymentSummary.total,
-            paymentCount:  paymentSummary.count,
-        },
-    }, "User detail fetched"));
+    res.json(new ApiResponse(200, { user, activity: { totalBookings: bookingCount, totalPaid: paymentSummary.total, paymentCount: paymentSummary.count } }, "User detail fetched"));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  TERMINATE USER (soft delete — disables account)
-//  DELETE /api/v1/admin/users/:id/terminate
-//  Body: { reason }
-//
-//  Sets isApproved=false, status='rejected'.
-//  Cancels all their upcoming bookings.
-//  Sends notification email.
-//  Does NOT hard-delete (preserve audit trail).
+//  TERMINATE USER
 // ─────────────────────────────────────────────────────────────────────────────
 export const terminateUser = asyncHandler(async (req, res) => {
-    const { id }    = req.params;
+    const { id }     = req.params;
     const { reason } = req.body;
 
-    if (id === req.user._id.toString())
-        throw new ApiError(400, "You cannot terminate your own account");
+    if (id === req.user._id.toString()) throw new ApiError(400, "You cannot terminate your own account");
 
     const user = await User.findById(id);
     if (!user) throw new ApiError(404, "User not found");
-    if (user.role === "admin")
-        throw new ApiError(403, "Admin accounts cannot be terminated this way");
+    if (user.role === "admin") throw new ApiError(403, "Admin accounts cannot be terminated this way");
 
-    // Disable account
-    await User.findByIdAndUpdate(id, {
-        isApproved:      false,
-        status:          "rejected",
-        isBannedFromForum: true,
-        refreshToken:    null,
-    });
+    await User.findByIdAndUpdate(id, { isApproved: false, status: "rejected", isBannedFromForum: true, refreshToken: null });
 
-    // Cancel all upcoming active bookings
     const cancelledCount = await Booking.updateMany(
-        {
-            $or: [{ student: id }, { counselor: id }],
-            status: { $in: ["pending", "confirmed", "payment_pending"] },
-        },
-        {
-            $set: {
-                status:             "cancelled",
-                cancellationReason: `Account terminated by admin${reason ? `: ${reason}` : ""}`,
-            },
-        }
+        { $or: [{ student: id }, { counselor: id }], status: { $in: ["pending", "confirmed", "payment_pending"] } },
+        { $set: { status: "cancelled", cancellationReason: `Account terminated by admin${reason ? `: ${reason}` : ""}` } }
     );
 
-    logAudit(req, "USER_TERMINATED", {
-        resourceType: "User",
-        resourceId:   id,
-        metadata:     { reason, role: user.role, cancelledBookings: cancelledCount.modifiedCount },
-    });
+    logAudit(req, "USER_TERMINATED", { resourceType: "User", resourceId: id, metadata: { reason, role: user.role, cancelledBookings: cancelledCount.modifiedCount } });
 
-    // Email the terminated user
     await sendMail({
         to:      user.email,
         subject: "Your MindCare Account Has Been Suspended",
         html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-          <div style="background:#ef4444;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">
-            <h1 style="color:#fff;margin:0">Account Suspended</h1>
-          </div>
+          <div style="background:#ef4444;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px"><h1 style="color:#fff;margin:0">Account Suspended</h1></div>
           <p>Hi <strong>${user.fullName}</strong>,</p>
-          <p>Your MindCare account has been suspended by an administrator.</p>
+          <p>Your account has been suspended. Contact <a href="mailto:support@mindcare.com">support@mindcare.com</a> if you believe this is a mistake.</p>
           ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
-          <p>If you believe this is a mistake, please contact us at <a href="mailto:support@mindcare.com">support@mindcare.com</a>.</p>
-          ${cancelledCount.modifiedCount > 0 ? `<p>⚠️ ${cancelledCount.modifiedCount} upcoming booking(s) have been cancelled.</p>` : ""}
         </div>`,
     }).catch(e => console.error("[Mail]", e.message));
 
-    res.json(new ApiResponse(200, {
-        userId:            id,
-        cancelledBookings: cancelledCount.modifiedCount,
-    }, `Account terminated. ${cancelledCount.modifiedCount} booking(s) cancelled.`));
+    res.json(new ApiResponse(200, { userId: id, cancelledBookings: cancelledCount.modifiedCount }, `Account terminated. ${cancelledCount.modifiedCount} booking(s) cancelled.`));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  RESTORE USER (re-activate a terminated account)
-//  PUT /api/v1/admin/users/:id/restore
+//  RESTORE USER
 // ─────────────────────────────────────────────────────────────────────────────
 export const restoreUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) throw new ApiError(404, "User not found");
 
-    await User.findByIdAndUpdate(req.params.id, {
-        isApproved:        user.role !== "counsellor" ? true : user.isApproved,
-        status:            "approved",
-        isBannedFromForum: false,
-    });
-
-    logAudit(req, "USER_RESTORED", {
-        resourceType: "User", resourceId: req.params.id,
-    });
+    await User.findByIdAndUpdate(req.params.id, { isApproved: user.role !== "counsellor" ? true : user.isApproved, status: "approved", isBannedFromForum: false });
+    logAudit(req, "USER_RESTORED", { resourceType: "User", resourceId: req.params.id });
 
     await sendMail({
         to:      user.email,
@@ -249,7 +164,7 @@ export const restoreUser = asyncHandler(async (req, res) => {
         html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
           <h2 style="color:#10b981">Account Restored</h2>
           <p>Hi <strong>${user.fullName}</strong>,</p>
-          <p>Your MindCare account has been restored. You can now log in as normal.</p>
+          <p>Your account has been restored. You can now log in as normal.</p>
           <a href="${process.env.FRONTEND_URL}/login" style="display:inline-block;background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;margin-top:16px">Login →</a>
         </div>`,
     }).catch(e => console.error("[Mail]", e.message));
@@ -258,18 +173,10 @@ export const restoreUser = asyncHandler(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  GET ALL PAYMENT LOGS (admin)
-//  GET /api/v1/admin/payments?page=&limit=&status=&search=
+//  GET ALL PAYMENT LOGS
 // ─────────────────────────────────────────────────────────────────────────────
 export const getAllPayments = asyncHandler(async (req, res) => {
-    const {
-        page   = 1,
-        limit  = 20,
-        status,
-        search,
-        dateFrom,
-        dateTo,
-    } = req.query;
+    const { page = 1, limit = 20, status, search, dateFrom, dateTo } = req.query;
 
     const filter = {};
     if (status) filter.status = status;
@@ -278,8 +185,6 @@ export const getAllPayments = asyncHandler(async (req, res) => {
         if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
         if (dateTo)   filter.createdAt.$lte = new Date(dateTo);
     }
-
-    // If searching by user name/email — find matching user IDs first
     if (search) {
         const re = { $regex: search, $options: "i" };
         const matchingUsers = await User.find({ $or: [{ fullName: re }, { email: re }] }).select("_id");
@@ -293,30 +198,240 @@ export const getAllPayments = asyncHandler(async (req, res) => {
             .populate("userId",       "fullName email avatar role")
             .populate("counsellorId", "fullName email avatar specialization")
             .populate("bookingId",    "date timeSlot mode status")
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(Number(limit)),
+            .sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
         Payment.countDocuments(filter),
-        Payment.aggregate([
-            { $group: {
-                _id:          null,
-                totalCollected: { $sum: { $cond: [{ $eq: ["$status","success"]  }, "$amount", 0] } },
-                totalRefunded:  { $sum: { $cond: [{ $eq: ["$status","refunded"] }, "$amount", 0] } },
-                successCount:   { $sum: { $cond: [{ $eq: ["$status","success"]  }, 1, 0] } },
-                refundCount:    { $sum: { $cond: [{ $eq: ["$status","refunded"] }, 1, 0] } },
-                failedCount:    { $sum: { $cond: [{ $eq: ["$status","failed"]   }, 1, 0] } },
-            }},
-        ]),
+        Payment.aggregate([{ $group: { _id: null,
+            totalCollected: { $sum: { $cond: [{ $eq: ["$status","success"]  }, "$amount", 0] } },
+            totalRefunded:  { $sum: { $cond: [{ $eq: ["$status","refunded"] }, "$amount", 0] } },
+            successCount:   { $sum: { $cond: [{ $eq: ["$status","success"]  }, 1, 0] } },
+            refundCount:    { $sum: { $cond: [{ $eq: ["$status","refunded"] }, 1, 0] } },
+            failedCount:    { $sum: { $cond: [{ $eq: ["$status","failed"]   }, 1, 0] } },
+        }}]),
     ]);
 
     const summary = summaryAgg[0] || { totalCollected: 0, totalRefunded: 0, successCount: 0, refundCount: 0, failedCount: 0 };
 
-    res.json(new ApiResponse(200, {
-        payments,
-        summary,
-        pagination: {
-            page: Number(page), limit: Number(limit), total,
-            totalPages: Math.ceil(total / Number(limit)),
-        },
-    }, "Payment logs fetched"));
+    res.json(new ApiResponse(200, { payments, summary, pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / Number(limit)) } }, "Payment logs fetched"));
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  GET ALL DISPUTES
+//  GET /api/v1/admin/disputes?status=open|resolved|all&page=&limit=
+//
+//  FIX: Use "adminDisputeResolution.decision" to distinguish open from resolved.
+//  Using $exists on the top-level subdoc is unreliable — an empty {} subdoc
+//  is truthy and breaks the filter. Checking the nested .decision field is
+//  the safe approach: it only exists when resolveDispute() has run successfully.
+// ─────────────────────────────────────────────────────────────────────────────
+export const getDisputes = asyncHandler(async (req, res) => {
+    const { status = "open", page = 1, limit = 20 } = req.query;
+
+    // Base: any booking cancelled with "DISPUTE:" prefix
+    const baseFilter = {
+        cancellationReason: { $regex: /^DISPUTE:/i },
+    };
+
+    if (status === "open") {
+        // Open = no decision has been recorded yet
+        baseFilter["adminDisputeResolution.decision"] = { $exists: false };
+    } else if (status === "resolved") {
+        // Resolved = a decision exists (refund_student or release_counsellor)
+        baseFilter["adminDisputeResolution.decision"] = {
+            $in: ["refund_student", "release_counsellor"],
+        };
+    }
+    // "all" = no extra filter
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Count open disputes using the same reliable filter
+    const openCountFilter = {
+        cancellationReason: { $regex: /^DISPUTE:/i },
+        "adminDisputeResolution.decision": { $exists: false },
+    };
+
+    const [disputes, total, openCount] = await Promise.all([
+        Booking.find(baseFilter)
+            .populate("student",  "fullName email avatar username")
+            .populate("counselor","fullName email avatar specialization sessionFee")
+            .populate("paymentId","status amount cf_payment_id refundId payoutStatus")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit)),
+        Booking.countDocuments(baseFilter),
+        Booking.countDocuments(openCountFilter),
+    ]);
+
+    res.json(new ApiResponse(200, {
+        disputes,
+        openCount,
+        pagination: { page: Number(page), limit: Number(limit), total, totalPages: Math.ceil(total / Number(limit)) },
+    }, "Disputes fetched"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  RESOLVE DISPUTE
+//  PATCH /api/v1/admin/disputes/:bookingId/resolve
+//  Body: { decision: "refund_student" | "release_counsellor", note }
+//
+//  FIX: Check adminDisputeResolution.decision (not the whole subdoc) to
+//  determine if already resolved — the subdoc itself may exist as {} from
+//  schema initialisation, but a decision string only exists after resolution.
+// ─────────────────────────────────────────────────────────────────────────────
+export const resolveDispute = asyncHandler(async (req, res) => {
+    const { bookingId }      = req.params;
+    const { decision, note } = req.body;
+
+    if (!["refund_student", "release_counsellor"].includes(decision))
+        throw new ApiError(400, "decision must be 'refund_student' or 'release_counsellor'");
+
+    const booking = await Booking.findById(bookingId)
+        .populate("student",  "fullName email")
+        .populate("counselor","fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+
+    if (!booking.cancellationReason?.match(/^DISPUTE:/i))
+        throw new ApiError(400, "This booking is not flagged as a dispute");
+
+    // Check the nested .decision field — not the whole subdoc
+    if (booking.adminDisputeResolution?.decision) {
+        throw new ApiError(400, `This dispute has already been resolved: ${booking.adminDisputeResolution.decision}`);
+    }
+
+    let outcomeMsg = "";
+    const resolvedAt = new Date();
+
+    if (decision === "refund_student") {
+        // ── Cashfree refund ───────────────────────────────────────────────────
+        const payment = await Payment.findOne({ bookingId: booking._id, status: "success" });
+        if (payment) {
+            try {
+                const refundId = `RF_DISP_${bookingId}_${Date.now()}`;
+                const cfUrl    = process.env.NODE_ENV === "production"
+                    ? "https://api.cashfree.com"
+                    : "https://sandbox.cashfree.com";
+
+                const cfRes = await fetch(`${cfUrl}/pg/orders/${payment.order_id}/refunds`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":    "application/json",
+                        "x-api-version":   "2023-08-01",
+                        "x-client-id":     process.env.CASHFREE_APP_ID,
+                        "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+                    },
+                    body: JSON.stringify({
+                        refund_amount: payment.amount,
+                        refund_id:     refundId,
+                        refund_note:   `Dispute resolved in student's favour: ${note || "Admin decision"}`,
+                    }),
+                });
+                const cfData = await cfRes.json();
+                payment.status       = "refunded";
+                payment.refundId     = cfData.refund_id || refundId;
+                payment.refundAmount = payment.amount;
+                payment.refundReason = `Dispute: ${note || "Admin decision"}`;
+                payment.refundedAt   = resolvedAt;
+                await payment.save();
+
+                logAudit(req, "DISPUTE_REFUND_INITIATED", {
+                    resourceType: "Payment", resourceId: payment._id,
+                    metadata: { refundId: payment.refundId, amount: payment.amount, bookingId },
+                });
+            } catch (err) {
+                console.error("[Dispute refund]", err.message);
+                // Non-fatal — still record resolution so admin isn't blocked
+            }
+        }
+        outcomeMsg = `Refund of ₹${booking.feePaid} initiated to student ${booking.student.fullName}.`;
+
+        await Promise.allSettled([
+            sendMail({ to: booking.student.email,  subject: "✅ Dispute Resolved — Refund Initiated",  html: disputeResolutionEmail(booking, "student",          note, booking.feePaid) }),
+            sendMail({ to: booking.counselor.email, subject: "ℹ️ Session Dispute Outcome — MindCare", html: disputeResolutionEmail(booking, "counsellor_refund", note, booking.feePaid) }),
+        ]);
+
+    } else {
+        // ── Release payout to counsellor ──────────────────────────────────────
+        await Booking.findByIdAndUpdate(bookingId, {
+            payoutStatus:     "released",
+            payoutReleasedAt: resolvedAt,
+        });
+        const payment = await Payment.findOne({ bookingId: booking._id });
+        if (payment) {
+            payment.payoutStatus     = "released";
+            payment.payoutReleasedAt = resolvedAt;
+            await payment.save();
+        }
+        outcomeMsg = `Payout of ₹${booking.feePaid} released to counsellor ${booking.counselor.fullName}.`;
+
+        await Promise.allSettled([
+            sendMail({ to: booking.counselor.email, subject: "✅ Dispute Resolved — Payout Released",    html: disputeResolutionEmail(booking, "counsellor_paid", note, booking.feePaid) }),
+            sendMail({ to: booking.student.email,   subject: "ℹ️ Session Dispute Outcome — MindCare",  html: disputeResolutionEmail(booking, "student_denied",  note, booking.feePaid) }),
+        ]);
+    }
+
+    // ── Stamp resolution on booking ───────────────────────────────────────────
+    // Use $set with explicit dot-notation keys to avoid overwriting existing
+    // subdoc fields and to ensure resolvedAt is always a real Date object.
+    await Booking.findByIdAndUpdate(bookingId, {
+        $set: {
+            "adminDisputeResolution.decision":   decision,
+            "adminDisputeResolution.note":        note || "",
+            "adminDisputeResolution.resolvedBy":  req.user._id,
+            "adminDisputeResolution.resolvedAt":  resolvedAt,
+        },
+    });
+
+    logAudit(req, "DISPUTE_RESOLVED", {
+        resourceType: "Booking", resourceId: bookingId,
+        metadata:     { decision, note, adminId: req.user._id },
+    });
+
+    res.json(new ApiResponse(200, {
+        bookingId,
+        decision,
+        resolvedAt: resolvedAt.toISOString(),
+        outcome:    outcomeMsg,
+    }, outcomeMsg));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  EMAIL TEMPLATES
+// ─────────────────────────────────────────────────────────────────────────────
+function disputeResolutionEmail(booking, recipient, note, amount) {
+    const date = new Date(booking.date).toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" });
+
+    const messages = {
+        student: {
+            title: "Dispute Resolved in Your Favour",
+            color: "#10b981",
+            body:  `Your dispute for the session on ${date} with <strong>${booking.counselor.fullName}</strong> has been reviewed. We have decided to issue a <strong>full refund of ₹${amount}</strong>, which will be credited to your original payment method within 5–7 business days.`,
+        },
+        counsellor_refund: {
+            title: "Session Dispute — Outcome",
+            color: "#f59e0b",
+            body:  `A student filed a dispute for your session on ${date}. After review, the admin team has decided to issue a refund to the student. The session fee will not be transferred to your account. Contact support@mindcare.com with questions.`,
+        },
+        counsellor_paid: {
+            title: "Dispute Resolved — Payout Released",
+            color: "#10b981",
+            body:  `A student filed a dispute for your session on ${date}. After review, the admin team has decided in your favour. A <strong>payout of ₹${amount}</strong> will be credited to your bank account within 3–5 business days.`,
+        },
+        student_denied: {
+            title: "Session Dispute — Outcome",
+            color: "#f59e0b",
+            body:  `Your dispute for the session on ${date} with <strong>${booking.counselor.fullName}</strong> has been reviewed. After investigation, the admin team determined the session was delivered as expected and the fee has been released to the counsellor. Contact support@mindcare.com for further concerns.`,
+        },
+    };
+
+    const m = messages[recipient];
+    return `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:${m.color};border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0;font-size:22px">⚖️ ${m.title}</h1>
+  </div>
+  <p style="color:#374151;line-height:1.6">${m.body}</p>
+  ${note ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin:16px 0"><p style="margin:0;color:#374151"><strong>Admin note:</strong> ${note}</p></div>` : ""}
+  <p style="color:#9ca3af;font-size:12px;margin-top:24px">Booking reference: ${booking._id}</p>
+  <p style="color:#9ca3af;font-size:12px">Questions? <a href="mailto:support@mindcare.com" style="color:#6366f1">support@mindcare.com</a></p>
+</div>`;
+}

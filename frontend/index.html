@@ -6,12 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MindCare — Mental Health Platform</title>
 
-    <!-- Cashfree JS SDK — must load before any payment call -->
-    <!-- Sandbox SDK (use during development) -->
+    <!-- ── PWA ── -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#6366f1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MindCare" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- ── SEO ── -->
+    <meta name="description" content="Confidential mental health support for students — AI chat, counsellor booking, screening & resources." />
+    <meta name="keywords" content="mental health, counselling, anxiety, depression, students, India" />
+
+    <!-- Cashfree JS SDK -->
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- ── Service Worker registration ── -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => console.log('[SW] Registered, scope:', reg.scope))
+            .catch(err => console.warn('[SW] Registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

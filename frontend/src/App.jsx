@@ -21,15 +21,14 @@ import Profile            from "./pages/Profile";
 import CounsellorSettings from "./pages/CounsellorSettings";
 import AdminUsers         from "./pages/AdminUsers";
 import PaymentLogs        from "./pages/PaymentLogs";
+import Journal            from "./pages/Journal";
+import PrivacyPolicy      from "./pages/PrivacyPolicy";
 
 import Layout             from "./components/Layout";
 import ProtectedRoute     from "./components/ProtectedRoute";
 import BookingDashboard   from "./components/BookingDashboard";
 
-// ── Booking page smart redirect ───────────────────────────────────────────────
-// Admin   → /dashboard          (no booking workflow)
-// Counsellor → /counsellorDashboard
-// Student → /booking (normal)
+// ── Booking page smart redirect ────────────────────────────────────────────────
 function BookingOrRedirect() {
   const { user } = useAuth();
   if (user?.role === "admin")      return <Navigate to="/dashboard"            replace />;
@@ -48,6 +47,7 @@ function App() {
       <Route path="/forgot-password"       element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/auth/google/success"   element={<GoogleAuthSuccess />} />
+      <Route path="/privacy"               element={<PrivacyPolicy />} />
 
       {/* ── Protected inside Layout (with Navbar) ── */}
       <Route element={<Layout />}>
@@ -86,7 +86,14 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* Book Appointment — admin + counsellor get smart-redirected */}
+        {/* Journal — student + counsellor */}
+        <Route path="/journal" element={
+          <ProtectedRoute allowedRoles={["student", "counsellor"]}>
+            <Journal />
+          </ProtectedRoute>
+        } />
+
+        {/* Book Appointment */}
         <Route path="/booking" element={
           <ProtectedRoute allowedRoles={["student", "counsellor", "admin"]}>
             <BookingOrRedirect />
@@ -99,8 +106,6 @@ function App() {
             <AllBookings />
           </ProtectedRoute>
         } />
-
-        {/* Student + counsellor payment history */}
         <Route path="/my-payments" element={
           <ProtectedRoute allowedRoles={["student", "counsellor"]}>
             <PaymentLogs />
