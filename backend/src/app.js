@@ -26,14 +26,47 @@ import wellnessRouter     from "./routes/wellness.routes.js";
 
 export const app = express();
 
-const FRONTEND_ORIGIN = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "http://localhost:5173";
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Accepts:
+//   1. The exact CORS_ORIGIN env var (your production Vercel URL)
+//   2. Any *.vercel.app subdomain (covers all Vercel preview deployment URLs)
+//   3. localhost:5173 and localhost:3000 for local development
+// ─────────────────────────────────────────────────────────────────────────────
+const PRODUCTION_ORIGIN = process.env.CORS_ORIGIN || process.env.FRONTEND_URL || "";
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:4173",
+];
+
+// Add production origin if set
+if (PRODUCTION_ORIGIN) {
+    // Remove trailing slash if present
+    allowedOrigins.push(PRODUCTION_ORIGIN.replace(/\/$/, ""));
+}
 
 const corsOptions = {
-    origin:           FRONTEND_ORIGIN,
-    credentials:      true,
-    methods:          ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders:   ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
-    exposedHeaders:   ["Set-Cookie"],
+    origin: (requestOrigin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Postman)
+        if (!requestOrigin) return callback(null, true);
+
+        // Allow exact matches
+        if (allowedOrigins.includes(requestOrigin)) return callback(null, true);
+
+        // Allow ANY *.vercel.app subdomain (covers all preview deployments)
+        if (requestOrigin.endsWith(".vercel.app")) return callback(null, true);
+
+        // Allow the render backend itself (for health checks)
+        if (requestOrigin.includes("onrender.com")) return callback(null, true);
+
+        console.warn(`[CORS] Blocked origin: ${requestOrigin}`);
+        return callback(new Error(`CORS: origin ${requestOrigin} not allowed`));
+    },
+    credentials:          true,
+    methods:              ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders:       ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    exposedHeaders:       ["Set-Cookie"],
     optionsSuccessStatus: 200,
 };
 
@@ -52,32 +85,32 @@ app.use("/api/v1/bookings",      bookingRouter);
 app.use("/api/v1/payments",      paymentRouter);
 app.use("/api/v1/ads",           adRouter);
 app.use("/api/v1/resources",     resourceRouter);
-app.use("/api/v1/wellness",      wellnessRouter);   // mood, onboarding, journal
+app.use("/api/v1/wellness",      wellnessRouter);
 app.use("/api/v1/tweets",        tweetRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/videos",        videoRouter);
 app.use("/api/v1/comments",      commentRouter);
 app.use("/api/v1/likes",         likeRouter);
-app.use("/api/v1/playlist",      playlistRouter);
+app.use("/api/v1/playlists",     playlistRouter);
 app.use("/api/v1/dashboard",     dashboardRouter);
 app.use("/api/v1/screenings",    screeningRouter);
 app.use("/api/v1/admin",         adminRouter);
-app.use("/api/v1/auth",          userRouter);
-app.use("/api/v1/auth",          googleAuthRouter);
-app.use("/api/forum",            postRouter);
+app.use("/api/v1/posts",         postRouter);
 app.use("/api/v1/chat",          chatRouter);
 app.use("/api/v1/verify",        verificationRouter);
+app.use("/api/v1/auth",          googleAuthRouter);
 
-// ── Error handler ─────────────────────────────────────────────────────────────
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.statusCode || 500).json({
-        success: false,
-        message: err.message || "Internal Server Error",
-        ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-    });
-});
-
+// ── 404 handler ───────────────────────────────────────────────────────────────
 app.use("*", (req, res) => {
     res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
+
+// ── Global error handler ──────────────────────────────────────────────────────
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+    const message    = err.message    || "Internal Server Error";
+    console.error(`[Error] ${req.method} ${req.path} → ${statusCode}: ${message}`);
+    res.status(statusCode).json({ success: false, message, ...(err.errors && { errors: err.errors }) });
+});
+
+export default app;
