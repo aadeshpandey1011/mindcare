@@ -6,10 +6,15 @@ import {
     ThumbsUp, AlertTriangle, Banknote, Scale, ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+// Static import replaces the dynamic await import() that caused the Vite warning
+import {
+    createPaymentOrder,
+    openCashfreeCheckout,
+    verifyPayment,
+} from '../api/paymentApi';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
-// ── helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (d) => {
     if (!d) return '—';
     const dt = new Date(d);
@@ -19,9 +24,8 @@ const fmtDate = (d) => {
 };
 const fmtSlot = (s) => s?.replace('-', ' – ') || '—';
 
-// ── Detect dispute bookings ───────────────────────────────────────────────────
-const isDispute     = (b) => /^DISPUTE:/i.test(b.cancellationReason || '');
-const disputeReason = (b) => (b.cancellationReason || '').replace(/^DISPUTE:\s*/i, '').trim();
+const isDispute         = (b) => /^DISPUTE:/i.test(b.cancellationReason || '');
+const disputeReason     = (b) => (b.cancellationReason || '').replace(/^DISPUTE:\s*/i, '').trim();
 const isDisputeResolved = (b) => !!(b.adminDisputeResolution?.decision);
 
 const STATUS_META = {
@@ -63,32 +67,26 @@ const STATUS_META = {
     },
 };
 
-// ── Dispute status meta (overrides the normal "Cancelled" when it's a dispute)
 const getDisputeMeta = (booking) => {
-    const resolved  = isDisputeResolved(booking);
-    const decision  = booking.adminDisputeResolution?.decision;
-
-    if (!resolved) {
-        return {
-            label: 'Dispute Under Review',
-            cls:   'bg-orange-100 text-orange-800 border-orange-300',
-            icon:  <ShieldAlert className="h-3.5 w-3.5" />,
-            tip:   'You raised a dispute. Our admin team is reviewing this case and will contact both parties within 24 hours.',
-        };
-    }
-    if (decision === 'refund_student') {
-        return {
-            label: 'Dispute — Refunded',
-            cls:   'bg-green-100 text-green-800 border-green-200',
-            icon:  <Scale className="h-3.5 w-3.5" />,
-            tip:   'Dispute resolved in your favour. A refund has been initiated to your original payment method.',
-        };
-    }
+    const resolved = isDisputeResolved(booking);
+    const decision = booking.adminDisputeResolution?.decision;
+    if (!resolved) return {
+        label: 'Dispute Under Review',
+        cls:   'bg-orange-100 text-orange-800 border-orange-300',
+        icon:  <ShieldAlert className="h-3.5 w-3.5" />,
+        tip:   'You raised a dispute. Our admin team is reviewing this case within 24 hours.',
+    };
+    if (decision === 'refund_student') return {
+        label: 'Dispute — Refunded',
+        cls:   'bg-green-100 text-green-800 border-green-200',
+        icon:  <Scale className="h-3.5 w-3.5" />,
+        tip:   'Dispute resolved in your favour. A refund has been initiated to your original payment method.',
+    };
     return {
         label: 'Dispute — Closed',
         cls:   'bg-gray-100 text-gray-700 border-gray-200',
         icon:  <Scale className="h-3.5 w-3.5" />,
-        tip:   'Dispute reviewed. The admin decided to release payment to the counsellor. Contact support@mindcare.com for further queries.',
+        tip:   'Dispute reviewed. Admin released payment to the counsellor. Contact support@mindcare.com with concerns.',
     };
 };
 
@@ -97,10 +95,9 @@ function StarRating({ value, onChange, size = 28 }) {
     const [hovered, setHovered] = useState(0);
     return (
         <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map(star => (
+            {[1,2,3,4,5].map(star => (
                 <button key={star} type="button"
-                    onMouseEnter={() => setHovered(star)}
-                    onMouseLeave={() => setHovered(0)}
+                    onMouseEnter={() => setHovered(star)} onMouseLeave={() => setHovered(0)}
                     onClick={() => onChange(star)}
                     className="focus:outline-none transition-transform hover:scale-110">
                     <Star size={size} className={`transition-colors ${star <= (hovered || value) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
@@ -108,20 +105,19 @@ function StarRating({ value, onChange, size = 28 }) {
             ))}
             {value > 0 && (
                 <span className="ml-2 text-sm font-medium text-gray-600">
-                    {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][value]}
+                    {['','Poor','Fair','Good','Very Good','Excellent'][value]}
                 </span>
             )}
         </div>
     );
 }
 
-// ── Review + Confirm Modal ────────────────────────────────────────────────────
+// ── Review Modal ──────────────────────────────────────────────────────────────
 function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
-    const [rating,   setRating]   = useState(0);
-    const [comment,  setComment]  = useState('');
-    const [showDisputeForm, setShowDisputeForm] = useState(false);
-    const [disputeReason_,  setDisputeReason_]  = useState('');
-
+    const [rating,          setRating]         = useState(0);
+    const [comment,         setComment]        = useState('');
+    const [showDisputeForm, setShowDispute]    = useState(false);
+    const [disputeText,     setDisputeText]    = useState('');
     const counsellorName = booking.counselor?.fullName || 'your counsellor';
     const autoConfirmIn  = booking.sessionDoneAt
         ? Math.max(0, Math.ceil((new Date(booking.sessionDoneAt).getTime() + 48*3600*1000 - Date.now()) / 3600000))
@@ -147,15 +143,14 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                         <li>• Refund will be issued if the dispute is valid</li>
                     </ul>
                 </div>
-                <textarea autoFocus value={disputeReason_} onChange={e => setDisputeReason_(e.target.value)}
-                    placeholder="Describe what happened (e.g. session did not take place, counsellor was unhelpful)…"
-                    rows={4} maxLength={500}
+                <textarea autoFocus value={disputeText} onChange={e => setDisputeText(e.target.value)}
+                    placeholder="Describe what happened…" rows={4} maxLength={500}
                     className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-300 mb-4" />
                 <div className="flex gap-3">
-                    <button onClick={() => setShowDisputeForm(false)}
+                    <button onClick={() => setShowDispute(false)}
                         className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Back</button>
-                    <button onClick={() => disputeReason_.trim() && onDispute(disputeReason_.trim())}
-                        disabled={loading || !disputeReason_.trim()}
+                    <button onClick={() => disputeText.trim() && onDispute(disputeText.trim())}
+                        disabled={loading || !disputeText.trim()}
                         className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
                         {loading ? <RefreshCw size={14} className="animate-spin" /> : <AlertTriangle size={14} />}
                         Submit Dispute
@@ -188,7 +183,7 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                 </div>
                 {autoConfirmIn !== null && autoConfirmIn > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
-                        ⏰ If you don't respond within <strong>{autoConfirmIn} hour{autoConfirmIn !== 1 ? 's' : ''}</strong>, the session will be automatically confirmed and payment released.
+                        ⏰ If you don't respond within <strong>{autoConfirmIn} hour{autoConfirmIn !== 1 ? 's' : ''}</strong>, the session will be auto-confirmed.
                     </div>
                 )}
                 {booking.feePaid > 0 && (
@@ -205,8 +200,7 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                 <div className="mb-5">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Write a review <span className="text-gray-400">(optional)</span></label>
                     <textarea value={comment} onChange={e => setComment(e.target.value)}
-                        placeholder="How was the session? Was it helpful? Would you recommend this counsellor?"
-                        rows={3} maxLength={500}
+                        placeholder="How was the session?" rows={3} maxLength={500}
                         className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
                     <p className="text-xs text-gray-400 text-right mt-1">{comment.length}/500</p>
                 </div>
@@ -216,7 +210,7 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle size={15} />}
                         Confirm Session & Submit Review
                     </button>
-                    <button onClick={() => setShowDisputeForm(true)} disabled={loading}
+                    <button onClick={() => setShowDispute(true)} disabled={loading}
                         className="w-full py-2.5 text-red-600 text-sm font-medium hover:bg-red-50 rounded-xl border border-red-200 flex items-center justify-center gap-2 transition-colors">
                         <AlertTriangle size={14} /> Session didn't happen / I have a dispute
                     </button>
@@ -240,7 +234,7 @@ function CancelModal({ booking, onConfirm, onClose, loading }) {
                 {isPaid && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-800">
                         <p className="font-medium mb-0.5">💰 Refund Policy</p>
-                        <p>Cancellations more than 24 hours before the session receive a <strong>full refund</strong>. Within 24 hours — no refund.</p>
+                        <p>Cancellations more than 24 hours before the session receive a <strong>full refund</strong>.</p>
                     </div>
                 )}
                 <textarea autoFocus value={reason} onChange={e => setReason(e.target.value)}
@@ -273,41 +267,28 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
     const [payState,      setPayState]      = useState('idle');
     const [payError,      setPayError]      = useState('');
 
-    // ── Determine if this is a dispute booking ─────────────────────────────────
-    const isDisputeBooking  = isDispute(booking);
-    const disputeResolved   = isDisputeResolved(booking);
-    const resolution        = booking.adminDisputeResolution;
+    const isDisputeBooking = isDispute(booking);
+    const disputeResolved  = isDisputeResolved(booking);
+    const resolution       = booking.adminDisputeResolution;
 
-    // ── Pick the right status meta ─────────────────────────────────────────────
-    const meta = isDisputeBooking
-        ? getDisputeMeta(booking)
-        : (STATUS_META[booking.status] || STATUS_META.cancelled);
-
-    const isUpcoming     = new Date(booking.date) > new Date();
-    const canCancel      = ['payment_pending', 'pending', 'confirmed'].includes(booking.status) && !isDisputeBooking;
-    const needsPayment   = booking.status === 'payment_pending' && !isDisputeBooking;
-    const needsReview    = booking.status === 'session_done' && !isDisputeBooking;
+    const meta       = isDisputeBooking ? getDisputeMeta(booking) : (STATUS_META[booking.status] || STATUS_META.cancelled);
+    const isUpcoming = new Date(booking.date) > new Date();
+    const canCancel  = ['payment_pending', 'pending', 'confirmed'].includes(booking.status) && !isDisputeBooking;
+    const needsPayment = booking.status === 'payment_pending' && !isDisputeBooking;
+    const needsReview  = booking.status === 'session_done'    && !isDisputeBooking;
 
     const accentColor = isDisputeBooking
-        ? (disputeResolved
-            ? (resolution?.decision === 'refund_student' ? '#10b981' : '#6b7280')
-            : '#f97316')
+        ? (disputeResolved ? (resolution?.decision === 'refund_student' ? '#10b981' : '#6b7280') : '#f97316')
         : ({
-            payment_pending: '#a855f7',
-            pending:         '#f59e0b',
-            confirmed:       '#10b981',
-            session_done:    '#6366f1',
-            completed:       '#3b82f6',
-            cancelled:       '#ef4444',
-        }[booking.status] || '#6b7280');
+            payment_pending: '#a855f7', pending: '#f59e0b', confirmed: '#10b981',
+            session_done: '#6366f1',    completed: '#3b82f6', cancelled: '#ef4444',
+          }[booking.status] || '#6b7280');
 
-    // ── Payment ────────────────────────────────────────────────────────────────
+    // ── Payment (now uses static import) ──────────────────────────────────────
     const handleRetryPayment = async () => {
         setPayError(''); setPayState('creating');
         try {
-            const { createPaymentOrder: cpAPI, openCashfreeCheckout: ocAPI, verifyPayment: vpAPI } =
-                await import('../api/paymentApi');
-            const orderRes  = await cpAPI(booking._id);
+            const orderRes  = await createPaymentOrder(booking._id);
             const orderData = orderRes.data?.data || orderRes.data;
             if (orderData?.free || !orderData?.paymentSessionId) {
                 setPayState(orderData?.free ? 'done' : 'failed');
@@ -316,11 +297,11 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                 return;
             }
             setPayState('paying');
-            ocAPI(orderData,
+            openCashfreeCheckout(orderData,
                 async () => {
                     setPayState('verifying');
                     try {
-                        await vpAPI({ orderId: orderData.orderId, bookingId: booking._id });
+                        await verifyPayment({ orderId: orderData.orderId, bookingId: booking._id });
                         setPayState('done');
                         if (onRefresh) onRefresh();
                     } catch (e) { setPayError(e.message); setPayState('failed'); }
@@ -406,7 +387,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                         </span>
                     </div>
 
-                    {/* Details */}
+                    {/* Details row */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
                         <div className="flex items-center gap-1.5 text-xs text-gray-600">
                             <Calendar size={12} className="text-indigo-400 flex-shrink-0" />
@@ -426,9 +407,9 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
 
                     {/* Status tip */}
                     <div className={`rounded-xl px-3 py-2 text-xs mb-4 ${
-                        isDisputeBooking && !disputeResolved ? 'bg-orange-50 border border-orange-200 text-orange-800' :
+                        isDisputeBooking && !disputeResolved               ? 'bg-orange-50 border border-orange-200 text-orange-800' :
                         isDisputeBooking && resolution?.decision === 'refund_student' ? 'bg-green-50 border border-green-200 text-green-800' :
-                        isDisputeBooking ? 'bg-gray-50 border border-gray-200 text-gray-700' :
+                        isDisputeBooking                                   ? 'bg-gray-50 border border-gray-200 text-gray-700' :
                         booking.status === 'payment_pending' ? 'bg-purple-50 border border-purple-200 text-purple-800' :
                         booking.status === 'pending'         ? 'bg-yellow-50 border border-yellow-200 text-yellow-800' :
                         booking.status === 'confirmed'       ? 'bg-green-50  border border-green-200  text-green-800'  :
@@ -443,64 +424,39 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                     {isDisputeBooking && (
                         <div className={`rounded-xl border p-4 mb-4 space-y-3 ${
                             disputeResolved
-                                ? resolution?.decision === 'refund_student'
-                                    ? 'bg-green-50 border-green-200'
-                                    : 'bg-gray-50 border-gray-200'
+                                ? resolution?.decision === 'refund_student' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
                                 : 'bg-orange-50 border-orange-300'
                         }`}>
-                            {/* Dispute filed reason */}
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wide mb-1 text-orange-600">
-                                    ⚖️ Your Dispute Reason
-                                </p>
-                                <p className="text-xs text-gray-700 leading-relaxed italic">
-                                    "{disputeReason(booking)}"
-                                </p>
+                                <p className="text-[10px] font-bold uppercase tracking-wide mb-1 text-orange-600">⚖️ Your Dispute Reason</p>
+                                <p className="text-xs text-gray-700 leading-relaxed italic">"{disputeReason(booking)}"</p>
                             </div>
 
-                            {/* Admin resolution (if resolved) */}
                             {disputeResolved && (
                                 <div className="border-t pt-3 space-y-2">
                                     <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500">Admin Decision</p>
-
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-gray-600">Outcome</span>
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                                            resolution.decision === 'refund_student'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-gray-200 text-gray-700'
-                                        }`}>
-                                            {resolution.decision === 'refund_student'
-                                                ? '💰 Refund Issued to You'
-                                                : '📤 Payment Released to Counsellor'}
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${resolution.decision === 'refund_student' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
+                                            {resolution.decision === 'refund_student' ? '💰 Refund Issued to You' : '📤 Payment Released to Counsellor'}
                                         </span>
                                     </div>
-
                                     {resolution.note && (
                                         <div className="bg-white rounded-lg border border-gray-200 px-3 py-2">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Admin Note</p>
                                             <p className="text-xs text-gray-700 leading-relaxed">"{resolution.note}"</p>
                                         </div>
                                     )}
-
-                                    <p className="text-[10px] text-gray-400">
-                                        Resolved on {fmtDate(resolution.resolvedAt)}
-                                    </p>
-
+                                    <p className="text-[10px] text-gray-400">Resolved on {fmtDate(resolution.resolvedAt)}</p>
                                     {resolution.decision === 'refund_student' && (
-                                        <p className="text-xs text-green-700 font-medium">
-                                            ✅ Refund of ₹{booking.feePaid} will be credited in 5–7 business days.
-                                        </p>
+                                        <p className="text-xs text-green-700 font-medium">✅ Refund of ₹{booking.feePaid} will be credited in 5–7 business days.</p>
                                     )}
                                     {resolution.decision === 'release_counsellor' && (
-                                        <p className="text-xs text-gray-600">
-                                            Contact <a href="mailto:support@mindcare.com" className="text-indigo-600 underline">support@mindcare.com</a> if you have further questions.
-                                        </p>
+                                        <p className="text-xs text-gray-600">Contact <a href="mailto:support@mindcare.com" className="text-indigo-600 underline">support@mindcare.com</a> if you have further questions.</p>
                                     )}
                                 </div>
                             )}
 
-                            {/* Pending review notice */}
                             {!disputeResolved && (
                                 <div className="flex items-center gap-2 text-xs text-orange-700">
                                     <RefreshCw size={11} className="animate-spin flex-shrink-0"/>
@@ -510,23 +466,21 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                         </div>
                     )}
 
-                    {/* session_done — prominent CTA */}
+                    {/* session_done CTA */}
                     {needsReview && (
                         <div className="bg-indigo-600 rounded-xl p-4 mb-4 text-white">
                             <p className="font-semibold text-sm mb-1">📋 Action required</p>
                             <p className="text-xs text-indigo-200 mb-3">
-                                {booking.counselor?.fullName} has marked the session as done.
-                                Confirm it happened and leave a review to release their payment.
+                                {booking.counselor?.fullName} has marked the session as done. Confirm and leave a review to release their payment.
                             </p>
                             <button onClick={() => setShowReview(true)}
                                 className="w-full py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2">
-                                <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                                Confirm & Leave Review
+                                <Star size={14} className="fill-yellow-400 text-yellow-400" /> Confirm & Leave Review
                             </button>
                         </div>
                     )}
 
-                    {/* Completed — show rating */}
+                    {/* Completed review */}
                     {booking.status === 'completed' && booking.reviewId && (
                         <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-2 mb-4">
                             <div className="flex items-center gap-1 mb-0.5">
@@ -535,23 +489,19 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                                 ))}
                                 <span className="text-xs text-blue-700 ml-1 font-medium">Your review</span>
                             </div>
-                            {booking.reviewId?.comment && (
-                                <p className="text-xs text-blue-700 mt-0.5">"{booking.reviewId.comment}"</p>
-                            )}
+                            {booking.reviewId?.comment && <p className="text-xs text-blue-700 mt-0.5">"{booking.reviewId.comment}"</p>}
                         </div>
                     )}
 
-                    {/* Auto-confirmed notice */}
+                    {/* Auto-confirmed */}
                     {booking.status === 'completed' && booking.autoConfirmed && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4 text-xs text-amber-800">
                             ⏰ Auto-confirmed after 48 hours.
-                            {!booking.reviewId && (
-                                <button onClick={() => setShowReview(true)} className="ml-1 underline">Leave a review now</button>
-                            )}
+                            {!booking.reviewId && <button onClick={() => setShowReview(true)} className="ml-1 underline">Leave a review now</button>}
                         </div>
                     )}
 
-                    {/* Payment errors */}
+                    {/* Pay errors */}
                     {payError && (
                         <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-800 mb-4 flex items-center justify-between">
                             <span>⚠️ {payError}</span>
@@ -573,7 +523,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                         </a>
                     )}
 
-                    {/* Expanded details */}
+                    {/* Expanded */}
                     {expanded && (
                         <div className="border-t border-gray-100 pt-4 mb-4 space-y-3 text-sm">
                             <div>
@@ -592,7 +542,6 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                                     <span>Fee paid: <strong className="text-gray-800">₹{booking.feePaid}</strong></span>
                                 </div>
                             )}
-                            {/* Only show raw cancellation reason if it's not a dispute (disputes show the pretty UI above) */}
                             {booking.cancellationReason && !isDisputeBooking && (
                                 <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2">
                                     <p className="text-xs text-red-500 font-medium mb-0.5">Cancellation reason</p>
@@ -610,7 +559,6 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                             {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                             {expanded ? 'Hide' : 'Details'}
                         </button>
-
                         <div className="flex items-center gap-2">
                             {needsPayment && (
                                 <button onClick={handleRetryPayment}
