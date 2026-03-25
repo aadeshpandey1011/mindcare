@@ -18,7 +18,7 @@ passport.use(
             clientID:     process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL:  process.env.GOOGLE_CALLBACK_URL ||
-                          "http://localhost:5000/api/v1/auth/google/callback",
+                          "https://mindcare-api-ws24.onrender.com/api/v1/auth/google/callback",
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
