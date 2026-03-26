@@ -32,12 +32,7 @@ const cfHeaders = () => {
     };
 };
 
-console.log("[Payment] Creating order for student:", {
-    id:    student._id,
-    email: student.email,
-    phone: student.phone,
-    fee:   feeRupees,
-});
+
 /** Generic Cashfree API call */
 const cfCall = async (method, path, body = null) => {
     const res = await fetch(`${CF_BASE()}${path}`, {
@@ -75,6 +70,13 @@ export const createOrder = asyncHandler(async (req, res) => {
         throw new ApiError(400, `Booking status is "${booking.status}" — payment not expected`);
 
     const feeRupees = booking.counselor.sessionFee ?? 299;
+
+    console.log("[Payment] Creating order for student:", {
+        id:    student._id,
+        email: student.email,
+        phone: student.phone,
+        fee:   feeRupees,
+    });
 
     // ── Handle FREE sessions — skip Cashfree entirely ─────────────────────────
     if (feeRupees === 0) {
