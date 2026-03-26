@@ -95,7 +95,7 @@ app.use("/api/v1/playlists",     playlistRouter);
 app.use("/api/v1/dashboard",     dashboardRouter);
 app.use("/api/v1/screenings",    screeningRouter);
 app.use("/api/v1/admin",         adminRouter);
-app.use("/api/v1/posts",         postRouter);
+app.use("/api/v1/forum",         postRouter);
 app.use("/api/v1/chat",          chatRouter);
 app.use("/api/v1/verify",        verificationRouter);
 app.use("/api/v1/auth",          googleAuthRouter);
