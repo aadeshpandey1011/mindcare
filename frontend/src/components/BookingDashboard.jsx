@@ -533,11 +533,27 @@ export default function BookingDashboard() {
                 body: JSON.stringify({ meetingLink: meetingLink || '' }),
             });
             const data = await res.json();
+            // If already confirmed (race condition from slow Render response), treat as success
+            if (!res.ok && data.message?.includes('already') || data.message?.includes('only pending')) {
+                setApproveTarget(null);
+                showToast('Session already confirmed! Refreshing...');
+                await loadBookings(true); await loadAllBookings();
+                return;
+            }
             if (!res.ok) throw new Error(data.message);
             setApproveTarget(null);
             showToast('Session confirmed! Student notified.');
             await loadBookings(true); await loadAllBookings();
-        } catch (e) { showToast(e.message, 'error'); }
+        } catch (e) {
+            // Network timeout — refresh to check actual state
+            if (e.name === 'TypeError' || e.message?.includes('fetch')) {
+                showToast('Server is waking up... refreshing status.', 'warning');
+                await loadBookings(true); await loadAllBookings();
+                setApproveTarget(null);
+            } else {
+                showToast(e.message, 'error');
+            }
+        }
         finally { setActionLoading(p => ({ ...p, [bookingId]: null })); }
     };
 
@@ -553,7 +569,15 @@ export default function BookingDashboard() {
             setRejectTarget(null);
             showToast('Request rejected. Full refund initiated.', 'warning');
             await loadBookings(true); await loadAllBookings();
-        } catch (e) { showToast(e.message, 'error'); }
+        } catch (e) {
+            if (e.name === 'TypeError' || e.message?.includes('fetch')) {
+                showToast('Server is waking up... refreshing status.', 'warning');
+                await loadBookings(true); await loadAllBookings();
+                setRejectTarget(null);
+            } else {
+                showToast(e.message, 'error');
+            }
+        }
         finally { setActionLoading(p => ({ ...p, [bookingId]: null })); }
     };
 
@@ -565,11 +589,25 @@ export default function BookingDashboard() {
                 body: JSON.stringify({ sessionNotes }),
             });
             const data = await res.json();
+            if (!res.ok && (data.message?.includes('already') || data.message?.includes('Only confirmed'))) {
+                setDoneTarget(null);
+                showToast('Session status already updated! Refreshing...');
+                await loadBookings(true); await loadAllBookings();
+                return;
+            }
             if (!res.ok) throw new Error(data.message);
             setDoneTarget(null);
             showToast('Session marked done! Student notified to confirm and review.');
             await loadBookings(true); await loadAllBookings();
-        } catch (e) { showToast(e.message, 'error'); }
+        } catch (e) {
+            if (e.name === 'TypeError' || e.message?.includes('fetch')) {
+                showToast('Server is waking up... refreshing status.', 'warning');
+                await loadBookings(true); await loadAllBookings();
+                setDoneTarget(null);
+            } else {
+                showToast(e.message, 'error');
+            }
+        }
         finally { setActionLoading(p => ({ ...p, [bookingId]: null })); }
     };
 

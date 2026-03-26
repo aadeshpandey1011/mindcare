@@ -97,6 +97,13 @@ const userSchema = new Schema(
                 },
             },
             bankName:          { type: String, trim: true,      select: false },
+            upiId: {
+                type: String, trim: true, lowercase: true, select: false,
+                validate: {
+                    validator: (v) => !v || /^[\w.\-]+@[\w]+$/.test(v),
+                    message: "UPI ID must be in format name@bank (e.g. john@okaxis)",
+                },
+            },
             accountType: {
                 type:    String,
                 enum:    ["savings", "current", ""],

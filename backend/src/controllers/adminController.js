@@ -243,7 +243,7 @@ export const getPendingPayouts = asyncHandler(async (req, res) => {
 
     const bookings = await Booking.find(filter)
         .populate("student",   "fullName email avatar")
-        .populate("counselor", "fullName email avatar specialization sessionFee bankDetails")
+        .populate("counselor", "fullName email avatar specialization sessionFee +bankDetails.upiId +bankDetails.bankName +bankDetails.accountHolderName +bankDetails.hasDetails")
         .populate("paymentId", "status amount cf_payment_id paymentMethod order_id createdAt")
         .sort({ updatedAt: -1 });
 
@@ -262,6 +262,9 @@ export const getPendingPayouts = asyncHandler(async (req, res) => {
                     avatar:         b.counselor.avatar,
                     specialization: b.counselor.specialization,
                     sessionFee:     b.counselor.sessionFee,
+                    upiId:          b.counselor.bankDetails?.upiId || "",
+                    bankName:       b.counselor.bankDetails?.bankName || "",
+                    hasBankDetails: b.counselor.bankDetails?.hasDetails || false,
                 },
                 totalOwed:       0,
                 totalPaid:       0,

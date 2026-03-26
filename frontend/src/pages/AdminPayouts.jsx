@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
     Banknote, CheckCircle, Clock, RefreshCw, ChevronDown, ChevronUp,
-    IndianRupee, Send, XCircle, AlertCircle, Search, Filter,
-    Calendar, User, CreditCard, ArrowLeft,
+    Send, XCircle, AlertCircle, Filter,
+    Calendar, User, ArrowLeft, Smartphone, ExternalLink, Copy,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,17 +11,28 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 const fmtDate = (d) =>
     d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-const fmtDateTime = (d) =>
-    d ? new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const fmtRupees = (n) => `₹${Number(n || 0).toLocaleString()}`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  MARK-AS-PAID MODAL
+//  PAY & MARK-PAID MODAL
 // ─────────────────────────────────────────────────────────────────────────────
-function PayModal({ booking, counsellorName, onConfirm, onClose }) {
+function PayModal({ booking, counsellorName, counsellorUpi, onConfirm, onClose }) {
     const [reference, setReference] = useState('');
     const [note, setNote] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [step, setStep] = useState(counsellorUpi ? 'pay' : 'manual'); // 'pay' → 'confirm'
+
+    const upiLink = counsellorUpi
+        ? `upi://pay?pa=${encodeURIComponent(counsellorUpi)}&pn=${encodeURIComponent(counsellorName)}&am=${booking.feePaid}&cu=INR&tn=${encodeURIComponent(`MindCare payout - session ${fmtDate(booking.date)}`)}`
+        : null;
+
+    const handleCopyUpi = () => {
+        navigator.clipboard.writeText(counsellorUpi).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
 
     const handleSubmit = async () => {
         setSubmitting(true);
@@ -31,14 +42,17 @@ function PayModal({ booking, counsellorName, onConfirm, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-gray-900">Mark Payout as Paid</h3>
+                        <h3 className="text-lg font-bold text-gray-900">
+                            {step === 'pay' ? 'Pay Counsellor' : 'Confirm Payment'}
+                        </h3>
                         <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><XCircle size={20} /></button>
                     </div>
                 </div>
                 <div className="p-6">
+                    {/* Amount display */}
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-5 text-center">
                         <p className="text-sm text-green-700 mb-1">Paying to <strong>{counsellorName}</strong></p>
                         <p className="text-3xl font-bold text-green-800">{fmtRupees(booking.feePaid)}</p>
@@ -47,41 +61,95 @@ function PayModal({ booking, counsellorName, onConfirm, onClose }) {
                         </p>
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Payment Reference <span className="text-gray-400">(UPI ref / NEFT ref / UTR)</span>
-                        </label>
-                        <input
-                            type="text" value={reference}
-                            onChange={e => setReference(e.target.value)}
-                            placeholder="e.g. UPI ref 412345678901"
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
-                        />
-                    </div>
+                    {/* Step 1: Pay via UPI */}
+                    {step === 'pay' && (
+                        <div className="space-y-4">
+                            {/* UPI ID display + copy */}
+                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                                <p className="text-xs text-indigo-600 font-medium mb-2">Counsellor's UPI ID</p>
+                                <div className="flex items-center gap-2">
+                                    <span className="flex-1 font-mono text-lg font-bold text-indigo-900">{counsellorUpi}</span>
+                                    <button onClick={handleCopyUpi}
+                                        className="p-2 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition-colors"
+                                        title="Copy UPI ID">
+                                        {copied ? <CheckCircle size={16} className="text-green-600" /> : <Copy size={16} />}
+                                    </button>
+                                </div>
+                                {copied && <p className="text-xs text-green-600 mt-1">Copied!</p>}
+                            </div>
 
-                    <div className="mb-5">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Note <span className="text-gray-400">(optional)</span>
-                        </label>
-                        <textarea
-                            value={note} onChange={e => setNote(e.target.value)}
-                            placeholder="e.g. Paid via Google Pay"
-                            rows={2}
-                            className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-400"
-                        />
-                    </div>
+                            {/* Pay via UPI app button */}
+                            <a href={upiLink}
+                                className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors text-sm"
+                                target="_blank" rel="noopener noreferrer">
+                                <Smartphone size={16} /> Open UPI App to Pay {fmtRupees(booking.feePaid)}
+                            </a>
 
-                    <div className="flex gap-3">
-                        <button onClick={onClose}
-                            className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
-                            Cancel
-                        </button>
-                        <button onClick={handleSubmit} disabled={submitting}
-                            className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-60 flex items-center justify-center gap-2">
-                            {submitting ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
-                            {submitting ? 'Marking…' : 'Confirm Paid'}
-                        </button>
-                    </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                This will open your default UPI app (GPay, PhonePe, Paytm) with the amount pre-filled.
+                                <br />After paying, come back and click "I've Paid" below.
+                            </p>
+
+                            <div className="border-t border-gray-200 pt-4 flex gap-3">
+                                <button onClick={onClose}
+                                    className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 text-sm">
+                                    Cancel
+                                </button>
+                                <button onClick={() => setStep('confirm')}
+                                    className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 flex items-center justify-center gap-2 text-sm">
+                                    <CheckCircle size={14} /> I've Paid — Confirm
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 2: Enter reference & confirm OR Manual mode */}
+                    {(step === 'confirm' || step === 'manual') && (
+                        <div className="space-y-4">
+                            {step === 'manual' && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                                    <p className="font-semibold">No UPI ID on file</p>
+                                    <p>This counsellor hasn't added their UPI ID. Transfer the amount manually via NEFT/IMPS using their bank details, then enter the reference below.</p>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Payment Reference <span className="text-gray-400">(UPI ref / NEFT ref / UTR)</span>
+                                </label>
+                                <input
+                                    type="text" value={reference}
+                                    onChange={e => setReference(e.target.value)}
+                                    placeholder="e.g. UPI ref 412345678901"
+                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Note <span className="text-gray-400">(optional)</span>
+                                </label>
+                                <textarea
+                                    value={note} onChange={e => setNote(e.target.value)}
+                                    placeholder="e.g. Paid via Google Pay"
+                                    rows={2}
+                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-green-400"
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button onClick={() => step === 'confirm' ? setStep('pay') : onClose()}
+                                    className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 text-sm">
+                                    {step === 'confirm' ? 'Back' : 'Cancel'}
+                                </button>
+                                <button onClick={handleSubmit} disabled={submitting}
+                                    className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-60 flex items-center justify-center gap-2 text-sm">
+                                    {submitting ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
+                                    {submitting ? 'Saving…' : 'Confirm Payment Done'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -113,7 +181,15 @@ function CounsellorPayoutCard({ data, onMarkPaid }) {
                 <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900">{c.fullName}</p>
                     <p className="text-sm text-gray-500">{c.email}</p>
-                    <p className="text-xs text-indigo-600">{c.specialization || 'General Counselling'}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-indigo-600">{c.specialization || 'General Counselling'}</span>
+                        {c.upiId && (
+                            <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-mono">{c.upiId}</span>
+                        )}
+                        {!c.upiId && (
+                            <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">No UPI ID</span>
+                        )}
+                    </div>
                 </div>
                 <div className="flex-shrink-0 text-right mr-3">
                     {data.totalOwed > 0 && (
@@ -161,9 +237,9 @@ function CounsellorPayoutCard({ data, onMarkPaid }) {
                                 ) : (
                                     <button
                                         onClick={() => setPayTarget(b)}
-                                        className="mt-1 inline-flex items-center gap-1 text-xs text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                                        className="mt-1 inline-flex items-center gap-1.5 text-xs text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg font-semibold transition-colors shadow-sm"
                                     >
-                                        <Send size={11} /> Mark Paid
+                                        {c.upiId ? <><Smartphone size={12} /> Pay via UPI</> : <><Send size={11} /> Mark Paid</>}
                                     </button>
                                 )}
                             </div>
@@ -177,6 +253,7 @@ function CounsellorPayoutCard({ data, onMarkPaid }) {
                 <PayModal
                     booking={payTarget}
                     counsellorName={c.fullName}
+                    counsellorUpi={c.upiId}
                     onConfirm={async (bookingId, reference, note) => {
                         await onMarkPaid(bookingId, reference, note);
                         setPayTarget(null);
@@ -228,7 +305,7 @@ export default function AdminPayouts() {
             });
             const json = await res.json();
             if (!res.ok) throw new Error(json.message || 'Failed');
-            fetchPayouts(); // refresh
+            fetchPayouts();
         } catch (e) {
             alert(`Error: ${e.message}`);
         }
@@ -249,7 +326,7 @@ export default function AdminPayouts() {
                         <Banknote size={26} className="text-green-600" /> Counsellor Payouts
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        Manage manual payouts to counsellors after sessions are completed
+                        Pay counsellors via UPI after sessions are completed
                     </p>
                 </div>
             </div>
@@ -341,12 +418,21 @@ export default function AdminPayouts() {
             {/* How-it-works note */}
             <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-800">
                 <p className="font-semibold mb-2">📋 How payouts work</p>
-                <ol className="list-decimal list-inside space-y-1 text-xs text-amber-700">
+                <ol className="list-decimal list-inside space-y-1.5 text-xs text-amber-700">
                     <li>Student pays → money goes to your Cashfree account → Cashfree settles to your bank (T+2 days)</li>
                     <li>After session is completed and confirmed, the counsellor's share appears here as "Pending"</li>
-                    <li>Transfer the amount to the counsellor's bank via UPI/NEFT/IMPS from your bank</li>
-                    <li>Click "Mark Paid" and enter the transaction reference — counsellor gets a confirmation email</li>
+                    <li>Click <strong>"Pay via UPI"</strong> → your UPI app opens with the counsellor's UPI ID and amount pre-filled → approve payment</li>
+                    <li>Come back and enter the UPI transaction reference → counsellor gets a confirmation email</li>
+                    <li>If counsellor hasn't added UPI ID, you can transfer manually via NEFT/IMPS and enter the reference</li>
                 </ol>
+            </div>
+
+            {/* Tip about UPI IDs */}
+            <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-800">
+                <p className="font-semibold mb-1">💡 Tip: Ask counsellors to add their UPI ID</p>
+                <p className="text-xs text-indigo-600">
+                    Counsellors can add their UPI ID in Settings &amp; Ads → Bank Account section. Once added, you'll see a "Pay via UPI" button that opens your payment app with everything pre-filled — one-tap payouts!
+                </p>
             </div>
         </div>
     );

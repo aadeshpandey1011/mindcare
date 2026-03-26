@@ -77,7 +77,7 @@ function BankDetailsSection({ token }) {
     const [error,    setError]    = useState('');
     const [success,  setSuccess]  = useState('');
     const [form, setForm] = useState({
-        accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', accountType: 'savings',
+        accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', upiId: '', accountType: 'savings',
     });
 
     useEffect(() => { fetchDetails(); }, []);
@@ -89,7 +89,7 @@ function BankDetailsSection({ token }) {
             const data = await res.json();
             if (data.success && data.data?.hasDetails) {
                 setDetails(data.data);
-                setForm({ accountHolderName: data.data.accountHolderName || '', accountNumber: '', ifscCode: data.data.ifscCode || '', bankName: data.data.bankName || '', accountType: data.data.accountType || 'savings' });
+                setForm({ accountHolderName: data.data.accountHolderName || '', accountNumber: '', ifscCode: data.data.ifscCode || '', bankName: data.data.bankName || '', upiId: data.data.upiId || '', accountType: data.data.accountType || 'savings' });
             }
         } catch (e) { /* silent */ }
         finally { setLoading(false); }
@@ -153,6 +153,7 @@ function BankDetailsSection({ token }) {
                             { label: 'Account Holder', value: details.accountHolderName },
                             { label: 'IFSC Code',      value: details.ifscCode, mono: true },
                             { label: 'Bank',           value: details.bankName },
+                            { label: 'UPI ID',         value: details.upiId || 'Not provided', mono: true },
                             { label: 'Account Type',   value: details.accountType, cap: true },
                         ].map(({ label, value, mono, cap }) => (
                             <div key={label} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
@@ -183,6 +184,7 @@ function BankDetailsSection({ token }) {
                                 { label: 'Account Number',      key: 'accountNumber',     placeholder: '9–18 digit account number' },
                                 { label: 'IFSC Code',           key: 'ifscCode',          placeholder: 'e.g. SBIN0001234', upper: true },
                                 { label: 'Bank Name',           key: 'bankName',          placeholder: 'e.g. State Bank of India' },
+                                { label: 'UPI ID',              key: 'upiId',             placeholder: 'e.g. yourname@okaxis' },
                             ].map(({ label, key, placeholder, upper }) => (
                                 <div key={key}>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{label} <span className="text-red-400">*</span></label>

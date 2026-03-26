@@ -15,7 +15,7 @@ export const saveBankDetails = asyncHandler(async (req, res) => {
     if (req.user.role !== "counsellor")
         throw new ApiError(403, "Only counsellors can add bank details");
 
-    const { accountHolderName, accountNumber, ifscCode, bankName, accountType } = req.body;
+    const { accountHolderName, accountNumber, ifscCode, bankName, accountType, upiId } = req.body;
 
     if (!accountHolderName?.trim())
         throw new ApiError(400, "Account holder name is required");
@@ -35,6 +35,7 @@ export const saveBankDetails = asyncHandler(async (req, res) => {
                 "bankDetails.ifscCode":          ifscCode.trim().toUpperCase(),
                 "bankDetails.bankName":          bankName.trim(),
                 "bankDetails.accountType":       accountType || "savings",
+                "bankDetails.upiId":             upiId?.trim().toLowerCase() || "",
                 "bankDetails.hasDetails":        true,
                 "bankDetails.isVerified":        false,  // reset on update
                 "bankDetails.verifiedAt":        null,
@@ -60,7 +61,7 @@ export const getBankDetails = asyncHandler(async (req, res) => {
         throw new ApiError(403, "Only counsellors can view bank details");
 
     const user = await User.findById(req.user._id)
-        .select("+bankDetails.accountHolderName +bankDetails.accountNumber +bankDetails.ifscCode +bankDetails.bankName +bankDetails.accountType +bankDetails.isVerified +bankDetails.verifiedAt +bankDetails.hasDetails");
+        .select("+bankDetails.accountHolderName +bankDetails.accountNumber +bankDetails.ifscCode +bankDetails.bankName +bankDetails.upiId +bankDetails.accountType +bankDetails.isVerified +bankDetails.verifiedAt +bankDetails.hasDetails");
 
     if (!user.bankDetails?.hasDetails) {
         return res.status(200).json(new ApiResponse(200, { hasDetails: false }, "No bank details saved"));
@@ -78,6 +79,7 @@ export const getBankDetails = asyncHandler(async (req, res) => {
         ifscCode:            user.bankDetails.ifscCode,
         bankName:            user.bankDetails.bankName,
         accountType:         user.bankDetails.accountType,
+        upiId:               user.bankDetails.upiId || "",
         isVerified:          user.bankDetails.isVerified,
         verifiedAt:          user.bankDetails.verifiedAt,
     }, "Bank details fetched"));
