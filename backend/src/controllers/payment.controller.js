@@ -64,8 +64,15 @@ export const createOrder = asyncHandler(async (req, res) => {
 
     if (!bookingId) throw new ApiError(400, "bookingId is required");
 
+    console.log("[createOrder] NODE_ENV:", process.env.NODE_ENV);
+    console.log("[createOrder] CF_BASE:", CF_BASE());
+    console.log("[createOrder] CASHFREE_APP_ID prefix:", process.env.CASHFREE_APP_ID?.substring(0, 12));
+    console.log("[createOrder] bookingId received:", bookingId);
+
     const booking = await Booking.findById(bookingId)
         .populate("counselor", "fullName email sessionFee");
+
+    console.log("[createOrder] booking found:", !!booking, "status:", booking?.status, "counselor fee:", booking?.counselor?.sessionFee);
 
     if (!booking)
         throw new ApiError(404, "Booking not found");
@@ -76,11 +83,25 @@ export const createOrder = asyncHandler(async (req, res) => {
 
     const feeRupees = booking.counselor.sessionFee ?? 299;
 
+    // ── Resolve a valid 10-digit Indian phone for Cashfree production ────────
+    //    Priority: student.phone → booking.phone → from govtId verification → safe fallback
+    const resolvePhone = () => {
+        const raw = student.phone || req.body.phone || "";
+        const digits = raw.replace(/\D/g, "").slice(-10);
+        if (/^[6-9]\d{9}$/.test(digits)) return digits;
+        return "9000000001"; // Cashfree-accepted placeholder (only used if user has no phone)
+    };
+    const customerPhone = resolvePhone();
+
     console.log("[Payment] Creating order for student:", {
         id:    student._id,
         email: student.email,
-        phone: student.phone,
+        phone: customerPhone,
         fee:   feeRupees,
+    });
+    console.log("[Payment] URLs:", {
+        FRONTEND_URL: process.env.FRONTEND_URL,
+        BACKEND_URL:  process.env.BACKEND_URL,
     });
 
     // ── Handle FREE sessions — skip Cashfree entirely ─────────────────────────
@@ -126,7 +147,7 @@ export const createOrder = asyncHandler(async (req, res) => {
             customer_id:    student._id.toString(),
             customer_name:  student.fullName,
             customer_email: student.email,
-            customer_phone: student.phone || "9999999999",
+            customer_phone: customerPhone,
         },
         order_meta: {
             return_url: `${process.env.FRONTEND_URL}/payment-result?order_id={order_id}&booking_id=${bookingId}`,

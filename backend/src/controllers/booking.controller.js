@@ -63,6 +63,19 @@ const createBooking = asyncHandler(async (req, res) => {
     if (!mongoose.isValidObjectId(counselorId))
         throw new ApiError(400, "Invalid counselor ID");
 
+    // ── Auto-cancel stale payment_pending bookings (>15 min old) for this student ──
+    const staleResult = await Booking.updateMany(
+        {
+            student: studentId,
+            status: "payment_pending",
+            createdAt: { $lt: new Date(Date.now() - 15 * 60 * 1000) },
+        },
+        { $set: { status: "cancelled", cancellationReason: "Payment timeout — auto-cancelled" } }
+    );
+    if (staleResult.modifiedCount > 0) {
+        console.log(`[Booking] Auto-cancelled ${staleResult.modifiedCount} stale payment_pending booking(s) for student ${studentId}`);
+    }
+
     const counselor = await User.findOne({ _id: counselorId, role: "counsellor", isApproved: true });
     if (!counselor) throw new ApiError(404, "Counselor not found or not approved");
 
