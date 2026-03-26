@@ -41,11 +41,16 @@ const cfCall = async (method, path, body = null) => {
         ...(body ? { body: JSON.stringify(body) } : {}),
     });
     const data = await res.json();
+    // if (!res.ok) {
+    //     const msg = data?.message || data?.error || `Cashfree error ${res.status}`;
+    //     throw new ApiError(res.status >= 500 ? 502 : 400, msg);
+    // }
     if (!res.ok) {
+        console.error("[Cashfree Error Full]", JSON.stringify(data)); // ADD THIS
         const msg = data?.message || data?.error || `Cashfree error ${res.status}`;
         throw new ApiError(res.status >= 500 ? 502 : 400, msg);
     }
-    return data;
+        return data;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
