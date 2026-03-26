@@ -20,6 +20,7 @@ import VerifyIdentity     from "./pages/VerifyIdentity";
 import Profile            from "./pages/Profile";
 import CounsellorSettings from "./pages/CounsellorSettings";
 import AdminUsers         from "./pages/AdminUsers";
+import AdminPayouts       from "./pages/AdminPayouts";
 import PaymentLogs        from "./pages/PaymentLogs";
 import Journal            from "./pages/Journal";
 import PrivacyPolicy      from "./pages/PrivacyPolicy";
@@ -143,6 +144,11 @@ function App() {
         <Route path="/admin/payments" element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <PaymentLogs />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/payouts" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminPayouts />
           </ProtectedRoute>
         } />
 

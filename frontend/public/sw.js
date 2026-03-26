@@ -4,7 +4,7 @@
  * Uses a Cache-First strategy for static assets and Network-First for API calls.
  */
 
-const CACHE_NAME    = "mindcare-v1";
+const CACHE_NAME    = "mindcare-v2";
 const OFFLINE_URL   = "/offline.html";
 
 // Assets to pre-cache on install (app shell)
@@ -56,13 +56,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigation requests — serve index.html from cache (SPA routing)
+  // Navigation requests — Network first, fall back to cached index.html (SPA routing)
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .catch(() =>
-          caches.match("/index.html").then((cached) => cached || fetch("/index.html"))
-        )
+      fetch(request).catch(() => caches.match("/"))
     );
     return;
   }

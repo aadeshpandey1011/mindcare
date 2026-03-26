@@ -31,6 +31,7 @@ export default function Navbar() {
     { name: "Dashboard",       path: "/dashboard"           },
     { name: "All Users",       path: "/admin/users"         },
     { name: "Payment Logs",    path: "/admin/payments"      },
+    { name: "Payouts",         path: "/admin/payouts"       },
     { name: "Peer Forum",      path: "/forum"               },
   ];
 
@@ -157,6 +158,7 @@ export default function Navbar() {
                         <DropItem icon="dashboard" label="Admin Dashboard"   to="/dashboard"      onClose={() => setIsDropdownOpen(false)} />
                         <DropItem icon="users"     label="All Users"          to="/admin/users"    onClose={() => setIsDropdownOpen(false)} />
                         <DropItem icon="payment"   label="Payment Logs"       to="/admin/payments" onClose={() => setIsDropdownOpen(false)} />
+                        <DropItem icon="payment"   label="Counsellor Payouts" to="/admin/payouts"  onClose={() => setIsDropdownOpen(false)} />
                         <hr className="my-1 border-gray-100" />
                       </>
                     )}

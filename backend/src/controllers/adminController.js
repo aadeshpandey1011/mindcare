@@ -215,6 +215,185 @@ export const getAllPayments = asyncHandler(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  GET PENDING PAYOUTS
+//  GET /api/v1/admin/payouts?status=pending|paid|all
+//
+//  Returns completed bookings grouped by counsellor, showing:
+//  - Total owed to each counsellor
+//  - Individual booking details
+//  - Payout status (pending / paid)
+// ─────────────────────────────────────────────────────────────────────────────
+export const getPendingPayouts = asyncHandler(async (req, res) => {
+    const { status = "all" } = req.query;
+
+    // Find completed bookings where payment was successful and fee > 0
+    const filter = {
+        status: "completed",
+        feePaid: { $gt: 0 },
+    };
+
+    if (status === "pending") {
+        filter.payoutStatus = { $in: ["pending", "released", "not_applicable"] };
+        // Also catch bookings where adminPayoutDone is not true
+        filter.adminPayoutDone = { $ne: true };
+    } else if (status === "paid") {
+        filter.adminPayoutDone = true;
+    }
+    // "all" = no additional filter
+
+    const bookings = await Booking.find(filter)
+        .populate("student",   "fullName email avatar")
+        .populate("counselor", "fullName email avatar specialization sessionFee bankDetails")
+        .populate("paymentId", "status amount cf_payment_id paymentMethod order_id createdAt")
+        .sort({ updatedAt: -1 });
+
+    // Group by counsellor
+    const counsellorMap = {};
+    for (const b of bookings) {
+        const cId = b.counselor?._id?.toString();
+        if (!cId) continue;
+
+        if (!counsellorMap[cId]) {
+            counsellorMap[cId] = {
+                counsellor: {
+                    _id:            b.counselor._id,
+                    fullName:       b.counselor.fullName,
+                    email:          b.counselor.email,
+                    avatar:         b.counselor.avatar,
+                    specialization: b.counselor.specialization,
+                    sessionFee:     b.counselor.sessionFee,
+                },
+                totalOwed:       0,
+                totalPaid:       0,
+                pendingCount:    0,
+                paidCount:       0,
+                bookings:        [],
+            };
+        }
+
+        const entry = counsellorMap[cId];
+        const amount = b.feePaid || 0;
+        const isPaid = b.adminPayoutDone === true;
+
+        entry.bookings.push({
+            _id:            b._id,
+            student:        b.student,
+            date:           b.date,
+            timeSlot:       b.timeSlot,
+            mode:           b.mode,
+            feePaid:        amount,
+            paymentId:      b.paymentId,
+            completedAt:    b.updatedAt,
+            adminPayoutDone:     isPaid,
+            adminPayoutDate:     b.adminPayoutDate || null,
+            adminPayoutRef:      b.adminPayoutRef  || null,
+            adminPayoutNote:     b.adminPayoutNote || null,
+        });
+
+        if (isPaid) {
+            entry.totalPaid += amount;
+            entry.paidCount++;
+        } else {
+            entry.totalOwed += amount;
+            entry.pendingCount++;
+        }
+    }
+
+    const counsellors = Object.values(counsellorMap)
+        .sort((a, b) => b.totalOwed - a.totalOwed); // Highest owed first
+
+    // Summary stats
+    const totalPendingAmount = counsellors.reduce((s, c) => s + c.totalOwed, 0);
+    const totalPaidAmount    = counsellors.reduce((s, c) => s + c.totalPaid, 0);
+    const totalPendingCount  = counsellors.reduce((s, c) => s + c.pendingCount, 0);
+    const totalPaidCount     = counsellors.reduce((s, c) => s + c.paidCount, 0);
+
+    res.json(new ApiResponse(200, {
+        counsellors,
+        summary: {
+            totalPendingAmount,
+            totalPaidAmount,
+            totalPendingCount,
+            totalPaidCount,
+            counsellorCount: counsellors.length,
+        },
+    }, "Payouts fetched"));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MARK PAYOUT AS PAID
+//  PATCH /api/v1/admin/payouts/:bookingId/mark-paid
+//  Body: { reference, note }
+//
+//  Admin calls this after manually transferring money to the counsellor.
+//  Records the payment reference (UPI ref / NEFT ref / transaction ID)
+//  and marks the booking as payout-complete.
+// ─────────────────────────────────────────────────────────────────────────────
+export const markPayoutPaid = asyncHandler(async (req, res) => {
+    const { bookingId }         = req.params;
+    const { reference, note }   = req.body;
+
+    const booking = await Booking.findById(bookingId)
+        .populate("counselor", "fullName email");
+    if (!booking) throw new ApiError(404, "Booking not found");
+    if (booking.status !== "completed")
+        throw new ApiError(400, "Only completed bookings can have payouts marked");
+    if (booking.adminPayoutDone)
+        throw new ApiError(400, "This payout has already been marked as paid");
+
+    await Booking.findByIdAndUpdate(bookingId, {
+        adminPayoutDone: true,
+        adminPayoutDate: new Date(),
+        adminPayoutRef:  reference || "",
+        adminPayoutNote: note || "",
+        adminPayoutBy:   req.user._id,
+        payoutStatus:    "released",
+        payoutReleasedAt: new Date(),
+    });
+
+    logAudit(req, "ADMIN_PAYOUT_MARKED", {
+        resourceType: "Booking",
+        resourceId:   bookingId,
+        metadata: {
+            counsellorId:   booking.counselor._id,
+            counsellorName: booking.counselor.fullName,
+            amount:         booking.feePaid,
+            reference,
+            note,
+        },
+    });
+
+    // Notify counsellor via email
+    try {
+        await sendMail({
+            to:      booking.counselor.email,
+            subject: "💰 Payout Sent — MindCare",
+            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="background:linear-gradient(135deg,#10b981,#059669);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
+    <h1 style="color:#fff;margin:0">💰 Payout Sent!</h1>
+  </div>
+  <p>Hi <strong>${booking.counselor.fullName}</strong>,</p>
+  <p>A payout of <strong>₹${booking.feePaid}</strong> has been sent to your bank account.</p>
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0">
+    <p><strong>Amount:</strong> ₹${booking.feePaid}</p>
+    ${reference ? `<p><strong>Reference:</strong> ${reference}</p>` : ""}
+    ${note ? `<p><strong>Note:</strong> ${note}</p>` : ""}
+  </div>
+  <p style="color:#6b7280;font-size:12px">The amount should reflect in your bank account within 24 hours. Contact support@mindcare.com for queries.</p>
+</div>`,
+        });
+    } catch (e) { console.error("[Mail] payout notification:", e.message); }
+
+    res.json(new ApiResponse(200, {
+        bookingId,
+        counsellorName: booking.counselor.fullName,
+        amount:         booking.feePaid,
+        reference,
+        paidAt:         new Date().toISOString(),
+    }, `Payout of ₹${booking.feePaid} marked as paid to ${booking.counselor.fullName}`));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  GET ALL DISPUTES
 //  GET /api/v1/admin/disputes?status=open|resolved|all&page=&limit=
 //

@@ -49,6 +49,13 @@ const bookingSchema = new Schema(
             default: "not_applicable",
         },
 
+        // ── Admin manual payout tracking ─────────────────────────────────────────
+        adminPayoutDone: { type: Boolean, default: false },
+        adminPayoutDate: { type: Date,    default: null },
+        adminPayoutRef:  { type: String,  default: "" },   // UPI ref / NEFT ref / transaction ID
+        adminPayoutNote: { type: String,  default: "" },
+        adminPayoutBy:   { type: Schema.Types.ObjectId, ref: "User", default: null },
+
         // ── Dispute resolution (set by admin after reviewing a dispute) ───────
         adminDisputeResolution: {
             decision:   { type: String, enum: ["refund_student", "release_counsellor"] },
