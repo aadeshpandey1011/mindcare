@@ -292,7 +292,7 @@ export default function PaymentLogsPage() {
                             </p>
                         </div>
                         <button onClick={fetchPayments}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
                             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
                         </button>
                     </div>
@@ -303,7 +303,7 @@ export default function PaymentLogsPage() {
                             {[
                                 { label: 'Total Collected', value: fmtRupees(totalCollected), cls: 'bg-green-50 border-green-200 text-green-700',  icon: IndianRupee },
                                 { label: 'Refunded',        value: fmtRupees(totalRefunded),  cls: 'bg-red-50   border-red-200   text-red-700',    icon: RotateCcw   },
-                                { label: 'Net Revenue',     value: fmtRupees(netRevenue),     cls: 'bg-indigo-50 border-indigo-200 text-indigo-700',icon: CreditCard  },
+                                { label: 'Net Revenue',     value: fmtRupees(netRevenue),     cls: 'bg-emerald-50 border-emerald-200 text-emerald-700',icon: CreditCard  },
                                 { label: 'Transactions',    value: `${summary.successCount || 0} paid · ${summary.refundCount || 0} refunded`, cls: 'bg-gray-50 border-gray-200 text-gray-700', icon: Calendar },
                             ].map(({ label, value, cls, icon: Icon }) => (
                                 <div key={label} className={`rounded-xl border p-4 flex items-start gap-3 ${cls}`}>
@@ -329,7 +329,7 @@ export default function PaymentLogsPage() {
                         ].map(({ id, label, icon: Icon }) => (
                             <button key={id} onClick={() => setTab(id)}
                                 className={`flex items-center gap-2 px-4 py-4 border-b-2 text-sm font-medium transition-colors ${
-                                    tab === id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    tab === id ? 'border-emerald-600 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}>
                                 <Icon size={15}/> {label}
                             </button>
@@ -355,11 +355,11 @@ export default function PaymentLogsPage() {
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input type="text" placeholder="Search by user name or email…"
                                         value={searchInput} onChange={e => setSearchInput(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                        className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                                 </div>
                             )}
                             <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300">
                                 <option value="all">All Statuses</option>
                                 <option value="success">Success / Paid</option>
                                 <option value="refunded">Refunded</option>
@@ -367,9 +367,9 @@ export default function PaymentLogsPage() {
                                 <option value="pending">Pending</option>
                             </select>
                             <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
-                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                             <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
-                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                             {(statusFilter !== 'all' || dateFrom || dateTo || searchInput) && (
                                 <button onClick={() => { setStatusFilter('all'); setDateFrom(''); setDateTo(''); setSearchInput(''); }}
                                     className="px-3 py-2 text-sm text-gray-500 hover:text-red-600 flex items-center gap-1">
@@ -477,7 +477,7 @@ export default function PaymentLogsPage() {
                                                         <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{fmtShort(p.createdAt)}</td>
                                                         <td className="px-4 py-3">
                                                             <button onClick={() => setSelected(p)}
-                                                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100" title="View details">
+                                                                className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100" title="View details">
                                                                 <Search size={13}/>
                                                             </button>
                                                         </td>

@@ -191,7 +191,7 @@ export default function Signup() {
       <div className="w-[90%] md:w-[55%] lg:w-[45%] max-w-2xl bg-white rounded-xl shadow-xl p-8">
 
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-red-400 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">MC</div>
+          <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">MC</div>
           <h1 className="text-3xl font-bold text-gray-800">Create Account</h1>
           <p className="text-gray-500 text-sm mt-1">Join MindCare — Mental Health Platform</p>
         </div>
@@ -214,25 +214,25 @@ export default function Signup() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
                 <input type="text" name="fullName" value={form.fullName} onChange={handleChange}
                   placeholder="Enter your full name"
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Username <span className="text-red-500">*</span></label>
                 <input type="text" name="username" value={form.username} onChange={handleChange}
                   placeholder="Unique username (no spaces)"
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
                 <input type="email" name="email" value={form.email} onChange={handleChange}
                   placeholder="Enter your email"
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
                 <input type="text" name="institution" value={form.institution} onChange={handleChange}
                   placeholder="School / College / Organization"
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
@@ -240,14 +240,14 @@ export default function Signup() {
                   <span className="inline-flex items-center px-3 border border-r-0 border-gray-300 rounded-l-lg bg-gray-100 text-gray-600 text-sm">+91</span>
                   <input type="tel" name="phone" value={form.phone} onChange={handleChange}
                     placeholder="10-digit number" maxLength={10} inputMode="numeric"
-                    className="w-full text-sm border border-gray-300 rounded-r-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                    className="w-full text-sm border border-gray-300 rounded-r-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
                 <input type="date" name="dob" value={form.dob} onChange={handleChange}
                   max={new Date().toISOString().split("T")[0]}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
                 {computedAge !== null && computedAge >= 5 && computedAge <= 100 && (
                   <p className="text-xs text-green-600 mt-1">Age: {computedAge} years</p>
                 )}
@@ -273,13 +273,13 @@ export default function Signup() {
                     onClick={() => setForm(p => ({ ...p, role: value, specialization: "" }))}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
                       form.role === value
-                        ? "border-indigo-500 bg-indigo-50"
+                        ? "border-emerald-500 bg-emerald-50"
                         : "border-gray-200 hover:border-gray-300 bg-white"
                     }`}
                   >
                     <span className="text-2xl">{icon}</span>
                     <div>
-                      <p className={`text-sm font-semibold ${form.role === value ? "text-indigo-700" : "text-gray-700"}`}>{label}</p>
+                      <p className={`text-sm font-semibold ${form.role === value ? "text-emerald-700" : "text-gray-700"}`}>{label}</p>
                       <p className="text-xs text-gray-500">{desc}</p>
                     </div>
                   </button>
@@ -306,7 +306,7 @@ export default function Signup() {
                   className={`w-full text-sm border rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 bg-white ${
                     !form.specialization
                       ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-                      : "border-green-400 focus:border-indigo-400 focus:ring-indigo-300"
+                      : "border-green-400 focus:border-emerald-400 focus:ring-emerald-300"
                   }`}
                 >
                   <option value="">— Select your specialization —</option>
@@ -330,7 +330,7 @@ export default function Signup() {
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
                     placeholder="Create a strong password"
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 pr-10 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-300 focus:outline-none" />
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2.5 pr-10 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-300 focus:outline-none" />
                   <button type="button" tabIndex={-1} onClick={() => setShowPassword(p => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -345,7 +345,7 @@ export default function Signup() {
                     className={`w-full text-sm border rounded-lg px-3 py-2.5 pr-10 focus:outline-none focus:ring-1 ${
                       form.confirmPassword && form.confirmPassword !== form.password
                         ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-                        : "border-gray-300 focus:border-indigo-400 focus:ring-indigo-300"
+                        : "border-gray-300 focus:border-emerald-400 focus:ring-emerald-300"
                     }`} />
                   <button type="button" tabIndex={-1} onClick={() => setShowConfirmPassword(p => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -433,7 +433,7 @@ export default function Signup() {
             type="button"
             onClick={handleSubmit}
             disabled={loading || (isCounsellor && !form.specialization)}
-            className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 rounded-xl text-base font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-base font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Creating Account…" : `Create ${isCounsellor ? "Counsellor" : "Student"} Account`}
           </button>
@@ -443,7 +443,7 @@ export default function Signup() {
 
       <p className="mt-4 mb-14 text-gray-700 text-center text-sm">
         Already have an account?{" "}
-        <button onClick={() => navigate("/login")} className="text-red-400 hover:underline font-medium bg-transparent border-none cursor-pointer">
+        <button onClick={() => navigate("/login")} className="text-emerald-600 hover:underline font-medium bg-transparent border-none cursor-pointer">
           Sign In
         </button>
       </p>

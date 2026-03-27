@@ -12,8 +12,8 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 const ASSESSMENTS = {
   PHQ9: {
     id: "PHQ9", label: "PHQ-9", fullName: "Depression Scale",
-    color: "#8b5cf6", bg: "#f5f3ff", badge: "bg-purple-100 text-purple-700",
-    icon: "💜", emoji: "🧠", duration: "3–5 min", questionCount: 9,
+    color: "#059669", bg: "#ecfdf5", badge: "bg-emerald-100 text-emerald-700",
+    icon: "💚", emoji: "🧠", duration: "3–5 min", questionCount: 9,
     description: "Clinically validated 9-item scale for detecting and measuring depression severity.",
     timeframe: "Over the LAST 2 WEEKS, how often have you been bothered by:",
     questions: [
@@ -214,7 +214,7 @@ const RESOURCE_CARDS = {
 };
 
 const TYPE_COLORS = {
-  article: { bg: "#eef2ff", color: "#6366f1", label: "Article" },
+  article: { bg: "#ecfdf5", color: "#059669", label: "Article" },
   video:   { bg: "#fef2f2", color: "#ef4444", label: "Video"   },
   audio:   { bg: "#ecfdf5", color: "#10b981", label: "Audio"   },
   tool:    { bg: "#fffbeb", color: "#f59e0b", label: "Tool"    },
@@ -260,7 +260,7 @@ function CrisisBanner() {
   );
 }
 
-function ProgressBar({ value, color = "#6366f1", height = "h-2.5" }) {
+function ProgressBar({ value, color = "#059669", height = "h-2.5" }) {
   return (
     <div className={`w-full ${height} bg-gray-200 rounded-full overflow-hidden`}>
       <div className="h-full rounded-full transition-all duration-700"
@@ -327,10 +327,10 @@ function GoalCard({ goal, screeningId, token, onUpdate }) {
   };
 
   const areaColors = {
-    Sleep: "#6366f1", Engagement: "#10b981", Energy: "#f59e0b",
+    Sleep: "#059669", Engagement: "#059669", Energy: "#f59e0b",
     "Self-Esteem": "#ec4899", Safety: "#ef4444", Grounding: "#0ea5e9",
     Relaxation: "#8b5cf6", "Worry Control": "#f97316", "Stress Awareness": "#f59e0b",
-    "Positive Activities": "#10b981", "Professional Support": "#6366f1", default: "#6366f1",
+    "Positive Activities": "#10b981", "Professional Support": "#059669", default: "#059669",
   };
   const color = areaColors[goal.area] || areaColors.default;
 
@@ -344,7 +344,7 @@ function GoalCard({ goal, screeningId, token, onUpdate }) {
           {goal.completed && <span className="ml-2 text-xs font-bold text-green-600">✅ Done</span>}
         </div>
         {!goal.completed && token && (
-          <button onClick={() => setEditing(e => !e)} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium">
+          <button onClick={() => setEditing(e => !e)} className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">
             {editing ? "Cancel" : "Update"}
           </button>
         )}
@@ -361,9 +361,9 @@ function GoalCard({ goal, screeningId, token, onUpdate }) {
         <div className="mt-3 pt-3 border-t border-gray-100">
           <input type="range" min="0" max="100" value={localProgress}
             onChange={e => setLocalProgress(Number(e.target.value))}
-            className="w-full accent-indigo-500 mb-2" />
+            className="w-full accent-emerald-600 mb-2" />
           <button onClick={save} disabled={saving}
-            className="w-full py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+            className="w-full py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50">
             {saving ? "Saving…" : `Save — ${localProgress}%`}
           </button>
         </div>
@@ -395,16 +395,16 @@ function MiniTrendChart({ history }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }}>
         <defs>
           <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2"/>
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0"/>
+            <stop offset="0%" stopColor="#059669" stopOpacity="0.2"/>
+            <stop offset="100%" stopColor="#059669" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d={pathD + ` L ${points[points.length-1].x} ${H} L ${points[0].x} ${H} Z`}
           fill="url(#trendGrad)"/>
-        <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d={pathD} fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         {points.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r="4" fill="#6366f1" stroke="white" strokeWidth="2"/>
+            <circle cx={p.x} cy={p.y} r="4" fill="#059669" stroke="white" strokeWidth="2"/>
             <text x={p.x} y={H - 1} textAnchor="middle" fontSize="7" fill="#9ca3af">
               {new Date(p.date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
             </text>
@@ -485,7 +485,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {result.resultMeta.selfCareActions.map((action, i) => (
               <div key={i} className="flex items-start gap-2 bg-gray-50 rounded-lg p-3">
-                <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[11px] font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[11px] font-bold flex-shrink-0 mt-0.5">{i + 1}</span>
                 <p className="text-sm text-gray-700 leading-snug">{action}</p>
               </div>
             ))}
@@ -495,12 +495,12 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
 
       {/* Coping strategies */}
       {result.resultMeta?.copingStrategies?.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-5">
+        <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100 p-5">
           <h4 className="font-bold text-gray-900 text-sm mb-3">🧠 Evidence-Based Coping Strategies</h4>
           <ul className="space-y-2">
             {result.resultMeta.copingStrategies.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                <span className="text-indigo-500 mt-0.5 flex-shrink-0">→</span> {s}
+                <span className="text-emerald-600 mt-0.5 flex-shrink-0">→</span> {s}
               </li>
             ))}
           </ul>
@@ -528,12 +528,12 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
                       {r.reason && <span className="text-[10px] text-gray-400 truncate">{r.reason}</span>}
                     </div>
                   </div>
-                  <span className="text-gray-300 group-hover:text-indigo-500 flex-shrink-0 text-sm">↗</span>
+                  <span className="text-gray-300 group-hover:text-emerald-600 flex-shrink-0 text-sm">↗</span>
                 </a>
               );
             })}
           </div>
-          <a href="/resources" className="mt-4 flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 font-semibold">
+          <a href="/resources" className="mt-4 flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-semibold">
             Browse all resources →
           </a>
         </div>
@@ -542,7 +542,7 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
       {/* Session progress plan */}
       {localGoals.length > 0 && (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-5 py-4">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-b border-emerald-100 px-5 py-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
                 <h4 className="font-bold text-gray-900 text-sm">🎯 Your Recovery Progress Plan</h4>
@@ -551,12 +551,12 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-indigo-600">{overallProgress}%</p>
+                <p className="text-2xl font-black text-emerald-600">{overallProgress}%</p>
                 <p className="text-xs text-gray-400">overall progress</p>
               </div>
             </div>
             <div className="mt-3">
-              <ProgressBar value={overallProgress} color="#6366f1" height="h-3" />
+              <ProgressBar value={overallProgress} color="#059669" height="h-3" />
             </div>
           </div>
           <div className="p-5">
@@ -582,9 +582,9 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
           <p className="text-xs text-gray-400 mb-3">Re-take this assessment on these dates to track progress.</p>
           <div className="flex flex-wrap gap-2">
             {result.sessionPlan.checkInDates.map((d, i) => (
-              <div key={i} className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-2">
-                <span className="text-indigo-500 font-bold text-xs">Check-in {i + 1}</span>
-                <span className="text-indigo-800 text-xs font-semibold">
+              <div key={i} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                <span className="text-emerald-600 font-bold text-xs">Check-in {i + 1}</span>
+                <span className="text-emerald-800 text-xs font-semibold">
                   {new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
                 </span>
               </div>
@@ -593,20 +593,20 @@ function ResultsPage({ result, assessmentType, history, token, navigate }) {
         </div>
       )}
 
-      <div className="border-2 border-indigo-200 bg-indigo-50 rounded-xl p-4">
-        <p className="text-sm font-bold text-indigo-800 mb-1">🩺 Remember: These results do not replace a clinical diagnosis</p>
-        <p className="text-xs text-indigo-700 leading-relaxed">
+      <div className="border-2 border-emerald-200 bg-emerald-50 rounded-xl p-4">
+        <p className="text-sm font-bold text-emerald-800 mb-1">🩺 Remember: These results do not replace a clinical diagnosis</p>
+        <p className="text-xs text-emerald-700 leading-relaxed">
           This screening is a self-report tool, not a diagnostic test. Only a qualified doctor or clinical psychologist can diagnose a mental health condition.
         </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <button onClick={() => navigate("/booking")}
-          className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all">
+          className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all">
           📅 Book a Counselling Session
         </button>
         <button onClick={() => navigate("/resources")}
-          className="flex-1 py-3 bg-white border-2 border-indigo-200 hover:border-indigo-400 text-indigo-700 rounded-xl font-bold text-sm transition-all">
+          className="flex-1 py-3 bg-white border-2 border-emerald-200 hover:border-emerald-400 text-emerald-700 rounded-xl font-bold text-sm transition-all">
           📚 Browse All Resources
         </button>
       </div>
@@ -871,10 +871,10 @@ export default function Screening() {
 
   // ── WELCOME ────────────────────────────────────────────────────────────────
   if (screen === "welcome") return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-4 shadow-2xl">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl mb-4 shadow-2xl">
             <span className="text-3xl">🧠</span>
           </div>
           <h1 className="text-4xl font-extrabold text-white mb-2">Mental Health Screening</h1>
@@ -938,7 +938,7 @@ export default function Screening() {
 
   // ── TEST ───────────────────────────────────────────────────────────────────
   if (screen === "test") return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <button onClick={() => setScreen("welcome")}
@@ -991,7 +991,7 @@ export default function Screening() {
 
   // ── RESULT ─────────────────────────────────────────────────────────────────
   if (screen === "result" && result) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
           <button onClick={() => setScreen("welcome")} className="text-white/60 hover:text-white text-sm">← Back</button>
@@ -1015,7 +1015,7 @@ export default function Screening() {
 
   // ── HISTORY ────────────────────────────────────────────────────────────────
   if (screen === "history") return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <button onClick={() => setScreen("welcome")} className="text-white/60 hover:text-white text-sm">← Back</button>

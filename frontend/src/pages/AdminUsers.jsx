@@ -81,7 +81,7 @@ function UserDrawer({ userId, token, onClose, onAction }) {
                         <div className="flex flex-col items-center text-center gap-3">
                             {data.user.avatar
                                 ? <img src={data.user.avatar} alt={data.user.fullName} className="w-20 h-20 rounded-full object-cover border-4 border-indigo-100" />
-                                : <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-2xl">{(data.user.fullName||'U')[0]}</div>
+                                : <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-2xl">{(data.user.fullName||'U')[0]}</div>
                             }
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900">{data.user.fullName}</h3>
@@ -117,20 +117,20 @@ function UserDrawer({ userId, token, onClose, onAction }) {
                         </div>
 
                         {/* Activity summary */}
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                            <p className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-3">Activity Summary</p>
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-3">Activity Summary</p>
                             <div className="grid grid-cols-3 gap-3 text-center">
                                 <div>
-                                    <p className="text-xl font-bold text-indigo-700">{data.activity.totalBookings}</p>
-                                    <p className="text-xs text-indigo-500">Bookings</p>
+                                    <p className="text-xl font-bold text-emerald-700">{data.activity.totalBookings}</p>
+                                    <p className="text-xs text-emerald-600">Bookings</p>
                                 </div>
-                                <div className="border-x border-indigo-200">
+                                <div className="border-x border-emerald-200">
                                     <p className="text-xl font-bold text-green-700">{data.activity.paymentCount}</p>
                                     <p className="text-xs text-green-600">Payments</p>
                                 </div>
                                 <div>
-                                    <p className="text-xl font-bold text-indigo-700">{fmtRupees(data.activity.totalPaid)}</p>
-                                    <p className="text-xs text-indigo-500">Total Paid</p>
+                                    <p className="text-xl font-bold text-emerald-700">{fmtRupees(data.activity.totalPaid)}</p>
+                                    <p className="text-xs text-emerald-600">Total Paid</p>
                                 </div>
                             </div>
                         </div>
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
                             <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
                             <p className="text-sm text-gray-500 mt-1">View, search, and manage all registered users</p>
                         </div>
-                        <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                        <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">
                             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
                         </button>
                     </div>
@@ -294,17 +294,17 @@ export default function AdminUsersPage() {
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input type="text" placeholder="Search by name, email or username…"
                             value={searchInput} onChange={e => setSearchInput(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                            className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                     </div>
                     <select value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }}
-                        className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300">
                         <option value="all">All Roles</option>
                         <option value="student">Students</option>
                         <option value="counsellor">Counsellors</option>
                         <option value="admin">Admins</option>
                     </select>
                     <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-                        className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300">
                         <option value="all">All Status</option>
                         <option value="approved">Active</option>
                         <option value="pending">Pending</option>
@@ -349,7 +349,7 @@ export default function AdminUsersPage() {
                                                     <div className="flex items-center gap-3">
                                                         {u.avatar
                                                             ? <img src={u.avatar} alt={u.fullName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
-                                                            : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{(u.fullName||'?')[0]}</div>
+                                                            : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{(u.fullName||'?')[0]}</div>
                                                         }
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-semibold text-gray-900 truncate">{u.fullName}</p>
@@ -379,7 +379,7 @@ export default function AdminUsersPage() {
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-1.5">
                                                         <button onClick={() => setSelectedUserId(u._id)} title="View details"
-                                                            className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100">
+                                                            className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100">
                                                             <Eye size={13}/>
                                                         </button>
                                                         {isTerminated ? (

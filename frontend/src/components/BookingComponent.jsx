@@ -58,14 +58,14 @@ function StepBar({ step, preselected }) {
                         <div className="flex flex-col items-center gap-1 min-w-[52px]">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                                 done || autoDone ? 'bg-green-500 text-white'  :
-                                current         ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-400'
+                                current         ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-400'
                             }`}>
                                 {done || autoDone ? '✓' : n}
                             </div>
-                            <span className={`text-[10px] font-medium ${current ? 'text-indigo-600' : 'text-gray-400'}`}>{label}</span>
+                            <span className={`text-[10px] font-medium ${current ? 'text-emerald-600' : 'text-gray-400'}`}>{label}</span>
                         </div>
                         {i < steps.length - 1 && (
-                            <div className={`flex-1 h-0.5 mb-4 ${(step > n || autoDone) ? 'bg-green-400' : 'bg-gray-200'}`} />
+                            <div className={`flex-1 h-0.5 mb-4 ${(step > n || autoDone) ? 'bg-emerald-400' : 'bg-gray-200'}`} />
                         )}
                     </React.Fragment>
                 );
@@ -257,28 +257,28 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
 
             {/* ── Pre-selected counsellor banner (shown on step 2+ when coming from ad) ── */}
             {preselectedCounsellorId && step <= 4 && selectedCounsellor && (
-                <div className="mb-6 flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3">
+                <div className="mb-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
                     {selectedCounsellor.avatar ? (
                         <img src={selectedCounsellor.avatar} alt={selectedCounsellor.fullName}
-                            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-indigo-200" />
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-emerald-200" />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold flex-shrink-0">
                             {selectedCounsellor.fullName[0]}
                         </div>
                     )}
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-indigo-900">{selectedCounsellor.fullName}</p>
-                        <p className="text-xs text-indigo-600">{selectedCounsellor.specialization || 'General Counselling'}</p>
+                        <p className="text-sm font-bold text-emerald-900">{selectedCounsellor.fullName}</p>
+                        <p className="text-xs text-emerald-600">{selectedCounsellor.specialization || 'General Counselling'}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                         {selectedCounsellor.sessionFee === 0
                             ? <span className="text-sm font-bold text-green-600">Free</span>
-                            : <span className="text-sm font-bold text-indigo-700">from ₹{selectedCounsellor.sessionFee}</span>
+                            : <span className="text-sm font-bold text-emerald-700">from ₹{selectedCounsellor.sessionFee}</span>
                         }
                     </div>
                     {/* Allow switching counsellor */}
                     <button onClick={() => { setFormData(prev => ({ ...prev, counselorId: '', date: '', timeSlot: '' })); setStep(1); }}
-                        className="ml-2 text-xs text-indigo-500 hover:text-indigo-700 underline flex-shrink-0">
+                        className="ml-2 text-xs text-emerald-600 hover:text-emerald-700 underline flex-shrink-0">
                         Change
                     </button>
                 </div>
@@ -291,7 +291,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                     <p className="text-sm text-gray-500 mb-6">Fees shown are base prices — in-person sessions have a ₹100 surcharge</p>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 text-gray-400">
-                            <div className="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full mr-3" />
+                            <div className="animate-spin w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full mr-3" />
                             Loading counsellors…
                         </div>
                     ) : counselors.length === 0 ? (
@@ -304,13 +304,13 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                             {counselors.map(c => (
                                 <button key={c._id} onClick={() => setField('counselorId', c._id)}
                                     className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                                        formData.counselorId === c._id ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        formData.counselorId === c._id ? 'border-emerald-600 bg-emerald-50 shadow-sm' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                     }`}>
                                     <div className="flex items-center gap-4">
                                         {c.avatar ? (
                                             <img src={c.avatar} alt={c.fullName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                                         ) : (
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                                                 {c.fullName[0]}
                                             </div>
                                         )}
@@ -323,7 +323,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                                                 <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">Free</span>
                                             ) : (
                                                 <div>
-                                                    <div className="flex items-center gap-0.5 justify-end text-indigo-700 font-semibold text-sm">
+                                                    <div className="flex items-center gap-0.5 justify-end text-emerald-700 font-semibold text-sm">
                                                         <IndianRupee size={12} />{c.sessionFee}<span className="text-gray-400 font-normal ml-0.5">online</span>
                                                     </div>
                                                     <div className="flex items-center gap-0.5 justify-end text-orange-600 text-xs mt-0.5">
@@ -332,14 +332,14 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                                                 </div>
                                             )}
                                         </div>
-                                        {formData.counselorId === c._id && <CheckCircle size={18} className="text-indigo-500 flex-shrink-0" />}
+                                        {formData.counselorId === c._id && <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />}
                                     </div>
                                 </button>
                             ))}
                         </div>
                     )}
                     <button onClick={() => setStep(2)} disabled={!formData.counselorId}
-                        className="w-full mt-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                        className="w-full mt-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-emerald-700 flex items-center justify-center gap-2">
                         Next: Pick Date & Slot <ChevronRight size={16} />
                     </button>
                 </div>
@@ -357,28 +357,28 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                     </p>
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <Calendar size={14} className="inline mr-1 text-indigo-400" />Select Date
+                            <Calendar size={14} className="inline mr-1 text-emerald-500" />Select Date
                         </label>
                         <input type="date" min={minDate} max={maxDate} value={formData.date}
                             onChange={e => handleDateChange(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm" />
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm" />
                     </div>
                     {formData.date && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-3">
-                                <Clock size={14} className="inline mr-1 text-indigo-400" />
+                                <Clock size={14} className="inline mr-1 text-emerald-500" />
                                 Time Slots — {new Date(formData.date).toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' })}
                             </label>
                             {slotsLoading ? (
                                 <div className="flex items-center gap-2 text-gray-400 text-sm py-4">
-                                    <div className="animate-spin w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full" />Loading slots…
+                                    <div className="animate-spin w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full" />Loading slots…
                                 </div>
                             ) : (
                                 <>
                                     <div className="flex gap-4 mb-3 text-xs text-gray-500">
-                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-100 border border-indigo-300 inline-block" />Available</span>
+                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-300 inline-block" />Available</span>
                                         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-100 border border-gray-300 inline-block" />Booked</span>
-                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-indigo-600 inline-block" />Selected</span>
+                                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-600 inline-block" />Selected</span>
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         {ALL_SLOTS.map(slot => {
@@ -389,8 +389,8 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                                                     onClick={() => !isBooked && setField('timeSlot', slot)}
                                                     className={`relative px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
                                                         isBooked    ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' :
-                                                        isSelected  ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'         :
-                                                        'border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400 hover:bg-indigo-100'
+                                                        isSelected  ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'         :
+                                                        'border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-100'
                                                     }`}>
                                                     <span className="flex items-center justify-center gap-2"><Clock size={13} />{slot}</span>
                                                     {isBooked   && <span className="absolute top-1 right-1.5 text-[9px] font-bold text-gray-400 bg-gray-200 px-1 rounded">TAKEN</span>}
@@ -419,7 +419,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                             Back
                         </button>
                         <button type="button" onClick={() => setStep(3)} disabled={!formData.date || !formData.timeSlot}
-                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-emerald-700 flex items-center justify-center gap-2">
                             Next: Session Details <ChevronRight size={16} />
                         </button>
                     </div>
@@ -442,7 +442,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                                     <button key={value} type="button" onClick={() => setField('mode', value)}
                                         className={`flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 transition-all ${
                                             isSelected
-                                                ? hasSurcharge ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                                ? hasSurcharge ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-emerald-600 bg-emerald-50 text-emerald-700'
                                                 : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                         }`}>
                                         <Icon size={20} />
@@ -461,7 +461,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                         </div>
                         {baseFee > 0 && (
                             <div className={`mt-3 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center justify-between ${
-                                formData.mode === 'in-person' ? 'bg-orange-50 border border-orange-200 text-orange-800' : 'bg-indigo-50 border border-indigo-200 text-indigo-800'
+                                formData.mode === 'in-person' ? 'bg-orange-50 border border-orange-200 text-orange-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
                             }`}>
                                 <span>{formData.mode === 'in-person' ? `₹${baseFee} base + ₹${MODE_SURCHARGE['in-person']} surcharge` : `₹${baseFee} for ${formData.mode} session`}</span>
                                 <span className="font-bold text-base flex items-center gap-0.5"><IndianRupee size={14} />{totalFee}</span>
@@ -473,7 +473,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                         <textarea value={formData.reason} onChange={handleReasonChange}
                             placeholder="Briefly describe what you'd like to discuss…"
                             rows={3} maxLength={200}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                         <p className="text-xs text-gray-400 mt-1 text-right">{formData.reason.length}/200</p>
                     </div>
                     <div className="mb-6">
@@ -481,13 +481,13 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                         <textarea value={formData.notes} onChange={handleNotesChange}
                             placeholder="Anything else the counsellor should know…"
                             rows={2} maxLength={500}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                            className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                         <p className="text-xs text-gray-400 mt-1 text-right">{formData.notes.length}/500</p>
                     </div>
                     <div className="flex gap-3">
                         <button type="button" onClick={() => setStep(2)} className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">Back</button>
                         <button type="button" onClick={() => setStep(4)} disabled={!formData.reason.trim()}
-                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-emerald-700 flex items-center justify-center gap-2">
                             Review Booking <ChevronRight size={16} />
                         </button>
                     </div>
@@ -528,7 +528,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                                         </>
                                     )}
                                     <Row label="Total fee" value={
-                                        <span className="flex items-center gap-0.5 text-indigo-700 font-bold text-base">
+                                        <span className="flex items-center gap-0.5 text-emerald-700 font-bold text-base">
                                             <IndianRupee size={14} />{totalFee}
                                         </span>
                                     } />
@@ -571,7 +571,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                     )}
 
                     {totalFee > 0 && payState === 'idle' && (
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4 text-sm text-indigo-800">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-4 text-sm text-emerald-800">
                             <p className="font-semibold mb-1">💳 Payment required</p>
                             <p>After confirming, a secure Cashfree checkout will open to pay <strong>₹{totalFee}</strong>.</p>
                             {formData.mode === 'in-person' && <p className="mt-1 text-orange-700 text-xs">🏢 Includes ₹{MODE_SURCHARGE['in-person']} in-person facility surcharge.</p>}
@@ -600,7 +600,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                         </button>
                         <button type="button" onClick={handleSubmit}
                             disabled={submitting || payState === 'creating' || payState === 'paying' || payState === 'verifying'}
-                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold disabled:opacity-60 hover:bg-indigo-700 flex items-center justify-center gap-2">
+                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold disabled:opacity-60 hover:bg-emerald-700 flex items-center justify-center gap-2">
                             {(submitting || payState === 'creating' || payState === 'verifying') && (
                                 <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                             )}
@@ -631,7 +631,7 @@ export default function BookingComponent({ onBookingCreated, preselectedCounsell
                     </div>
                     <div className="flex gap-3">
                         <button type="button" onClick={() => window.location.href = '/newhome'}
-                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">
+                            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700">
                             Go to Home
                         </button>
                         <button type="button" onClick={reset}

@@ -172,7 +172,7 @@ export default function Profile() {
 
                 {/* ── Cover + Avatar ── */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="h-32 bg-gradient-to-r from-purple-500 via-pink-500 to-red-400">
+                    <div className="h-32 bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700">
                         {user.coverImage && <img src={user.coverImage} alt="Cover" className="w-full h-full object-cover" />}
                     </div>
                     <div className="px-6 pb-6 relative">
@@ -182,7 +182,7 @@ export default function Profile() {
                                     <img src={user.avatar} alt={user.fullName}
                                         className="w-20 h-20 rounded-full border-4 border-white object-cover shadow" />
                                 ) : (
-                                    <div className="w-20 h-20 rounded-full border-4 border-white bg-purple-500 flex items-center justify-center shadow">
+                                    <div className="w-20 h-20 rounded-full border-4 border-white bg-emerald-600 flex items-center justify-center shadow">
                                         <span className="text-white text-2xl font-bold">{user.fullName?.[0]?.toUpperCase() ?? "U"}</span>
                                     </div>
                                 )}
@@ -477,7 +477,7 @@ function GovtIdRow({ label, has, masked }) {
 function QuickLink({ to, label }) {
     return (
         <Link to={to}
-            className="flex items-center justify-center p-3 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-200 rounded-xl text-sm text-gray-700 hover:text-purple-700 font-medium transition-colors">
+            className="flex items-center justify-center p-3 bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-200 rounded-xl text-sm text-gray-700 hover:text-emerald-700 font-medium transition-colors">
             {label}
         </Link>
     );

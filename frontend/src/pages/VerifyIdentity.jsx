@@ -306,7 +306,7 @@ export default function VerifyIdentity() {
                                 </div>
                                 <button
                                     onClick={() => navigate("/profile")}
-                                    className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-colors"
+                                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors"
                                 >
                                     Go to Profile
                                 </button>

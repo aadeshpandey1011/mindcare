@@ -10,7 +10,7 @@ const MOOD_EMOJIS = { 1:"😞",2:"😔",3:"😐",4:"🙂",5:"😊" };
 
 const INITIAL_MSG = {
   id: 0, role: "model",
-  text: "Hi there 👋 I'm Mia, your MindCare companion. I'm here to listen and support you — whatever's on your mind today.\n\nIs there something specific you'd like to talk about, or would you just like to chat?",
+  text: "Hi there 👋 I'm Ira, your MindCare companion. I'm here to listen and support you — whatever's on your mind today.\n\nIs there something specific you'd like to talk about, or would you just like to chat?",
 };
 
 // Crisis hotline block shown when crisis detected
@@ -39,14 +39,14 @@ function MessageBubble({ msg, onSuggestionClick }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3 px-4`}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-          <span className="text-white text-xs font-bold">M</span>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+          <span className="text-white text-xs font-bold">I</span>
         </div>
       )}
       <div className={`max-w-[78%] ${isUser ? "order-first mr-2" : ""}`}>
         <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
           isUser
-            ? "bg-indigo-600 text-white rounded-tr-sm"
+            ? "bg-emerald-600 text-white rounded-tr-sm"
             : "bg-white/12 backdrop-blur text-white/95 rounded-tl-sm border border-white/10"
         }`}>
           {isUser ? (
@@ -208,24 +208,24 @@ export default function ChatSupport() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 flex flex-col">
       {/* Ambient orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-32 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-10" />
-        <div className="absolute -bottom-32 -left-40 w-96 h-96 bg-indigo-500 rounded-full filter blur-3xl opacity-10" />
+        <div className="absolute -top-40 -right-32 w-96 h-96 bg-emerald-500 rounded-full filter blur-3xl opacity-10" />
+        <div className="absolute -bottom-32 -left-40 w-96 h-96 bg-emerald-600 rounded-full filter blur-3xl opacity-10" />
       </div>
 
       {/* Header */}
       <div className="relative z-10 bg-white/5 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">M</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">I</span>
             </div>
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-900" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-sm">Mia — AI Support</h1>
+            <h1 className="text-white font-bold text-sm">Ira — AI Support</h1>
             <p className="text-white/50 text-xs">Mental Health Companion · Always here</p>
           </div>
         </div>
@@ -243,7 +243,7 @@ export default function ChatSupport() {
 
       {/* Mood check-in strip (shown if not logged today) */}
       {todayMood === null && !moodSaved && (
-        <div className="relative z-10 bg-indigo-900/40 border-b border-indigo-500/20 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+        <div className="relative z-10 bg-emerald-900/40 border-b border-emerald-500/20 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
           <p className="text-white/70 text-xs font-medium">How are you feeling today?</p>
           <div className="flex gap-1.5">
             {[1,2,3,4,5].map(m => (
@@ -274,13 +274,13 @@ export default function ChatSupport() {
         {/* Typing indicator */}
         {loading && (
           <div className="flex justify-start mb-3 px-4">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-              <span className="text-white text-xs font-bold">M</span>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+              <span className="text-white text-xs font-bold">I</span>
             </div>
             <div className="bg-white/12 backdrop-blur border border-white/10 px-4 py-3 rounded-2xl rounded-tl-sm">
               <div className="flex gap-1">
                 {[0,1,2].map(i => (
-                  <div key={i} className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  <div key={i} className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"
                     style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </div>
@@ -293,7 +293,7 @@ export default function ChatSupport() {
       {/* Disclaimer */}
       <div className="relative z-10 px-4 py-1 text-center">
         <p className="text-white/25 text-[10px]">
-          Mia is an AI companion — not a therapist. If in crisis, call iCall: 9152987821 · Always seek professional help for serious concerns.
+          Ira is an AI companion — not a therapist. If in crisis, call iCall: 9152987821 · Always seek professional help for serious concerns.
         </p>
       </div>
 
@@ -323,12 +323,12 @@ export default function ChatSupport() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Share what's on your mind…"
-            className="flex-1 bg-white/10 backdrop-blur border border-white/15 rounded-2xl px-4 py-3 text-white text-sm placeholder-white/35 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all"
+            className="flex-1 bg-white/10 backdrop-blur border border-white/15 rounded-2xl px-4 py-3 text-white text-sm placeholder-white/35 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all"
             style={{ minHeight: 48, maxHeight: 120 }}
           />
           <button onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all shadow-lg flex-shrink-0">
+            className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed text-white rounded-2xl flex items-center justify-center transition-all shadow-lg flex-shrink-0">
             {loading
               ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

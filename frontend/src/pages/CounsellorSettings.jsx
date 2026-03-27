@@ -17,8 +17,8 @@ const AD_PLANS = [
         pricePerMonth: 499,
         description:   'Appear in the forum ad rotation alongside other counsellors.',
         features:      ['Forum sidebar placement', 'Rotation with other Basic ads', 'Your rating & sessions shown', 'Book session button'],
-        color:         '#6366f1',
-        light:         '#eef2ff',
+        color:         '#059669',
+        light:         '#ecfdf5',
     },
     {
         key:           'standard',
@@ -36,8 +36,8 @@ const AD_PLANS = [
         pricePerMonth: 1999,
         description:   'Fixed top slot — always the first counsellor students see.',
         features:      ['Fixed top slot — always visible', '⭐ Top Rated badge', 'Highlighted card border', 'Impressions & clicks analytics', 'Priority support'],
-        color:         '#8b5cf6',
-        light:         '#f5f3ff',
+        color:         '#047857',
+        light:         '#ecfdf5',
     },
 ];
 
@@ -129,7 +129,7 @@ function BankDetailsSection({ token }) {
                         </div>
                     </div>
                     {details?.hasDetails && !editing && (
-                        <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 border border-indigo-200">
+                        <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 border border-emerald-200">
                             <Edit3 size={14} /> Update
                         </button>
                     )}
@@ -189,13 +189,13 @@ function BankDetailsSection({ token }) {
                                 <div key={key}>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">{label} <span className="text-red-400">*</span></label>
                                     <input type="text" value={form[key]} onChange={e => set(key, upper ? e.target.value.toUpperCase() : e.target.value)} placeholder={placeholder}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                                 </div>
                             ))}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
                                 <select value={form.accountType} onChange={e => set('accountType', e.target.value)}
-                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white">
+                                    className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white">
                                     <option value="savings">Savings</option>
                                     <option value="current">Current</option>
                                 </select>
@@ -343,17 +343,17 @@ function AdManagementSection({ token }) {
 
     return (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 px-6 py-4">
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-b border-emerald-100 px-6 py-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center"><Megaphone size={20} className="text-indigo-600" /></div>
+                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center"><Megaphone size={20} className="text-emerald-600" /></div>
                         <div>
                             <h3 className="font-bold text-gray-900">Forum Advertisement</h3>
                             <p className="text-xs text-gray-500">Reach students who need your help</p>
                         </div>
                     </div>
                     {myAd && ['active','paused','rejected','expired'].includes(myAd.status) && view === 'status' && (
-                        <button onClick={() => setView('create')} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 border border-indigo-200">
+                        <button onClick={() => setView('create')} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 border border-emerald-200">
                             <Edit3 size={14} /> New Ad
                         </button>
                     )}
@@ -371,7 +371,7 @@ function AdManagementSection({ token }) {
 
                 {/* ── Payment progress indicator ── */}
                 {isPaying && (
-                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex items-center gap-3 text-sm text-indigo-800">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4 flex items-center gap-3 text-sm text-emerald-800">
                         <RefreshCw size={16} className="animate-spin flex-shrink-0" />
                         <span>
                             {payState === 'creating'   && 'Setting up your ad and payment order…'}
@@ -416,7 +416,7 @@ function AdManagementSection({ token }) {
                         <div className={`rounded-xl p-4 border ${myAd.status === 'active' ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
                             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ad Details</p>
                             <div className="space-y-2 text-sm">
-                                <div className="flex justify-between"><span className="text-gray-500">Plan</span><span className="font-semibold capitalize text-indigo-700">{myAd.plan}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500">Plan</span><span className="font-semibold capitalize text-emerald-700">{myAd.plan}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-500">Duration</span><span className="text-gray-800">{myAd.durationMonths} month{myAd.durationMonths > 1 ? 's' : ''}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="font-semibold text-green-700">₹{myAd.amountPaid}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-500">Tagline</span><span className="text-gray-800 text-right max-w-xs">{myAd.tagline}</span></div>
@@ -430,7 +430,7 @@ function AdManagementSection({ token }) {
                             {myAd.status === 'active' && (
                                 <div className="border-t border-green-200 pt-3 mt-3 grid grid-cols-2 gap-3 text-center">
                                     <div className="bg-white rounded-lg p-2">
-                                        <p className="text-xl font-bold text-indigo-700">{(myAd.impressions || 0).toLocaleString()}</p>
+                                        <p className="text-xl font-bold text-emerald-700">{(myAd.impressions || 0).toLocaleString()}</p>
                                         <p className="text-xs text-gray-500 flex items-center justify-center gap-1"><TrendingUp size={10}/> Impressions</p>
                                     </div>
                                     <div className="bg-white rounded-lg p-2">
@@ -459,7 +459,7 @@ function AdManagementSection({ token }) {
                     <div className="space-y-6">
                         {/* How it works — shown on first-time create */}
                         {!myAd && (
-                            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-800">
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
                                 <p className="font-semibold mb-2">📋 How forum advertising works</p>
                                 <ol className="space-y-1 list-decimal list-inside text-xs">
                                     <li>Choose your plan and customise your ad</li>
@@ -486,7 +486,7 @@ function AdManagementSection({ token }) {
                                         <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-bold text-sm text-gray-900">{plan.name}</span>
-                                                {plan.popular && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-600 text-white">POPULAR</span>}
+                                                {plan.popular && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">POPULAR</span>}
                                             </div>
                                             <span className="font-bold text-sm" style={{ color: plan.color }}>
                                                 ₹{plan.pricePerMonth.toLocaleString()}<span className="text-xs font-normal text-gray-400">/mo</span>
@@ -512,7 +512,7 @@ function AdManagementSection({ token }) {
                                 {[1, 3, 6, 12].map(m => (
                                     <button key={m} type="button"
                                         onClick={() => setForm(p => ({ ...p, durationMonths: m }))}
-                                        className={`py-2 rounded-xl text-sm font-medium border transition-colors ${form.durationMonths === m ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-gray-200 text-gray-700 hover:border-indigo-300'}`}>
+                                        className={`py-2 rounded-xl text-sm font-medium border transition-colors ${form.durationMonths === m ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-gray-200 text-gray-700 hover:border-emerald-300'}`}>
                                         {m}mo
                                     </button>
                                 ))}
@@ -527,7 +527,7 @@ function AdManagementSection({ token }) {
                             <textarea value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value.slice(0, 120) }))}
                                 placeholder="e.g. Specialising in anxiety, stress & exam pressure. Confidential sessions for students."
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                             <p className="text-xs text-gray-400 text-right mt-1">{form.tagline.length}/120</p>
                         </div>
 
@@ -536,19 +536,19 @@ function AdManagementSection({ token }) {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
                             <input type="text" value={form.ctaText} onChange={e => setForm(p => ({ ...p, ctaText: e.target.value.slice(0, 30) }))}
                                 placeholder="Book a Session"
-                                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                         </div>
 
                         {/* Cost summary + pay button */}
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4">
+                        <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-sm font-semibold text-gray-900">{selectedPlan?.name} plan × {form.durationMonths} month{form.durationMonths > 1 ? 's' : ''}</p>
                                     <p className="text-xs text-gray-500">₹{selectedPlan?.pricePerMonth}/mo × {form.durationMonths} = ₹{totalCost.toLocaleString()}</p>
                                 </div>
-                                <p className="text-2xl font-bold text-indigo-700">₹{totalCost.toLocaleString()}</p>
+                                <p className="text-2xl font-bold text-emerald-700">₹{totalCost.toLocaleString()}</p>
                             </div>
-                            <div className="text-xs text-indigo-600 space-y-0.5">
+                            <div className="text-xs text-emerald-600 space-y-0.5">
                                 <p>✓ Secure payment via Cashfree (UPI, Card, Net Banking)</p>
                                 <p>✓ Full refund if admin rejects your ad</p>
                                 <p>✓ Ad goes live within 24 hours of approval</p>
@@ -563,7 +563,7 @@ function AdManagementSection({ token }) {
                                 </button>
                             )}
                             <button onClick={handleSubmitAd} disabled={isPaying || !form.tagline.trim()}
-                                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
+                                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
                                 {isPaying
                                     ? <><RefreshCw size={14} className="animate-spin" /> {payState === 'creating' ? 'Creating order…' : payState === 'verifying' ? 'Verifying…' : 'Processing…'}</>
                                     : <><CreditCard size={14} /> Pay ₹{totalCost.toLocaleString()} & Submit Ad</>

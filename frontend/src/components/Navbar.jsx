@@ -78,25 +78,25 @@ export default function Navbar() {
     if (user?.avatar && !err) {
       return (
         <img src={user.avatar} alt={user.fullName}
-          className={`${size} rounded-full object-cover border-2 border-indigo-200 shadow-sm`}
+          className={`${size} rounded-full object-cover border-2 border-emerald-200 shadow-sm`}
           onError={() => setErr(true)}
         />
       );
     }
     return (
-      <div className={`${size} rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center border-2 border-indigo-200 shadow-sm`}>
+      <div className={`${size} rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center border-2 border-emerald-200 shadow-sm`}>
         <span className="text-white font-semibold text-sm">{getUserInitials(user)}</span>
       </div>
     );
   };
 
   return (
-    <header className="sticky top-0 z-50 shadow-md bg-gradient-to-r from-white via-blue-50 to-blue-100 backdrop-blur border-b">
+    <header className="sticky top-0 z-50 shadow-md bg-white backdrop-blur border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
         {/* Logo */}
         <Link to={user?.role === "admin" ? "/dashboard" : user?.role === "counsellor" ? "/counsellorDashboard" : "/newhome"}
-          className={`text-2xl font-extrabold tracking-tight transition-colors ${user?.role === "admin" ? "text-red-600 hover:text-red-700" : "text-indigo-700 hover:text-indigo-800"}`}>
+          className={`text-2xl font-extrabold tracking-tight transition-colors ${user?.role === "admin" ? "text-red-600 hover:text-red-700" : "text-emerald-700 hover:text-emerald-800"}`}>
           MindCare
           {user?.role === "admin" && <span className="ml-1 text-xs font-semibold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md align-middle">ADMIN</span>}
         </Link>
@@ -107,8 +107,8 @@ export default function Navbar() {
             <Link key={item.name} to={item.path}
               className={`transition-colors duration-200 pb-1 border-b-2 text-sm ${
                 isActive(item.path)
-                  ? "border-indigo-600 text-indigo-700 font-semibold"
-                  : "border-transparent text-gray-600 hover:text-indigo-600 hover:border-indigo-500"
+                  ? "border-emerald-600 text-emerald-700 font-semibold"
+                  : "border-transparent text-gray-600 hover:text-emerald-600 hover:border-emerald-500"
               }`}>
               {item.name}
             </Link>
@@ -122,7 +122,7 @@ export default function Navbar() {
           ) : user ? (
             <div className="relative" ref={dropdownRef}>
               <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/70 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-emerald-50 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
                 <div className="relative">
                   <AvatarCircle />
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
@@ -193,8 +193,8 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center space-x-3">
-              <Link to="/login"  className="px-4 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors">Login</Link>
-              <Link to="/signup" className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition-colors">Sign Up</Link>
+              <Link to="/login"  className="px-4 py-2 text-emerald-700 hover:text-emerald-800 font-medium transition-colors">Login</Link>
+              <Link to="/signup" className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-md transition-colors">Sign Up</Link>
             </div>
           )}
         </div>
@@ -207,7 +207,7 @@ function DropItem({ icon, label, to, onClose, dot }) {
   const navigate = useNavigate();
   return (
     <button onClick={() => { onClose(); navigate(to); }}
-      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600 transition-colors">
       <DropIcon name={icon} />
       <span className="flex-1">{label}</span>
       {dot && <span className={`w-2 h-2 rounded-full bg-${dot}-400 ml-auto`} />}

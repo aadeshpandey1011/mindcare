@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar       from "./Navbar";
 import MoodWidget   from "./MoodWidget";
+import AccountAssistant from "./AccountAssistant";
 import OnboardingModal from "./OnboardingModal";
 import { Outlet }   from "react-router-dom";
 import { useAuth }  from "../context/AuthContext";
@@ -42,6 +43,9 @@ const Layout = () => {
 
       {/* Floating mood check-in widget — all authenticated users */}
       <MoodWidget />
+
+      {/* Floating AI account assistant — all authenticated users */}
+      <AccountAssistant />
 
       {/* First-time onboarding modal — students only */}
       {showOnboarding && (

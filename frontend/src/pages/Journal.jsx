@@ -28,7 +28,7 @@ function MoodSelector({ value, onChange }) {
       {[1,2,3,4,5].map(m => (
         <button key={m} type="button" onClick={() => onChange(value === m ? null : m)}
           className={`w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all hover:scale-110 ${
-            value === m ? "ring-2 ring-indigo-400 bg-indigo-50" : "opacity-50 hover:opacity-100"
+            value === m ? "ring-2 ring-emerald-400 bg-emerald-50" : "opacity-50 hover:opacity-100"
           }`}>
           {MOOD_MAP[m]}
         </button>
@@ -56,7 +56,7 @@ function EntryCard({ entry, onEdit, onDelete }) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {entry.mood && <span className="text-xl">{MOOD_MAP[entry.mood]}</span>}
-          <button onClick={() => onEdit(entry)} className="text-gray-300 hover:text-indigo-500 transition-colors p-1">
+          <button onClick={() => onEdit(entry)} className="text-gray-300 hover:text-emerald-500 transition-colors p-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
@@ -79,7 +79,7 @@ function EntryCard({ entry, onEdit, onDelete }) {
       {entry.tags?.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-3">
           {entry.tags.map(t => (
-            <span key={t} className="text-[11px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">#{t}</span>
+            <span key={t} className="text-[11px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">#{t}</span>
           ))}
         </div>
       )}
@@ -185,7 +185,7 @@ export default function Journal() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white">
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 text-white">
         <div className="max-w-3xl mx-auto px-6 py-10">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -200,7 +200,7 @@ export default function Journal() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => openNew()}
-                className="flex items-center gap-2 bg-white text-indigo-700 hover:bg-indigo-50 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow">
+                className="flex items-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow">
                 ✍️ New Entry
               </button>
             </div>
@@ -212,14 +212,14 @@ export default function Journal() {
 
         {/* Write form */}
         {showForm && (
-          <div className="bg-white rounded-2xl border border-indigo-200 shadow-lg p-6 mb-6">
+          <div className="bg-white rounded-2xl border border-emerald-200 shadow-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-bold text-gray-900">{editing ? "Edit Entry" : "New Entry"}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
             </div>
 
             {prompt && !editing && (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 mb-4 text-sm text-indigo-700 font-medium">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4 text-sm text-emerald-700 font-medium">
                 💭 {prompt}
               </div>
             )}
@@ -227,27 +227,27 @@ export default function Journal() {
             <input type="text" value={form.title}
               onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
               placeholder="Title (optional)"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
 
             <textarea ref={bodyRef} rows={8} value={form.body}
               onChange={e => setForm(p => ({ ...p, body: e.target.value }))}
               placeholder="Write freely — this is your private space…"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-3" />
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300 mb-3" />
 
             <input type="text" value={form.tags}
               onChange={e => setForm(p => ({ ...p, tags: e.target.value }))}
               placeholder="Tags: stress, gratitude, reflection (comma-separated)"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-300" />
 
             <div className="flex items-center justify-between flex-wrap gap-3">
               <MoodSelector value={form.mood} onChange={m => setForm(p => ({ ...p, mood: m }))} />
               <div className="flex gap-2">
                 <button onClick={() => openNew(PROMPTS[Math.floor(Math.random() * PROMPTS.length)])}
-                  className="text-xs text-indigo-500 hover:text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg transition-colors">
+                  className="text-xs text-emerald-500 hover:text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors">
                   💡 New prompt
                 </button>
                 <button onClick={handleSave} disabled={!form.body.trim() || saving}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all">
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all">
                   {saving ? "Saving…" : editing ? "Update" : "Save Entry"}
                 </button>
               </div>
@@ -264,7 +264,7 @@ export default function Journal() {
             <div className="grid grid-cols-1 gap-2 text-left">
               {PROMPTS.slice(0, 4).map((p, i) => (
                 <button key={i} onClick={() => openNew(p)}
-                  className="flex items-start gap-2 px-4 py-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-xl text-sm text-indigo-800 transition-colors text-left">
+                  className="flex items-start gap-2 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 rounded-xl text-sm text-emerald-800 transition-colors text-left">
                   <span className="flex-shrink-0 mt-0.5">💭</span> {p}
                 </button>
               ))}
@@ -276,7 +276,7 @@ export default function Journal() {
         {!showForm && entries.length > 0 && (
           <div className="flex gap-3 mb-6 flex-wrap">
             <button onClick={() => openNew()}
-              className="flex-1 py-3 bg-white border-2 border-dashed border-indigo-200 hover:border-indigo-400 text-indigo-600 hover:text-indigo-700 rounded-xl text-sm font-medium transition-all">
+              className="flex-1 py-3 bg-white border-2 border-dashed border-emerald-200 hover:border-emerald-400 text-emerald-600 hover:text-emerald-700 rounded-xl text-sm font-medium transition-all">
               ✍️ Write a new entry
             </button>
             <button onClick={() => openNew(PROMPTS[Math.floor(Math.random() * PROMPTS.length)])}
@@ -289,7 +289,7 @@ export default function Journal() {
         {/* Entry list */}
         {loading ? (
           <div className="text-center py-16 text-gray-400">
-            <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             Loading your entries…
           </div>
         ) : (

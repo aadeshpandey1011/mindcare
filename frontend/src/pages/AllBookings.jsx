@@ -119,7 +119,7 @@ export default function AllBookings() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4" />
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4" />
                     <p className="text-gray-600">Loading…</p>
                 </div>
             </div>
@@ -148,7 +148,7 @@ export default function AllBookings() {
                             <ArrowLeft className="h-4 w-4" /> Back to Booking
                         </button>
                         <button onClick={() => navigate("/booking")}
-                            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors">
+                            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-colors">
                             <Calendar className="h-4 w-4" /> Book New Session
                         </button>
                     </div>
@@ -163,7 +163,7 @@ export default function AllBookings() {
                                     onClick={() => setFilters(f => ({ ...f, status: key === 'all' ? 'all' : key }))}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all ${cls} ${
                                         filters.status === key || (key === 'all' && filters.status === 'all')
-                                            ? 'ring-2 ring-indigo-400 ring-offset-1' : 'hover:opacity-80'
+                                            ? 'ring-2 ring-emerald-400 ring-offset-1' : 'hover:opacity-80'
                                     }`}>
                                     <span className="font-bold text-base">{count}</span>
                                     <span>{label}</span>
@@ -179,11 +179,11 @@ export default function AllBookings() {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                             <input type="text" placeholder="Search by counsellor, reason, or status…"
                                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                         </div>
                         <button onClick={() => setShowFilters(s => !s)}
                             className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
-                                showFilters ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                                showFilters ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'
                             }`}>
                             <Filter className="h-4 w-4" /> Filters
                         </button>
@@ -197,7 +197,7 @@ export default function AllBookings() {
 
                 {bookingsLoading && (
                     <div className="flex items-center justify-center py-16">
-                        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                         <span className="ml-3 text-gray-600">Loading bookings…</span>
                     </div>
                 )}
@@ -222,7 +222,7 @@ export default function AllBookings() {
                                         : "You haven't made any booking requests yet."}
                                 </p>
                                 <button onClick={() => navigate("/booking")}
-                                    className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                                    className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
                                     Book Your First Session
                                 </button>
                             </div>
@@ -245,7 +245,7 @@ export default function AllBookings() {
                                         onClick={() => setPagination(p => ({ ...p, page: i + 1 }))}
                                         className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                                             pagination.page === i + 1
-                                                ? "bg-indigo-600 text-white"
+                                                ? "bg-emerald-600 text-white"
                                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                         }`}>
                                         {i + 1}

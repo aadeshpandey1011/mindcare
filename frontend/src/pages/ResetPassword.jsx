@@ -170,7 +170,7 @@ export default function ResetPassword() {
           <div className="mt-6 text-center">
             <button
               onClick={() => navigate("/login")}
-              className="text-red-400 hover:underline text-sm inline-flex items-center gap-1"
+              className="text-emerald-600 hover:underline text-sm inline-flex items-center gap-1"
             >
               ← Back to Sign In
             </button>
@@ -182,7 +182,7 @@ export default function ResetPassword() {
         Link expired?{" "}
         <button
           onClick={() => navigate("/forgot-password")}
-          className="text-red-400 hover:underline"
+          className="text-emerald-600 hover:underline"
         >
           Request a new one
         </button>

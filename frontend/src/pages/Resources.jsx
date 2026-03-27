@@ -395,7 +395,7 @@ const RESOURCES = [
     readTime: "10 min/day", rating: 4.9,
     url: "https://www.headspace.com/meditation/meditation-for-beginners",
     source: "Headspace",
-    accent: "#6366f1",
+    accent: "#059669",
   },
   {
     id: "38", title: "UCLA Free Mindfulness Audio Library",
@@ -519,7 +519,7 @@ const RESOURCES = [
     readTime: "Immediate", rating: 4.9, urgent: true,
     url: "https://icallhelpline.org",
     source: "TISS iCall — Free Helpline",
-    accent: "#6366f1",
+    accent: "#059669",
   },
   {
     id: "50", title: "Vandrevala Foundation 24/7 Helpline",
@@ -529,7 +529,7 @@ const RESOURCES = [
     readTime: "24/7", rating: 4.9, urgent: true,
     url: "https://www.vandrevalafoundation.com",
     source: "Vandrevala Foundation",
-    accent: "#6366f1",
+    accent: "#059669",
   },
   {
     id: "51", title: "Safety Planning for Suicidal Thoughts",
@@ -559,7 +559,7 @@ const RESOURCES = [
     readTime: "Immediate", rating: 4.8, urgent: true,
     url: "https://icallhelpline.org/chat-counselling/",
     source: "TISS iCall — Online Chat",
-    accent: "#6366f1",
+    accent: "#059669",
   },
 
   // ─── FOR COUNSELLORS (6) ───────────────────────────────────────────────────
@@ -591,7 +591,7 @@ const RESOURCES = [
     readTime: "Reference", rating: 4.8,
     url: "https://www.apa.org/practice/guidelines",
     source: "American Psychological Association",
-    accent: "#6366f1",
+    accent: "#059669",
   },
   {
     id: "57", title: "Counsellor Self-Care: Preventing Compassion Fatigue",
@@ -611,7 +611,7 @@ const RESOURCES = [
     readTime: "Reference", rating: 4.9,
     url: "https://www.therapistaid.com",
     source: "Therapist Aid",
-    accent: "#6366f1",
+    accent: "#059669",
   },
   {
     id: "59", title: "Beck Institute — CBT Training Resources",
@@ -621,7 +621,7 @@ const RESOURCES = [
     readTime: "Reference", rating: 4.8,
     url: "https://beckinstitute.org/get-informed/",
     source: "Beck Institute for CBT",
-    accent: "#6366f1",
+    accent: "#059669",
   },
 ];
 
@@ -629,11 +629,11 @@ const RESOURCES = [
 //  CATEGORIES + TYPES config
 // ─────────────────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: "all",         label: "All",            icon: BookOpen,  color: "#6366f1", bg: "#eef2ff" },
+  { id: "all",         label: "All",            icon: BookOpen,  color: "#059669", bg: "#ecfdf5" },
   { id: "anxiety",     label: "Anxiety",        icon: Brain,     color: "#0ea5e9", bg: "#f0f9ff" },
-  { id: "depression",  label: "Depression",     icon: Heart,     color: "#8b5cf6", bg: "#f5f3ff" },
+  { id: "depression",  label: "Depression",     icon: Heart,     color: "#059669", bg: "#ecfdf5" },
   { id: "stress",      label: "Stress",         icon: Flame,     color: "#f59e0b", bg: "#fffbeb" },
-  { id: "sleep",       label: "Sleep",          icon: Moon,      color: "#6366f1", bg: "#eef2ff" },
+  { id: "sleep",       label: "Sleep",          icon: Moon,      color: "#0d9488", bg: "#f0fdfa" },
   { id: "mindfulness", label: "Mindfulness",    icon: Leaf,      color: "#10b981", bg: "#ecfdf5" },
   { id: "selfcare",    label: "Self-Care",      icon: Sun,       color: "#ec4899", bg: "#fdf2f8" },
   { id: "crisis",      label: "Crisis Support", icon: Shield,    color: "#ef4444", bg: "#fef2f2" },
@@ -642,7 +642,7 @@ const CATEGORIES = [
 
 // Type designs — each with distinct icon, colour, bg, label
 const TYPE_META = {
-  article: { icon: Newspaper,  label: "Article",  color: "#6366f1", bg: "#eef2ff", iconBg: "#818cf8" },
+  article: { icon: Newspaper,  label: "Article",  color: "#059669", bg: "#ecfdf5", iconBg: "#34d399" },
   video:   { icon: PlayCircle, label: "Video",    color: "#ef4444", bg: "#fef2f2", iconBg: "#f87171" },
   audio:   { icon: Headphones, label: "Audio",    color: "#10b981", bg: "#ecfdf5", iconBg: "#34d399" },
   tool:    { icon: Wrench,     label: "Tool",     color: "#f59e0b", bg: "#fffbeb", iconBg: "#fbbf24" },
@@ -651,7 +651,7 @@ const TYPE_META = {
 
 const HOTLINES = [
   { name: "Emergency",      number: "112",          note: "Police / Ambulance",    color: "#ef4444" },
-  { name: "iCall (TISS)",   number: "9152987821",   note: "Mon–Sat 8am–10pm",     color: "#6366f1" },
+  { name: "iCall (TISS)",   number: "9152987821",   note: "Mon–Sat 8am–10pm",     color: "#059669" },
   { name: "Vandrevala",     number: "1860-2662-345",note: "24/7 Free",             color: "#0ea5e9" },
   { name: "NIMHANS",        number: "080-46110007", note: "Bangalore",             color: "#10b981" },
   { name: "Snehi",          number: "044-24640050", note: "Emotional support",     color: "#f59e0b" },
@@ -801,7 +801,7 @@ function ResourceCard({ resource, userData, onToggleBookmark, onToggleComplete, 
             <StarRating value={myRating} onChange={setMyRating} size={18} />
             <textarea value={myComment} onChange={e => setMyComment(e.target.value)}
               placeholder="Leave a comment (optional)…" rows={2}
-              className="w-full mt-2 px-2 py-1.5 border border-gray-200 rounded-lg text-xs resize-none focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+              className="w-full mt-2 px-2 py-1.5 border border-gray-200 rounded-lg text-xs resize-none focus:outline-none focus:ring-1 focus:ring-emerald-300" />
             <div className="flex gap-2 mt-2">
               <button onClick={() => setShowRatePanel(false)} className="flex-1 py-1 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50">Cancel</button>
               <button onClick={handleRateSubmit} disabled={!myRating || submittingRate}
@@ -833,7 +833,7 @@ function ResourceCard({ resource, userData, onToggleBookmark, onToggleComplete, 
           {/* Bookmark */}
           {token && (
             <button onClick={() => onToggleBookmark(resource.id)} title={saved ? "Remove bookmark" : "Save"}
-              className={`p-1.5 rounded-lg transition-colors ${saved ? "bg-indigo-100 text-indigo-500" : "bg-gray-100 text-gray-400 hover:text-indigo-500"}`}>
+              className={`p-1.5 rounded-lg transition-colors ${saved ? "bg-emerald-100 text-emerald-500" : "bg-gray-100 text-gray-400 hover:text-emerald-500"}`}>
               {saved ? <BookmarkCheck size={14}/> : <Bookmark size={14}/>}
             </button>
           )}
@@ -897,18 +897,18 @@ function FeaturedCard({ resource, saved, completed, onToggleBookmark }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function RecommendedBadge({ rec }) {
   return (
-    <div className="flex items-start gap-2 bg-indigo-50 border border-indigo-200 rounded-xl p-3">
-      <div className="w-7 h-7 rounded-full bg-indigo-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+    <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+      <div className="w-7 h-7 rounded-full bg-emerald-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
         {rec.counsellor?.avatar
           ? <img src={rec.counsellor.avatar} alt={rec.counsellor.fullName} className="w-full h-full object-cover"/>
-          : <span className="text-xs font-bold text-indigo-700">{(rec.counsellor?.fullName||"C")[0]}</span>
+          : <span className="text-xs font-bold text-emerald-700">{(rec.counsellor?.fullName||"C")[0]}</span>
         }
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold text-indigo-800">
+        <p className="text-[11px] font-semibold text-emerald-800">
           📌 Recommended by {rec.counsellor?.fullName}
         </p>
-        {rec.note && <p className="text-[11px] text-indigo-600 italic">"{rec.note}"</p>}
+        {rec.note && <p className="text-[11px] text-emerald-600 italic">"{rec.note}"</p>}
       </div>
     </div>
   );
@@ -964,7 +964,7 @@ function RecommendModal({ resourceId, token, onClose }) {
             </div>
             <h3 className="font-bold text-gray-900 mb-1">Recommendation Sent!</h3>
             <p className="text-sm text-gray-500 mb-4">The student has been notified via email.</p>
-            <button onClick={onClose} className="px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold">Done</button>
+            <button onClick={onClose} className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold">Done</button>
           </div>
         ) : (
           <>
@@ -976,14 +976,14 @@ function RecommendModal({ resourceId, token, onClose }) {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
               <input type="text" value={studentSearch} onChange={e => setStudentSearch(e.target.value)}
                 placeholder="Search student name or email…"
-                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"/>
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"/>
             </div>
             {students.length > 0 && !selected && (
               <div className="border border-gray-200 rounded-xl overflow-hidden mb-3 max-h-48 overflow-y-auto">
                 {students.map(s => (
                   <button key={s._id} onClick={() => { setSelected(s); setStudents([]); setStudentSearch(s.fullName); }}
                     className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-50 text-left">
-                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700 flex-shrink-0">
                       {(s.fullName||"S")[0]}
                     </div>
                     <div>
@@ -995,17 +995,17 @@ function RecommendModal({ resourceId, token, onClose }) {
               </div>
             )}
             {selected && (
-              <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 mb-3">
-                <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">{selected.fullName[0]}</div>
-                <p className="text-sm font-semibold text-indigo-800">{selected.fullName}</p>
-                <button onClick={() => { setSelected(null); setStudentSearch(""); }} className="ml-auto text-indigo-400 hover:text-indigo-600"><X size={14}/></button>
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-3">
+                <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">{selected.fullName[0]}</div>
+                <p className="text-sm font-semibold text-emerald-800">{selected.fullName}</p>
+                <button onClick={() => { setSelected(null); setStudentSearch(""); }} className="ml-auto text-emerald-400 hover:text-emerald-600"><X size={14}/></button>
               </div>
             )}
             <textarea value={note} onChange={e => setNote(e.target.value)}
               placeholder="Add a note for the student (optional)…" rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 mb-4"/>
+              className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300 mb-4"/>
             <button onClick={handleSubmit} disabled={!selected || submitting}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2">
               {submitting ? <Loader2 size={14} className="animate-spin"/> : <Send size={14}/>}
               Send Recommendation
             </button>
@@ -1130,7 +1130,7 @@ export default function Resources() {
     <div className="min-h-screen bg-gray-50">
 
       {/* ── HERO ── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 text-white">
+      <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-green-500 text-white">
         <div className="max-w-6xl mx-auto px-6 py-10">
           <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
             <div>
@@ -1205,12 +1205,12 @@ export default function Resources() {
       {/* ── Counsellor recommendations (student-only) ── */}
       {!isCounsellor && !isAdmin && recommendations.length > 0 && (
         <div className="max-w-6xl mx-auto px-6 pt-6">
-          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
-              <PinIcon size={15} className="text-indigo-600"/>
-              <h2 className="font-bold text-indigo-900 text-sm">
+              <PinIcon size={15} className="text-emerald-600"/>
+              <h2 className="font-bold text-emerald-900 text-sm">
                 Resources Recommended by Your Counsellor
-                {pendingRecs.length > 0 && <span className="ml-2 text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full">{pendingRecs.length} new</span>}
+                {pendingRecs.length > 0 && <span className="ml-2 text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full">{pendingRecs.length} new</span>}
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1220,14 +1220,14 @@ export default function Resources() {
                 const type = TYPE_META[res.type];
                 const TypeIcon = type.icon;
                 return (
-                  <div key={rec.id} className="bg-white border border-indigo-200 rounded-xl p-3 flex items-start gap-3">
+                  <div key={rec.id} className="bg-white border border-emerald-200 rounded-xl p-3 flex items-start gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: type.bg }}>
                       <TypeIcon size={14} style={{ color: type.color }}/>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-gray-900 truncate">{res.title}</p>
-                      <p className="text-[11px] text-indigo-600">From: {rec.counsellor?.fullName}</p>
+                      <p className="text-[11px] text-emerald-600">From: {rec.counsellor?.fullName}</p>
                       {rec.note && <p className="text-[11px] text-gray-400 italic truncate">"{rec.note}"</p>}
                     </div>
                     <a href={res.url} target="_blank" rel="noopener noreferrer"
@@ -1269,7 +1269,7 @@ export default function Resources() {
           {SECTION_TABS.map(tab => {
             const icons = { All: Grid3X3, Videos: PlayCircle, Articles: Newspaper, Audios: Headphones, Tools: Wrench, Links: Link };
             const Icon = icons[tab];
-            const colors = { All: "#6366f1", Videos: "#ef4444", Articles: "#0ea5e9", Audios: "#10b981", Tools: "#f59e0b", Links: "#8b5cf6" };
+            const colors = { All: "#059669", Videos: "#ef4444", Articles: "#0ea5e9", Audios: "#10b981", Tools: "#f59e0b", Links: "#047857" };
             const active = activeSection === tab;
             return (
               <button key={tab} onClick={() => setActiveSection(tab)}
@@ -1322,7 +1322,7 @@ export default function Resources() {
               <>
                 <button onClick={() => { setShowSaved(s => !s); setShowCompleted(false); }}
                   className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
-                    showSaved ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                    showSaved ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
                   }`}>
                   <Bookmark size={11}/> Saved ({userData.bookmarks.length})
                 </button>
@@ -1377,7 +1377,7 @@ export default function Resources() {
                 {/* Counsellor recommend button */}
                 {(isCounsellor || isAdmin) && (
                   <button onClick={() => setRecommendModal(r.id)}
-                    className="flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-700 mb-1 font-medium">
+                    className="flex items-center gap-1 text-[11px] text-emerald-500 hover:text-emerald-700 mb-1 font-medium">
                     <PinIcon size={10}/> Recommend to student
                   </button>
                 )}
@@ -1455,7 +1455,7 @@ export default function Resources() {
         {activeCategory === "all" && !search && !showSaved && !showCompleted && activeSection === "All" && (
           <section className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { stat: "1 in 4",  desc: "people will experience a mental health problem this year",         icon: Brain,  color: "#6366f1" },
+              { stat: "1 in 4",  desc: "people will experience a mental health problem this year",         icon: Brain,  color: "#059669" },
               { stat: "79%",     desc: "anxiety reduction after 8 weeks of evidence-based mindfulness",    icon: Leaf,   color: "#10b981" },
               { stat: "40%",     desc: "of depression episodes remain untreated due to stigma and access", icon: Heart,  color: "#ec4899" },
             ].map(({ stat, desc, icon: Icon, color }) => (

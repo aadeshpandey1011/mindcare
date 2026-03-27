@@ -21,7 +21,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <motion.section
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-20"
+        className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-500 text-white py-20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
@@ -41,7 +41,7 @@ export default function Home() {
             <div className="mt-6 flex space-x-4">
               <Link
                 to="/signup"
-                className="px-6 py-3 bg-white text-purple-600 rounded-lg shadow hover:bg-gray-100 hover:scale-105 transform transition duration-500 flex items-center"
+                className="px-6 py-3 bg-white text-emerald-700 rounded-lg shadow hover:bg-gray-100 hover:scale-105 transform transition duration-500 flex items-center"
               >
                 Get Started <ArrowRight className="ml-2" size={18} />
               </Link>
@@ -71,7 +71,7 @@ export default function Home() {
 
       {/* Features Section */}
       <motion.section
-        className="bg-gradient-to-r from-indigo-100 to-purple-100 py-16"
+        className="bg-gradient-to-r from-emerald-50 to-green-50 py-16"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
@@ -145,7 +145,7 @@ export default function Home() {
 
       {/* Testimonials Section */}
       <motion.section
-        className="bg-gradient-to-r from-purple-100 via-indigo-100 to-purple-100 py-16"
+        className="bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50 py-16"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
@@ -181,25 +181,25 @@ export default function Home() {
             <h4 className="font-semibold text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Home</span>
+                <span className="hover:text-emerald-400 transition-colors duration-300">Home</span>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Resources</span>
+                <span className="hover:text-emerald-400 transition-colors duration-300">Resources</span>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Forum</span>
+                <span className="hover:text-emerald-400 transition-colors duration-300">Forum</span>
               </li>
               <li>
-                <span className="hover:text-purple-400 transition-colors duration-300">Contact</span>
+                <span className="hover:text-emerald-400 transition-colors duration-300">Contact</span>
               </li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold text-lg mb-4">Follow Us</h4>
             <div className="flex justify-center md:justify-start space-x-4">
-              <a href="#" className="hover:text-purple-400 transition-colors duration-300 text-2xl">🌐</a>
-              <a href="#" className="hover:text-purple-400 transition-colors duration-300 text-2xl">🐦</a>
-              <a href="#" className="hover:text-purple-400 transition-colors duration-300 text-2xl">📸</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors duration-300 text-2xl">🌐</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors duration-300 text-2xl">🐦</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors duration-300 text-2xl">📸</a>
             </div>
           </div>
         </div>

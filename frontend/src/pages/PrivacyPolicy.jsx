@@ -11,7 +11,7 @@ const Section = ({ title, children }) => (
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-10 px-6">
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-10 px-6">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-extrabold mb-2">Privacy Policy</h1>
           <p className="text-white/70 text-sm">Last updated: March 2026 · Effective immediately</p>
@@ -20,9 +20,9 @@ export default function PrivacyPolicy() {
 
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Summary card */}
-        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-6 mb-8">
-          <h2 className="font-bold text-indigo-900 text-base mb-3">🔑 The Short Version</h2>
-          <ul className="space-y-2 text-sm text-indigo-800">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 mb-8">
+          <h2 className="font-bold text-emerald-900 text-base mb-3">🔑 The Short Version</h2>
+          <ul className="space-y-2 text-sm text-emerald-800">
             <li className="flex items-start gap-2"><span className="mt-0.5">✅</span> Your mental health data is private. We never sell it.</li>
             <li className="flex items-start gap-2"><span className="mt-0.5">✅</span> Your journal, screening results, and chat history are yours alone.</li>
             <li className="flex items-start gap-2"><span className="mt-0.5">✅</span> We only contact you for things you've opted into.</li>
@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
 
         <Section title="1. Who we are">
           <p>MindCare is a digital mental health support platform designed for students and young adults in India. We are based in India and our services are governed by Indian data protection law.</p>
-          <p>Contact: <a href="mailto:support@mindcare.com" className="text-indigo-600 hover:underline">support@mindcare.com</a></p>
+          <p>Contact: <a href="mailto:support@mindcare.com" className="text-emerald-600 hover:underline">support@mindcare.com</a></p>
         </Section>
 
         <Section title="2. What data we collect">
@@ -90,7 +90,7 @@ export default function PrivacyPolicy() {
             <li><strong className="text-gray-800">Object</strong> to processing — you can stop receiving emails from your notification settings</li>
             <li><strong className="text-gray-800">Data portability</strong> — we can provide your data in a machine-readable format on request</li>
           </ul>
-          <p className="mt-2">To exercise any of these rights, email <a href="mailto:privacy@mindcare.com" className="text-indigo-600 hover:underline">privacy@mindcare.com</a>.</p>
+          <p className="mt-2">To exercise any of these rights, email <a href="mailto:privacy@mindcare.com" className="text-emerald-600 hover:underline">privacy@mindcare.com</a>.</p>
         </Section>
 
         <Section title="8. Cookies">
@@ -109,8 +109,8 @@ export default function PrivacyPolicy() {
         <Section title="11. Contact us">
           <p>For privacy concerns, data requests, or questions about this policy:</p>
           <ul className="space-y-1 ml-2">
-            <li>Email: <a href="mailto:privacy@mindcare.com" className="text-indigo-600 hover:underline">privacy@mindcare.com</a></li>
-            <li>Support: <a href="mailto:support@mindcare.com" className="text-indigo-600 hover:underline">support@mindcare.com</a></li>
+            <li>Email: <a href="mailto:privacy@mindcare.com" className="text-emerald-600 hover:underline">privacy@mindcare.com</a></li>
+            <li>Support: <a href="mailto:support@mindcare.com" className="text-emerald-600 hover:underline">support@mindcare.com</a></li>
           </ul>
         </Section>
 
@@ -126,7 +126,7 @@ export default function PrivacyPolicy() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-gray-200 text-xs text-gray-400 text-center">
-          <p>© 2026 MindCare. <Link to="/newhome" className="text-indigo-500 hover:underline">Back to Home</Link></p>
+          <p>© 2026 MindCare. <Link to="/newhome" className="text-emerald-600 hover:underline">Back to Home</Link></p>
         </div>
       </div>
     </div>

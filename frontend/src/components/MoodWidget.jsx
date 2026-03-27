@@ -96,8 +96,8 @@ export default function MoodWidget() {
       <button onClick={() => setOpen(o => !o)}
         className={`relative w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 ${
           saved
-            ? "bg-gradient-to-br from-indigo-500 to-purple-600"
-            : "bg-gradient-to-br from-purple-600 to-pink-500"
+            ? "bg-gradient-to-br from-emerald-500 to-emerald-700"
+            : "bg-gradient-to-br from-emerald-600 to-green-500"
         }`}
         title={saved ? `Today's mood: ${moodObj?.label}` : "Log today's mood"}>
         <span className="text-2xl">{saved ? (moodObj?.emoji || "😊") : "💭"}</span>

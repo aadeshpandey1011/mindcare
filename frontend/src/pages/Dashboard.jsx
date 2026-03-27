@@ -22,7 +22,7 @@ const fmtDate  = (d) => {
     const dt = new Date(d);
     return isNaN(dt.getTime()) ? "—" : dt.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
 };
-const COLORS   = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#0ea5e9"];
+const COLORS   = ["#059669","#10b981","#f59e0b","#ef4444","#0d9488","#0ea5e9"];
 
 function StatCard({ title, value, subtitle, icon: Icon, color = "blue", trend, trendUp }) {
     const colorMap = {
@@ -31,7 +31,7 @@ function StatCard({ title, value, subtitle, icon: Icon, color = "blue", trend, t
         yellow: { bg:"bg-yellow-50", text:"text-yellow-600", icon:"text-yellow-500" },
         red:    { bg:"bg-red-50",    text:"text-red-600",    icon:"text-red-500"    },
         purple: { bg:"bg-purple-50", text:"text-purple-600", icon:"text-purple-500" },
-        indigo: { bg:"bg-indigo-50", text:"text-indigo-600", icon:"text-indigo-500" },
+        emerald:{ bg:"bg-emerald-50",text:"text-emerald-600", icon:"text-emerald-500" },
         orange: { bg:"bg-orange-50", text:"text-orange-600", icon:"text-orange-500" },
     };
     const c = colorMap[color] || colorMap.blue;
@@ -66,12 +66,12 @@ function UserModal({ user, loading, onApprove, onReject, onClose }) {
                 <div className="p-6">
                     <div className="flex flex-col items-center mb-6">
                         {user.avatar
-                            ? <img src={user.avatar} alt={user.fullName} className="w-20 h-20 rounded-full object-cover border-4 border-indigo-100 mb-3"/>
-                            : <div className="w-20 h-20 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-2xl border-4 border-indigo-100 mb-3">{(user.fullName||"?")[0]}</div>
+                            ? <img src={user.avatar} alt={user.fullName} className="w-20 h-20 rounded-full object-cover border-4 border-emerald-100 mb-3"/>
+                            : <div className="w-20 h-20 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-2xl border-4 border-emerald-100 mb-3">{(user.fullName||"?")[0]}</div>
                         }
                         <h4 className="text-xl font-bold text-gray-900">{user.fullName}</h4>
                         <p className="text-gray-500 text-sm">{user.email}</p>
-                        <span className="mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 capitalize">{user.role}</span>
+                        <span className="mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 capitalize">{user.role}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
                         {user.specialization && <div className="col-span-2 bg-gray-50 rounded-xl p-3"><p className="text-gray-400 text-xs mb-0.5">Specialization</p><p className="font-medium text-gray-900">{user.specialization}</p></div>}
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
                             </div>
                         )}
                         <button onClick={handleRefresh} disabled={refreshing}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
                             <RefreshCw size={14} className={refreshing ? "animate-spin" : ""}/> Refresh
                         </button>
                     </div>
@@ -525,7 +525,7 @@ export default function AdminDashboard() {
                     {TABS.map(({ id, label, icon: Icon, badge, badgeColor }) => (
                         <button key={id} onClick={() => setActiveTab(id)}
                             className={`relative flex items-center gap-2 px-4 py-4 border-b-2 text-sm font-medium whitespace-nowrap transition-colors ${
-                                activeTab === id ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                                activeTab === id ? "border-emerald-600 text-emerald-600" : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}>
                             <Icon size={15}/> {label}
                             {badge > 0 && (
@@ -587,7 +587,7 @@ export default function AdminDashboard() {
                                             <XAxis dataKey="month" tick={{ fontSize:12 }}/>
                                             <YAxis tickFormatter={v => `₹${v>=1000?(v/1000).toFixed(0)+"K":v}`} tick={{ fontSize:11 }}/>
                                             <Tooltip formatter={(v) => [`₹${v}`,"Revenue"]}/>
-                                            <Area type="monotone" dataKey="revenue" stroke="#6366f1" fill="#6366f1" fillOpacity={0.15} strokeWidth={2}/>
+                                            <Area type="monotone" dataKey="revenue" stroke="#059669" fill="#059669" fillOpacity={0.15} strokeWidth={2}/>
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 ) : <div className="h-64 flex items-center justify-center text-gray-400 text-sm">No revenue data yet</div>}
@@ -618,7 +618,7 @@ export default function AdminDashboard() {
                                         {pendingUsers.slice(0,3).map(u => (
                                             <div key={u._id} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl">
                                                 <div className="flex items-center gap-2 min-w-0">
-                                                    {u.avatar ? <img src={u.avatar} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0"/> : <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{(u.fullName||"?")[0]}</div>}
+                                                    {u.avatar ? <img src={u.avatar} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0"/> : <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{(u.fullName||"?")[0]}</div>}
                                                     <div className="min-w-0"><p className="text-xs font-medium text-gray-900 truncate">{u.fullName}</p><p className="text-[10px] text-gray-400 capitalize truncate">{u.role}</p></div>
                                                 </div>
                                                 <div className="flex gap-1 flex-shrink-0">
@@ -627,20 +627,20 @@ export default function AdminDashboard() {
                                                 </div>
                                             </div>
                                         ))}
-                                        {pendingUsers.length > 3 && <button onClick={() => setActiveTab("users")} className="w-full text-xs text-indigo-600 hover:underline pt-1">+{pendingUsers.length-3} more →</button>}
+                                        {pendingUsers.length > 3 && <button onClick={() => setActiveTab("users")} className="w-full text-xs text-emerald-600 hover:underline pt-1">+{pendingUsers.length-3} more →</button>}
                                     </div>
                                 )}
                             </div>
                             <div className="bg-white p-5 rounded-xl border border-gray-200">
                                 <h3 className="text-sm font-bold text-gray-900 mb-3">Pending Ad Requests</h3>
                                 {ads.filter(a=>a.status==="payment_received").length === 0 ? (
-                                    <div className="text-center py-6 text-gray-400"><Megaphone size={28} className="mx-auto mb-2 text-indigo-200"/><p className="text-xs">No ads awaiting review.</p></div>
+                                    <div className="text-center py-6 text-gray-400"><Megaphone size={28} className="mx-auto mb-2 text-emerald-200"/><p className="text-xs">No ads awaiting review.</p></div>
                                 ) : (
                                     <div className="space-y-2">
                                         {ads.filter(a=>a.status==="payment_received").slice(0,3).map(ad => (
-                                            <div key={ad._id} className="flex items-center justify-between p-2.5 bg-indigo-50 rounded-xl">
-                                                <div className="min-w-0"><p className="text-xs font-medium text-gray-900 truncate">{ad.counsellorId?.fullName}</p><p className="text-[10px] text-indigo-600 capitalize">{ad.plan} · ₹{ad.amountPaid}</p></div>
-                                                <button onClick={() => setActiveTab("ads")} className="text-[11px] text-indigo-600 font-semibold hover:underline flex-shrink-0">Review →</button>
+                                            <div key={ad._id} className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl">
+                                                <div className="min-w-0"><p className="text-xs font-medium text-gray-900 truncate">{ad.counsellorId?.fullName}</p><p className="text-[10px] text-emerald-600 capitalize">{ad.plan} · ₹{ad.amountPaid}</p></div>
+                                                <button onClick={() => setActiveTab("ads")} className="text-[11px] text-emerald-600 font-semibold hover:underline flex-shrink-0">Review →</button>
                                             </div>
                                         ))}
                                     </div>
@@ -673,7 +673,7 @@ export default function AdminDashboard() {
                             <button onClick={fetchPendingUsers} className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><RefreshCw size={13} className={usersLoading?"animate-spin":""}/> Refresh</button>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-gray-200 flex gap-3">
-                            <div className="flex-1 relative"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type="text" placeholder="Search name or email…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"/></div>
+                            <div className="flex-1 relative"><Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/><input type="text" placeholder="Search name or email…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300"/></div>
                             <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none"><option value="all">All Roles</option><option value="student">Students</option><option value="counsellor">Counsellors</option></select>
                         </div>
                         {usersLoading ? (
@@ -684,13 +684,13 @@ export default function AdminDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {filteredUsers.map(u => (
                                     <div key={u._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                                        <div className="h-20 bg-gradient-to-r from-indigo-400 to-purple-500 relative">
-                                            <div className="absolute -bottom-7 left-4">{u.avatar?<img src={u.avatar} alt="" className="w-14 h-14 rounded-full object-cover border-3 border-white shadow"/>:<div className="w-14 h-14 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-lg border-3 border-white shadow">{(u.fullName||"?")[0]}</div>}</div>
+                                        <div className="h-20 bg-gradient-to-r from-emerald-400 to-emerald-600 relative">
+                                            <div className="absolute -bottom-7 left-4">{u.avatar?<img src={u.avatar} alt="" className="w-14 h-14 rounded-full object-cover border-3 border-white shadow"/>:<div className="w-14 h-14 rounded-full bg-emerald-700 flex items-center justify-center text-white font-bold text-lg border-3 border-white shadow">{(u.fullName||"?")[0]}</div>}</div>
                                         </div>
                                         <div className="pt-10 px-4 pb-4">
                                             <p className="font-bold text-gray-900">{u.fullName}</p>
                                             <p className="text-xs text-gray-400 mb-3">@{u.username||u.email}</p>
-                                            <div className="flex flex-wrap gap-1 mb-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 capitalize">{u.role}</span>{u.specialization && <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{u.specialization}</span>}</div>
+                                            <div className="flex flex-wrap gap-1 mb-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 capitalize">{u.role}</span>{u.specialization && <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{u.specialization}</span>}</div>
                                             <p className="text-xs text-gray-400 mb-4">{u.email}</p>
                                             <div className="flex gap-2">
                                                 <button onClick={() => setSelectedUser(u)} className="flex items-center gap-1 px-2 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200"><Eye size={12}/> View</button>
@@ -715,18 +715,18 @@ export default function AdminDashboard() {
                                 <button onClick={() => fetchAds(adFilter)} className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><RefreshCw size={13} className={adsLoading?"animate-spin":""}/> Refresh</button>
                             </div>
                         </div>
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-800">
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
                             <p className="font-semibold mb-2">📋 Ad Review Workflow</p>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
                                 {[{step:"1",text:"Counsellor configures ad + pays"},{step:"2",text:"Appears here for admin review"},{step:"3",text:"Admin approves → Live on forum"},{step:"4",text:"Admin rejects → Full refund"}].map(({step,text}) => (
-                                    <div key={step} className="flex items-start gap-2 bg-white rounded-lg p-2"><span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">{step}</span><span>{text}</span></div>
+                                    <div key={step} className="flex items-start gap-2 bg-white rounded-lg p-2"><span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">{step}</span><span>{text}</span></div>
                                 ))}
                             </div>
                         </div>
                         {adsLoading ? (
                             <div className="flex flex-col items-center py-16 gap-3"><RefreshCw size={28} className="animate-spin text-indigo-400"/><p className="text-gray-400 text-sm">Loading…</p></div>
                         ) : ads.length === 0 ? (
-                            <div className="bg-white rounded-xl border border-gray-200 p-16 text-center"><Megaphone size={40} className="mx-auto mb-3 text-indigo-200"/><h3 className="text-lg font-semibold text-gray-700 mb-1">No {adFilter === "payment_received" ? "pending" : adFilter} ads</h3></div>
+                            <div className="bg-white rounded-xl border border-gray-200 p-16 text-center"><Megaphone size={40} className="mx-auto mb-3 text-emerald-200"/><h3 className="text-lg font-semibold text-gray-700 mb-1">No {adFilter === "payment_received" ? "pending" : adFilter} ads</h3></div>
                         ) : (
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                                 {ads.map(ad => {
@@ -866,13 +866,13 @@ export default function AdminDashboard() {
                             <StatCard title="Total Revenue"  value={payStats?fmtRupees(payStats.summary?.totalRevenue) :"–"} icon={IndianRupee} color="green" />
                             <StatCard title="Total Refunded" value={payStats?fmtRupees(payStats.summary?.totalRefunded):"–"} icon={XCircle}     color="red"   />
                             <StatCard title="Net Revenue"    value={payStats?fmtRupees(payStats.summary?.netRevenue)   :"–"} icon={Banknote}    color="blue"  />
-                            <StatCard title="Success Rate"   value={payStats?`${Math.round((payStats.summary.successCount/Math.max(payStats.summary.totalPayments,1))*100)}%`:"–"} icon={TrendingUp} color="indigo"/>
+                            <StatCard title="Success Rate"   value={payStats?`${Math.round((payStats.summary.successCount/Math.max(payStats.summary.totalPayments,1))*100)}%`:"–"} icon={TrendingUp} color="emerald"/>
                         </div>
                         {monthlyRevenue.length > 0 ? (
                             <div className="bg-white p-6 rounded-xl border border-gray-200">
                                 <h3 className="text-base font-bold text-gray-900 mb-4">Revenue Over Time</h3>
                                 <ResponsiveContainer width="100%" height={320}>
-                                    <LineChart data={monthlyRevenue}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/><XAxis dataKey="month" tick={{fontSize:12}}/><YAxis tickFormatter={v=>`₹${v>=1000?(v/1000).toFixed(0)+"K":v}`} tick={{fontSize:11}}/><Tooltip formatter={(v)=>[`₹${v}`,"Revenue"]}/><Legend/><Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5} dot={{r:4}} name="Revenue (₹)"/><Line type="monotone" dataKey="sessions" stroke="#10b981" strokeWidth={2} dot={{r:3}} name="Paid Sessions"/></LineChart>
+                                    <LineChart data={monthlyRevenue}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/><XAxis dataKey="month" tick={{fontSize:12}}/><YAxis tickFormatter={v=>`₹${v>=1000?(v/1000).toFixed(0)+"K":v}`} tick={{fontSize:11}}/><Tooltip formatter={(v)=>[`₹${v}`,"Revenue"]}/><Legend/><Line type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={2.5} dot={{r:4}} name="Revenue (₹)"/><Line type="monotone" dataKey="sessions" stroke="#10b981" strokeWidth={2} dot={{r:3}} name="Paid Sessions"/></LineChart>
                                 </ResponsiveContainer>
                             </div>
                         ) : <div className="bg-white rounded-xl border border-gray-200 p-16 text-center text-gray-400"><IndianRupee size={40} className="mx-auto mb-3 text-gray-200"/><p>Revenue data will appear here once payments are processed.</p></div>}

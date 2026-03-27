@@ -201,12 +201,12 @@ function ReviewModal({ booking, onConfirm, onDispute, onClose, loading }) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Write a review <span className="text-gray-400">(optional)</span></label>
                     <textarea value={comment} onChange={e => setComment(e.target.value)}
                         placeholder="How was the session?" rows={3} maxLength={500}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-300" />
                     <p className="text-xs text-gray-400 text-right mt-1">{comment.length}/500</p>
                 </div>
                 <div className="space-y-2">
                     <button onClick={() => rating > 0 && onConfirm(rating, comment)} disabled={loading || rating === 0}
-                        className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
+                        className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 text-sm">
                         {loading ? <RefreshCw size={15} className="animate-spin" /> : <CheckCircle size={15} />}
                         Confirm Session & Submit Review
                     </button>
@@ -280,8 +280,8 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
     const accentColor = isDisputeBooking
         ? (disputeResolved ? (resolution?.decision === 'refund_student' ? '#10b981' : '#6b7280') : '#f97316')
         : ({
-            payment_pending: '#a855f7', pending: '#f59e0b', confirmed: '#10b981',
-            session_done: '#6366f1',    completed: '#3b82f6', cancelled: '#ef4444',
+            payment_pending: '#059669', pending: '#f59e0b', confirmed: '#10b981',
+            session_done: '#059669',    completed: '#3b82f6', cancelled: '#ef4444',
           }[booking.status] || '#6b7280');
 
     // ── Payment (now uses static import) ──────────────────────────────────────
@@ -373,7 +373,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                                 <img src={booking.counselor.avatar} alt={booking.counselor.fullName}
                                     className="w-11 h-11 rounded-full object-cover flex-shrink-0 border-2 border-white shadow-sm" />
                             ) : (
-                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-base flex-shrink-0">
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0">
                                     {(booking.counselor?.fullName || 'C')[0].toUpperCase()}
                                 </div>
                             )}
@@ -452,7 +452,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                                         <p className="text-xs text-green-700 font-medium">✅ Refund of ₹{booking.feePaid} will be credited in 5–7 business days.</p>
                                     )}
                                     {resolution.decision === 'release_counsellor' && (
-                                        <p className="text-xs text-gray-600">Contact <a href="mailto:support@mindcare.com" className="text-indigo-600 underline">support@mindcare.com</a> if you have further questions.</p>
+                                        <p className="text-xs text-gray-600">Contact <a href="mailto:support@mindcare.com" className="text-emerald-600 underline">support@mindcare.com</a> if you have further questions.</p>
                                     )}
                                 </div>
                             )}
@@ -468,13 +468,13 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
 
                     {/* session_done CTA */}
                     {needsReview && (
-                        <div className="bg-indigo-600 rounded-xl p-4 mb-4 text-white">
+                        <div className="bg-emerald-600 rounded-xl p-4 mb-4 text-white">
                             <p className="font-semibold text-sm mb-1">📋 Action required</p>
-                            <p className="text-xs text-indigo-200 mb-3">
+                            <p className="text-xs text-emerald-200 mb-3">
                                 {booking.counselor?.fullName} has marked the session as done. Confirm and leave a review to release their payment.
                             </p>
                             <button onClick={() => setShowReview(true)}
-                                className="w-full py-2 bg-white text-indigo-700 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2">
+                                className="w-full py-2 bg-white text-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
                                 <Star size={14} className="fill-yellow-400 text-yellow-400" /> Confirm & Leave Review
                             </button>
                         </div>
@@ -518,7 +518,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                     {/* Meeting link */}
                     {booking.meetingLink && booking.status === 'confirmed' && isUpcoming && (
                         <a href={booking.meetingLink} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 mb-3 font-medium">
+                            className="flex items-center gap-2 text-sm text-emerald-600 hover:text-emerald-800 mb-3 font-medium">
                             <ExternalLink size={13} /> Join Meeting
                         </a>
                     )}
@@ -563,7 +563,7 @@ export default function BookingCard({ booking, onStatusUpdate, onRefresh }) {
                             {needsPayment && (
                                 <button onClick={handleRetryPayment}
                                     disabled={payState === 'creating' || payState === 'paying' || payState === 'verifying'}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50">
                                     {payState !== 'idle' ? <RefreshCw size={11} className="animate-spin" /> : <CreditCard size={11} />}
                                     Pay Now
                                 </button>

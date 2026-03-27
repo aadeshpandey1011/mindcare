@@ -68,7 +68,7 @@ const STEPS = [
     field: "preferredSupport",
     options: [
       { value: "self_help",   label: "Self-help resources & tools", icon: "📚" },
-      { value: "ai_chat",     label: "AI chat companion (Mia)",     icon: "🤖" },
+      { value: "ai_chat",     label: "AI chat companion (Ira)",     icon: "🤖" },
       { value: "counsellor",  label: "Human counsellor sessions",   icon: "👩‍⚕️" },
       { value: "combination", label: "A mix of everything",         icon: "🔀" },
     ],
@@ -149,7 +149,7 @@ export default function OnboardingModal({ onComplete }) {
 
         {/* Progress bar */}
         <div className="h-1 bg-gray-100">
-          <div className="h-full bg-indigo-500 transition-all duration-500 rounded-full"
+          <div className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
             style={{ width: `${pct}%` }} />
         </div>
 
@@ -185,12 +185,12 @@ export default function OnboardingModal({ onComplete }) {
                   <button key={String(opt.value)} onClick={() => handleSelect(field, opt.value)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
                       selected
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-800"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50/50"
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:bg-emerald-50/50"
                     }`}>
                     <span className="text-xl flex-shrink-0">{opt.icon}</span>
                     <span className="text-sm font-medium">{opt.label}</span>
-                    {selected && <span className="ml-auto text-indigo-500">✓</span>}
+                    {selected && <span className="ml-auto text-emerald-600">✓</span>}
                   </button>
                 );
               })}
@@ -211,7 +211,7 @@ export default function OnboardingModal({ onComplete }) {
                 </button>
               )}
               <button onClick={handleNext} disabled={!canProceed() || saving}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
                 {saving ? "Saving…" : step === totalSteps - 1 ? "Get Started 🚀" : "Next →"}
               </button>
             </div>

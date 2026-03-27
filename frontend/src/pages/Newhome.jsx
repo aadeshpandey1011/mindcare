@@ -70,14 +70,14 @@ function MoodCheckInCard({ token }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-indigo-100 p-5 shadow-sm">
+    <div className="bg-white rounded-2xl border-2 border-emerald-100 p-5 shadow-sm">
       <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
         💭 How are you feeling today?
       </p>
       <div className="flex justify-between">
         {[1,2,3,4,5].map(m => (
           <button key={m} onClick={() => logMood(m)} disabled={loading}
-            className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-indigo-50 transition-all group">
+            className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-emerald-50 transition-all group">
             <span className="text-3xl group-hover:scale-125 transition-transform">{MOOD_EMOJIS[m]}</span>
             <span className="text-[10px] text-gray-400">{MOOD_LABELS[m]}</span>
           </button>
@@ -123,7 +123,7 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <motion.section
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-16"
+        className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white py-16"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <motion.div initial={{ x: -50, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 1 }}>
@@ -131,12 +131,12 @@ export default function Home() {
             <p className="mt-4 text-lg">Confidential, stigma-free, and student-focused mental health support at your fingertips.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/screening"
-                className="px-6 py-3 border border-white rounded-lg hover:bg-white hover:text-purple-600 hover:scale-105 transform transition duration-300 font-medium">
+                className="px-6 py-3 border border-white rounded-lg hover:bg-white hover:text-emerald-700 hover:scale-105 transform transition duration-300 font-medium">
                 Take Screening
               </Link>
               <Link to="/chat"
                 className="px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg hover:scale-105 transform transition duration-300 font-medium flex items-center gap-2">
-                <MessageCircle size={16}/> Chat with Mia
+                <MessageCircle size={16}/> Chat with Ira
               </Link>
             </div>
           </motion.div>
@@ -151,7 +151,7 @@ export default function Home() {
 
       {/* ── Daily mood check-in (logged-in users) ── */}
       {user && token && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 py-6">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 py-6">
           <div className="max-w-3xl mx-auto px-6">
             <MoodCheckInCard token={token} />
           </div>
@@ -159,36 +159,36 @@ export default function Home() {
       )}
 
       {/* ── Features ── */}
-      <motion.section className="bg-gradient-to-r from-indigo-100 to-purple-100 py-16"
+      <motion.section className="bg-emerald-50 py-16"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         <div className="max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-10 text-gray-800">What We Offer</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-            <FeatureCard icon={<MessageCircle size={32} className="text-white"/>} title="AI Support" desc="Talk to Mia anytime, 24/7." link="/chat" gradient="from-blue-500 to-blue-400"/>
-            <FeatureCard icon={<Calendar size={32} className="text-white"/>} title="Book Sessions" desc="Book private counsellor sessions." link="/booking" gradient="from-purple-500 to-purple-400"/>
-            <FeatureCard icon={<BookOpen size={32} className="text-white"/>} title="Resources" desc="Videos, articles, and guided audio." link="/resources" gradient="from-green-500 to-green-400"/>
-            <FeatureCard icon={<BookMarked size={32} className="text-white"/>} title="Journal" desc="Your private mental health journal." link="/journal" gradient="from-pink-500 to-rose-400"/>
-            <FeatureCard icon={<Users size={32} className="text-white"/>} title="Peer Forum" desc="Anonymous peer support community." link="/forum" gradient="from-orange-500 to-orange-400"/>
+            <FeatureCard icon={<MessageCircle size={32} className="text-white"/>} title="AI Support" desc="Talk to Ira anytime, 24/7." link="/chat" gradient="from-emerald-600 to-emerald-500"/>
+            <FeatureCard icon={<Calendar size={32} className="text-white"/>} title="Book Sessions" desc="Book private counsellor sessions." link="/booking" gradient="from-teal-600 to-teal-500"/>
+            <FeatureCard icon={<BookOpen size={32} className="text-white"/>} title="Resources" desc="Videos, articles, and guided audio." link="/resources" gradient="from-green-600 to-green-500"/>
+            <FeatureCard icon={<BookMarked size={32} className="text-white"/>} title="Journal" desc="Your private mental health journal." link="/journal" gradient="from-emerald-700 to-emerald-600"/>
+            <FeatureCard icon={<Users size={32} className="text-white"/>} title="Peer Forum" desc="Anonymous peer support community." link="/forum" gradient="from-teal-700 to-teal-600"/>
           </div>
         </div>
       </motion.section>
 
       {/* ── How It Works ── */}
-      <motion.section className="bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 py-16"
+      <motion.section className="bg-white py-16"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl font-bold mb-10 text-center text-gray-800">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-            <StepCard icon={<UserPlus size={36} className="text-white"/>}    title="1. Sign Up"       desc="Create a confidential account in 60 seconds." gradient="from-blue-500 to-blue-400"/>
-            <StepCard icon={<TrendingUp size={36} className="text-white"/>}  title="2. Assess"        desc="Take a 3-minute mental health screening."      gradient="from-purple-500 to-purple-400"/>
-            <StepCard icon={<MessageCircle size={36} className="text-white"/>}title="3. Get Support"  desc="Chat with Mia or book a human counsellor."     gradient="from-green-500 to-green-400"/>
-            <StepCard icon={<Heart size={36} className="text-white"/>}        title="4. Stay Well"     desc="Track progress and use daily resources."       gradient="from-red-500 to-red-400"/>
+            <StepCard icon={<UserPlus size={36} className="text-white"/>}    title="1. Sign Up"       desc="Create a confidential account in 60 seconds." gradient="from-emerald-600 to-emerald-500"/>
+            <StepCard icon={<TrendingUp size={36} className="text-white"/>}  title="2. Assess"        desc="Take a 3-minute mental health screening."      gradient="from-teal-600 to-teal-500"/>
+            <StepCard icon={<MessageCircle size={36} className="text-white"/>}title="3. Get Support"  desc="Chat with Ira or book a human counsellor."     gradient="from-green-600 to-green-500"/>
+            <StepCard icon={<Heart size={36} className="text-white"/>}        title="4. Stay Well"     desc="Track progress and use daily resources."       gradient="from-emerald-700 to-emerald-600"/>
           </div>
         </div>
       </motion.section>
 
       {/* ── Testimonials ── */}
-      <motion.section className="bg-gradient-to-r from-purple-100 via-indigo-100 to-purple-100 py-16"
+      <motion.section className="bg-emerald-50/50 py-16"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
         <div className="max-w-4xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">What Students Say</h2>
@@ -224,11 +224,11 @@ export default function Home() {
           <div>
             <h4 className="font-semibold text-base mb-3">Features</h4>
             <ul className="space-y-1.5 text-sm text-gray-400">
-              <li><Link to="/chat"       className="hover:text-purple-400 transition-colors">AI Chat Support</Link></li>
-              <li><Link to="/screening"  className="hover:text-purple-400 transition-colors">Screening Tests</Link></li>
-              <li><Link to="/resources"  className="hover:text-purple-400 transition-colors">Resource Library</Link></li>
-              <li><Link to="/journal"    className="hover:text-purple-400 transition-colors">Private Journal</Link></li>
-              <li><Link to="/forum"      className="hover:text-purple-400 transition-colors">Peer Forum</Link></li>
+              <li><Link to="/chat"       className="hover:text-emerald-400 transition-colors">AI Chat Support</Link></li>
+              <li><Link to="/screening"  className="hover:text-emerald-400 transition-colors">Screening Tests</Link></li>
+              <li><Link to="/resources"  className="hover:text-emerald-400 transition-colors">Resource Library</Link></li>
+              <li><Link to="/journal"    className="hover:text-emerald-400 transition-colors">Private Journal</Link></li>
+              <li><Link to="/forum"      className="hover:text-emerald-400 transition-colors">Peer Forum</Link></li>
             </ul>
           </div>
           <div>
@@ -242,13 +242,13 @@ export default function Home() {
           <div>
             <h4 className="font-semibold text-base mb-3">Legal</h4>
             <ul className="space-y-1.5 text-sm text-gray-400">
-              <li><Link to="/privacy"        className="hover:text-purple-400 transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/verify-identity" className="hover:text-purple-400 transition-colors">Verify Identity</Link></li>
+              <li><Link to="/privacy"        className="hover:text-emerald-400 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/verify-identity" className="hover:text-emerald-400 transition-colors">Verify Identity</Link></li>
             </ul>
             <div className="flex justify-center md:justify-start space-x-3 mt-4">
-              <a href="#" className="hover:text-purple-400 transition-colors text-xl">🌐</a>
-              <a href="#" className="hover:text-purple-400 transition-colors text-xl">🐦</a>
-              <a href="#" className="hover:text-purple-400 transition-colors text-xl">📸</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors text-xl">🌐</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors text-xl">🐦</a>
+              <a href="#" className="hover:text-emerald-400 transition-colors text-xl">📸</a>
             </div>
           </div>
         </div>

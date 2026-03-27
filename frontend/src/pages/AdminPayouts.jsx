@@ -182,7 +182,7 @@ function CounsellorPayoutCard({ data, onMarkPaid }) {
                     <p className="font-semibold text-gray-900">{c.fullName}</p>
                     <p className="text-sm text-gray-500">{c.email}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-indigo-600">{c.specialization || 'General Counselling'}</span>
+                        <span className="text-xs text-emerald-600">{c.specialization || 'General Counselling'}</span>
                         {c.upiId && (
                             <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded font-mono">{c.upiId}</span>
                         )}
@@ -344,10 +344,10 @@ export default function AdminPayouts() {
                         <p className="text-2xl font-bold text-green-700">{fmtRupees(s.totalPaidAmount)}</p>
                         <p className="text-xs text-green-500">{s.totalPaidCount} session{s.totalPaidCount !== 1 ? 's' : ''}</p>
                     </div>
-                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                        <p className="text-xs text-indigo-600 font-medium mb-1">Counsellors</p>
-                        <p className="text-2xl font-bold text-indigo-700">{s.counsellorCount}</p>
-                        <p className="text-xs text-indigo-500">with payouts</p>
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                        <p className="text-xs text-emerald-600 font-medium mb-1">Counsellors</p>
+                        <p className="text-2xl font-bold text-emerald-700">{s.counsellorCount}</p>
+                        <p className="text-xs text-emerald-600">with payouts</p>
                     </div>
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                         <p className="text-xs text-blue-600 font-medium mb-1">Net Revenue</p>
@@ -369,7 +369,7 @@ export default function AdminPayouts() {
                     <button key={key} onClick={() => setFilter(key)}
                         className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                             filter === key
-                                ? 'bg-indigo-600 text-white shadow-sm'
+                                ? 'bg-emerald-600 text-white shadow-sm'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}>
                         <Icon size={14} /> {label}
@@ -428,9 +428,9 @@ export default function AdminPayouts() {
             </div>
 
             {/* Tip about UPI IDs */}
-            <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-800">
+            <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
                 <p className="font-semibold mb-1">💡 Tip: Ask counsellors to add their UPI ID</p>
-                <p className="text-xs text-indigo-600">
+                <p className="text-xs text-emerald-600">
                     Counsellors can add their UPI ID in Settings &amp; Ads → Bank Account section. Once added, you'll see a "Pay via UPI" button that opens your payment app with everything pre-filled — one-tap payouts!
                 </p>
             </div>

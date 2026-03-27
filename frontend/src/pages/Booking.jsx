@@ -166,7 +166,7 @@ const Booking = () => {
                     </div>
                   ))}
                   <button onClick={() => navigate('/all-bookings')}
-                    className="w-full text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium pt-2 border-t border-gray-100">
+                    className="w-full text-center text-sm text-emerald-600 hover:text-emerald-800 font-medium pt-2 border-t border-gray-100">
                     View All Bookings →
                   </button>
                 </div>
@@ -176,7 +176,7 @@ const Booking = () => {
             {/* Crisis support */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-purple-500" />Need Urgent Help?
+                <Clock className="h-4 w-4 text-emerald-500" />Need Urgent Help?
               </h3>
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
                 <p className="text-red-800 font-medium text-xs mb-1">Crisis Support</p>

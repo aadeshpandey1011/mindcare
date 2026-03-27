@@ -119,7 +119,7 @@ export default function PendingApprovals() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600">Loading pending users...</p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function PendingApprovals() {
           <p className="text-red-700">{error}</p>
           <button
             onClick={fetchPendingUsers}
-            className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            className="mt-3 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition-colors"
           >
             Retry
           </button>
@@ -152,7 +152,7 @@ export default function PendingApprovals() {
         </p>
         <button
           onClick={fetchPendingUsers}
-          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          className="mt-2 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition-colors"
         >
           Refresh
         </button>
@@ -172,7 +172,7 @@ export default function PendingApprovals() {
               className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
               {/* User Avatar */}
-              <div className="relative h-32 bg-gradient-to-r from-blue-400 to-purple-500">
+              <div className="relative h-32 bg-gradient-to-r from-emerald-400 to-emerald-600">
                 {user.coverImage && (
                   <img
                     src={user.coverImage}
@@ -212,7 +212,7 @@ export default function PendingApprovals() {
                   
                   <div className="flex items-center text-sm">
                     <span className="font-medium text-gray-700 w-16">Role:</span>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 capitalize">
                       {user.role}
                     </span>
                   </div>

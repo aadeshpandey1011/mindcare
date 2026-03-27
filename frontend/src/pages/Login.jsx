@@ -123,7 +123,7 @@ export default function Login() {
         <div className="text-3xl font-bold mb-6 text-gray-800 text-center">Sign In</div>
 
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-red-400 rounded-full flex items-center justify-center text-white font-bold text-xl">MC</div>
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl">MC</div>
         </div>
 
         {message && (
@@ -175,11 +175,11 @@ export default function Login() {
             {form.loginMethod === "email" ? (
               <input type="email" name="email" value={form.email} onChange={handleChange}
                 placeholder="Enter your email" onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
-                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:outline-none" />
+                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-emerald-500 focus:outline-none" />
             ) : (
               <input type="text" name="username" value={form.username} onChange={handleChange}
                 placeholder="Enter your username" onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
-                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:outline-none" />
+                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-emerald-500 focus:outline-none" />
             )}
           </div>
 
@@ -194,7 +194,7 @@ export default function Login() {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
-                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 pr-11 focus:border-blue-500 focus:outline-none"
+                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 pr-11 focus:border-emerald-500 focus:outline-none"
               />
               <button
                 type="button"
@@ -209,14 +209,14 @@ export default function Login() {
           </div>
 
           <button onClick={handleSubmit} disabled={loading}
-            className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 rounded-xl text-base font-medium cursor-pointer mt-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-base font-medium cursor-pointer mt-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </div>
 
         <div className="mt-4 text-center">
           <button onClick={() => setShowForgotPassword(true)}
-            className="text-red-400 hover:underline text-sm cursor-pointer">
+            className="text-emerald-600 hover:underline text-sm cursor-pointer">
             Forgot Password?
           </button>
         </div>
@@ -225,7 +225,7 @@ export default function Login() {
       <div className="mt-4 mb-14 text-gray-700">
         New to MindCare?{" "}
         <button onClick={() => navigate("/signup")}
-          className="text-red-400 hover:underline cursor-pointer">
+          className="text-emerald-600 hover:underline cursor-pointer">
           Join Now
         </button>
       </div>
@@ -278,7 +278,7 @@ function ForgotPasswordComponent({ onBack }) {
         <p className="text-sm text-gray-600 text-center mb-6">We'll send you reset instructions.</p>
 
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-red-400 rounded-full flex items-center justify-center text-white font-bold text-xl">MC</div>
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl">MC</div>
         </div>
 
         {message && (
@@ -295,10 +295,10 @@ function ForgotPasswordComponent({ onBack }) {
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
                 placeholder="Enter your registered email"
-                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:outline-none" />
+                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-emerald-500 focus:outline-none" />
             </div>
             <button onClick={handleSubmit} disabled={loading}
-              className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 rounded-xl text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {loading ? "Sending…" : "Send Reset Link"}
             </button>
           </div>
@@ -319,7 +319,7 @@ function ForgotPasswordComponent({ onBack }) {
         )}
 
         <div className="mt-6 text-center">
-          <button onClick={onBack} className="text-red-400 hover:underline text-sm">
+          <button onClick={onBack} className="text-emerald-600 hover:underline text-sm">
             ← Back to Sign In
           </button>
         </div>

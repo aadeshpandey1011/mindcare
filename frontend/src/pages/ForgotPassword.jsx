@@ -57,7 +57,7 @@ export default function ForgotPassword() {
         </p>
 
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-red-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
+          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
             MC
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function ForgotPassword() {
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
                 placeholder="Enter your registered email"
-                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:outline-none"
+                className="w-full text-sm border-2 border-gray-300 rounded-lg px-4 py-2.5 focus:border-emerald-500 focus:outline-none"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Enter the email linked to your MindCare account.
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-red-400 hover:bg-red-500 text-white py-3 px-4 rounded-xl text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Sending…" : "Send Reset Link"}
             </button>
@@ -123,7 +123,7 @@ export default function ForgotPassword() {
         <div className="mt-6 text-center">
           <button
             onClick={() => navigate("/login")}
-            className="text-red-400 hover:underline text-sm inline-flex items-center gap-1"
+            className="text-emerald-600 hover:underline text-sm inline-flex items-center gap-1"
           >
             ← Back to Sign In
           </button>

@@ -11,7 +11,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 // ── constants ─────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-    { name: 'Stress',        icon: '🌊', accent: '#6366f1', light: '#eef2ff' },
+    { name: 'Stress',        icon: '🌊', accent: '#059669', light: '#ecfdf5' },
     { name: 'Exams',         icon: '📖', accent: '#0ea5e9', light: '#f0f9ff' },
     { name: 'Sleep',         icon: '🌙', accent: '#8b5cf6', light: '#f5f3ff' },
     { name: 'Relationships', icon: '🤝', accent: '#ec4899', light: '#fdf2f8' },
@@ -35,7 +35,7 @@ const authorName  = (post) => post.isAnonymous ? 'Anonymous' : (post.userId?.ful
 const replyAuthor = (r)    => r.isAnonymous    ? 'Anonymous' : (r.userId?.fullName    || r.userId?.name    || r.userId?.username    || 'Unknown');
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-function Avatar({ src, name, size = 40, accent = '#6366f1', isAnon = false }) {
+function Avatar({ src, name, size = 40, accent = '#059669', isAnon = false }) {
     const [err, setErr] = useState(false);
     if (isAnon) return <div style={{ width: size, height: size, borderRadius: '50%', flexShrink: 0, background: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.4 }}>🎭</div>;
     if (src && !err) return <img src={src} alt={name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />;
@@ -235,7 +235,7 @@ function ReasonModal({ title, subtitle, placeholder, confirmLabel, danger, onCon
                     style={{ width: '100%', boxSizing: 'border-box', padding: '10px 13px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, resize: 'none', outline: 'none', fontFamily: 'inherit', color: '#0f172a', background: '#f8fafc' }} />
                 <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
                     <button onClick={onCancel} style={{ padding: '8px 20px', borderRadius: 9, border: '1.5px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>Cancel</button>
-                    <button onClick={() => text.trim() && onConfirm(text.trim())} disabled={!text.trim()} style={{ padding: '8px 20px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#fff', background: danger ? '#ef4444' : '#6366f1', opacity: text.trim() ? 1 : 0.4 }}>{confirmLabel || 'Confirm'}</button>
+                    <button onClick={() => text.trim() && onConfirm(text.trim())} disabled={!text.trim()} style={{ padding: '8px 20px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#fff', background: danger ? '#ef4444' : '#059669', opacity: text.trim() ? 1 : 0.4 }}>{confirmLabel || 'Confirm'}</button>
                 </div>
             </div>
         </div>
@@ -244,7 +244,7 @@ function ReasonModal({ title, subtitle, placeholder, confirmLabel, danger, onCon
 
 function Toast({ msg, type, onDone }) {
     useEffect(() => { const t = setTimeout(onDone, 3500); return () => clearTimeout(t); }, []);
-    const bg = { success: '#10b981', error: '#ef4444', info: '#6366f1', warn: '#f59e0b' }[type] || '#6366f1';
+    const bg = { success: '#10b981', error: '#ef4444', info: '#059669', warn: '#f59e0b' }[type] || '#059669';
     return <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 99999, background: bg, color: '#fff', padding: '12px 20px', borderRadius: 12, fontSize: 14, fontWeight: 500, boxShadow: '0 8px 28px rgba(0,0,0,.2)', maxWidth: 340 }}>{msg}</div>;
 }
 
@@ -303,12 +303,12 @@ function ComposeIdentityHeader({ user, postAnon, onToggleAnon, accent, light }) 
                 </div>
             </div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}>
-                <div style={{ width: 40, height: 22, borderRadius: 11, position: 'relative', background: postAnon ? '#6366f1' : '#cbd5e1', transition: 'background .2s', boxShadow: postAnon ? '0 0 0 3px #6366f120' : 'none' }}>
+                <div style={{ width: 40, height: 22, borderRadius: 11, position: 'relative', background: postAnon ? '#059669' : '#cbd5e1', transition: 'background .2s', boxShadow: postAnon ? '0 0 0 3px #05966920' : 'none' }}>
                     <div style={{ position: 'absolute', top: 3, left: postAnon ? 21 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }} />
                     <input type="checkbox" checked={postAnon} onChange={e => onToggleAnon(e.target.checked)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }} />
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: postAnon ? '#6366f1' : '#64748b', lineHeight: 1.1 }}>🎭 Anonymous</p>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: postAnon ? '#059669' : '#64748b', lineHeight: 1.1 }}>🎭 Anonymous</p>
                     <p style={{ margin: 0, fontSize: 10, color: '#94a3b8', lineHeight: 1.1 }}>{postAnon ? 'On' : 'Off'}</p>
                 </div>
             </label>

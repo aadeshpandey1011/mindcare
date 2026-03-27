@@ -20,7 +20,7 @@ const BookingFilters = ({ filters, onFiltersChange }) => {
           <select
             value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -38,7 +38,7 @@ const BookingFilters = ({ filters, onFiltersChange }) => {
           <select
             value={filters.mode}
             onChange={(e) => handleFilterChange('mode', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="all">All Modes</option>
             <option value="online">Online</option>
@@ -55,7 +55,7 @@ const BookingFilters = ({ filters, onFiltersChange }) => {
           <select
             value={filters.dateRange}
             onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
           >
             <option value="all">All Dates</option>
             <option value="upcoming">Upcoming</option>
