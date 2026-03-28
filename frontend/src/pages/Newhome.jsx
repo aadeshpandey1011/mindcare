@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import Hero from "../assets/logo.png";
@@ -9,86 +9,8 @@ import {
   BookMarked, TrendingUp,
 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
-
-const MOOD_EMOJIS = { 1:"😞", 2:"😔", 3:"😐", 4:"🙂", 5:"😊" };
-const MOOD_LABELS = { 1:"Awful", 2:"Bad", 3:"Okay", 4:"Good", 5:"Great" };
-const MOOD_COLORS = {
-  1: "from-red-500 to-red-400",
-  2: "from-orange-500 to-orange-400",
-  3: "from-yellow-500 to-yellow-400",
-  4: "from-green-500 to-green-400",
-  5: "from-emerald-500 to-teal-400",
-};
-
-// ── Mood check-in card embedded in home screen ─────────────────────────────
-function MoodCheckInCard({ token }) {
-  const [todayMood, setTodayMood] = useState(null);
-  const [saved,     setSaved]     = useState(false);
-  const [loading,   setLoading]   = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    fetch(`${API}/wellness/mood`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => {
-        if (d.success) {
-          setTodayMood(d.data.todayMood);
-          if (d.data.todayMood !== null) setSaved(true);
-        }
-      })
-      .catch(() => {});
-  }, [token]);
-
-  const logMood = async (value) => {
-    setLoading(true);
-    try {
-      const res  = await fetch(`${API}/wellness/mood`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body:    JSON.stringify({ mood: value }),
-      });
-      const data = await res.json();
-      if (data.success) { setTodayMood(value); setSaved(true); }
-    } catch (e) { /* silent */ }
-    finally { setLoading(false); }
-  };
-
-  if (saved && todayMood) {
-    return (
-      <div className={`bg-gradient-to-r ${MOOD_COLORS[todayMood]} rounded-2xl p-5 text-white`}>
-        <p className="text-xs font-bold opacity-75 uppercase tracking-wider mb-1">Today's Mood</p>
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{MOOD_EMOJIS[todayMood]}</span>
-          <div>
-            <p className="text-xl font-black">{MOOD_LABELS[todayMood]}</p>
-            <p className="text-white/70 text-xs">Logged today · Come back tomorrow</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl border-2 border-emerald-100 p-5 shadow-sm">
-      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-        💭 How are you feeling today?
-      </p>
-      <div className="flex justify-between">
-        {[1,2,3,4,5].map(m => (
-          <button key={m} onClick={() => logMood(m)} disabled={loading}
-            className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-emerald-50 transition-all group">
-            <span className="text-3xl group-hover:scale-125 transition-transform">{MOOD_EMOJIS[m]}</span>
-            <span className="text-[10px] text-gray-400">{MOOD_LABELS[m]}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const [bannerDismissed, setBannerDismissed] = React.useState(
     () => sessionStorage.getItem("verifyBannerDismissed") === "true"
@@ -148,15 +70,6 @@ export default function Home() {
           </motion.div>
         </div>
       </motion.section>
-
-      {/* ── Daily mood check-in (logged-in users) ── */}
-      {user && token && (
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 py-6">
-          <div className="max-w-3xl mx-auto px-6">
-            <MoodCheckInCard token={token} />
-          </div>
-        </div>
-      )}
 
       {/* ── Features ── */}
       <motion.section className="bg-emerald-50 py-16"

@@ -106,20 +106,15 @@ function MediaPreview({ files, onRemove }) {
     );
 }
 
-// ── Counsellor Ad Card ────────────────────────────────────────────────────────
-// Uses useNavigate so clicking the CTA takes the student directly to
-// /booking?counsellor=<counsellorId> — skipping the counsellor-picker
-// and landing straight on the date/slot step for that specific counsellor.
+// ── Inline Counsellor Ad Card (for feed) ──────────────────────────────────────
 function CounsellorAd({ ad }) {
     const [hov, setHov] = useState(false);
     const navigate = useNavigate();
 
     const handleClick = () => {
-        // Track click fire-and-forget
         if (ad.adId) {
             fetch(`${API_BASE}/ads/${ad.adId}/click`, { method: 'POST' }).catch(() => {});
         }
-        // Navigate to booking with this counsellor pre-selected
         navigate(`/booking?counsellor=${ad.counsellorId}`);
     };
 
@@ -128,98 +123,40 @@ function CounsellorAd({ ad }) {
             onMouseEnter={() => setHov(true)}
             onMouseLeave={() => setHov(false)}
             style={{
-                background: '#fff', borderRadius: 14, overflow: 'hidden',
+                background: '#fff', borderRadius: 16, overflow: 'hidden',
                 boxShadow: hov ? `0 8px 28px ${ad.accent}22, 0 0 0 1px ${ad.accent}30` : '0 1px 4px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.05)',
                 transition: 'box-shadow .2s, transform .2s',
                 transform: hov ? 'translateY(-2px)' : 'none',
-                marginBottom: 14,
+                marginBottom: 16,
                 ...(ad.highlight ? { border: `2px solid ${ad.accent}` } : {}),
             }}
         >
-            <div style={{ height: ad.highlight ? 5 : 4, background: ad.accent }} />
-            <div style={{ padding: '6px 12px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.06em', color: '#94a3b8', textTransform: 'uppercase' }}>Sponsored</span>
-                {ad.plan === 'premium' && <span style={{ fontSize: 9, fontWeight: 700, color: ad.accent, background: ad.light, padding: '1px 6px', borderRadius: 10 }}>PREMIUM</span>}
-            </div>
-            <div style={{ padding: '10px 14px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{ height: 3, background: `linear-gradient(90deg, ${ad.accent}, ${ad.accent}80)` }} />
+            <div style={{ padding: '14px 18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.06em', color: '#94a3b8', textTransform: 'uppercase' }}>Sponsored</span>
+                    {ad.plan === 'premium' && <span style={{ fontSize: 9, fontWeight: 700, color: ad.accent, background: ad.light, padding: '2px 8px', borderRadius: 10 }}>PREMIUM</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     {ad.avatar
-                        ? <img src={ad.avatar} alt={ad.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${ad.accent}30` }} />
-                        : <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: ad.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15 }}>{ad.initials}</div>
+                        ? <img src={ad.avatar} alt={ad.name} style={{ width: 50, height: 50, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `2px solid ${ad.accent}30` }} />
+                        : <div style={{ width: 50, height: 50, borderRadius: '50%', flexShrink: 0, background: ad.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 17 }}>{ad.initials}</div>
                     }
-                    <div>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{ad.name}</p>
-                        <p style={{ margin: 0, fontSize: 11, color: '#64748b' }}>{ad.title}</p>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{ad.name}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>{ad.title}</p>
+                        <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: ad.light, color: ad.accent, marginTop: 4 }}>{ad.badge}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, flexShrink: 0 }}>
+                        <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#0f172a' }}>⭐ {ad.rating}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Rating</p></div>
+                        <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{ad.sessions}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Sessions</p></div>
                     </div>
                 </div>
-                <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: ad.light, color: ad.accent, marginBottom: 8 }}>{ad.badge}</span>
-                <p style={{ margin: '0 0 10px', fontSize: 12, color: '#475569', lineHeight: 1.55 }}>{ad.tagline}</p>
-                <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#0f172a' }}>⭐ {ad.rating}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Rating</p></div>
-                    <div style={{ width: 1, background: '#f1f5f9' }} />
-                    <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: '#0f172a' }}>{ad.sessions}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Sessions</p></div>
-                    <div style={{ width: 1, background: '#f1f5f9' }} />
-                    <div style={{ textAlign: 'center' }}><p style={{ margin: 0, fontWeight: 600, fontSize: 11, color: ad.accent }}>{ad.specialty}</p><p style={{ margin: 0, fontSize: 10, color: '#94a3b8' }}>Focus</p></div>
-                </div>
-                <button onClick={handleClick} style={{ width: '100%', padding: '9px 0', borderRadius: 9, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12, background: hov ? ad.accent : ad.light, color: hov ? '#fff' : ad.accent, transition: 'all .2s' }}>
+                <p style={{ margin: '10px 0 12px', fontSize: 13, color: '#475569', lineHeight: 1.55 }}>{ad.tagline}</p>
+                <button onClick={handleClick} style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, background: hov ? ad.accent : ad.light, color: hov ? '#fff' : ad.accent, transition: 'all .2s' }}>
                     {ad.ctaText} →
                 </button>
             </div>
-        </div>
-    );
-}
-
-function AdSkeleton() {
-    return (
-        <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
-            <div style={{ height: 4, background: '#e2e8f0' }} />
-            <div style={{ padding: 14 }}>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#f1f5f9' }} />
-                    <div style={{ flex: 1 }}>
-                        <div style={{ height: 12, background: '#f1f5f9', borderRadius: 6, marginBottom: 6, width: '70%' }} />
-                        <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, width: '50%' }} />
-                    </div>
-                </div>
-                <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, marginBottom: 6 }} />
-                <div style={{ height: 10, background: '#f1f5f9', borderRadius: 6, width: '80%', marginBottom: 12 }} />
-                <div style={{ height: 34, background: '#f1f5f9', borderRadius: 9 }} />
-            </div>
-        </div>
-    );
-}
-
-function WellnessTip() {
-    const tips = [
-        { icon: '💧', text: 'Drink a glass of water right now.' },
-        { icon: '🌬️', text: '4-7-8 breathing: inhale 4s, hold 7s, exhale 8s.' },
-        { icon: '🚶', text: 'A 10-minute walk reduces cortisol by 15%.' },
-        { icon: '📵', text: 'No screens 30 min before bed improves sleep quality.' },
-        { icon: '📝', text: "Write 3 things you are grateful for today." },
-    ];
-    const [idx] = useState(() => Math.floor(Math.random() * tips.length));
-    const tip = tips[idx];
-    return (
-        <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,.06)', marginBottom: 14 }}>
-            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em' }}>Daily Wellness Tip</p>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ fontSize: 22, lineHeight: 1 }}>{tip.icon}</span>
-                <p style={{ margin: 0, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>{tip.text}</p>
-            </div>
-        </div>
-    );
-}
-
-function AdvertiseCard({ accent, isCounsellor }) {
-    return (
-        <div style={{ background: '#f8fafc', borderRadius: 14, padding: '18px 16px', textAlign: 'center', border: '1.5px dashed #cbd5e1', marginBottom: 14 }}>
-            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#64748b' }}>📢 Advertise here</p>
-            <p style={{ margin: '0 0 12px', fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
-                {isCounsellor ? 'Promote your practice to students who need support.' : 'Reach students who need mental health support.'}
-            </p>
-            <button onClick={() => window.location.href = isCounsellor ? '/counsellor-settings' : '/contact'} style={{ padding: '7px 16px', borderRadius: 8, border: `1.5px solid ${accent}`, background: 'transparent', color: accent, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                {isCounsellor ? 'Set up your ad →' : 'Get in touch'}
-            </button>
         </div>
     );
 }
@@ -316,6 +253,9 @@ function ComposeIdentityHeader({ user, postAnon, onToggleAnon, accent, light }) 
     );
 }
 
+// ── AD_INSERT_INTERVAL: show an ad after every N posts ────────────────────────
+const AD_INSERT_INTERVAL = 3;
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  MAIN
 // ─────────────────────────────────────────────────────────────────────────────
@@ -330,8 +270,7 @@ export default function Forum() {
     const [loading,        setLoading]         = useState(false);
     const [showDeleted,    setShowDeleted]     = useState(false);
 
-    const [leftAds,        setLeftAds]         = useState([]);
-    const [rightAds,       setRightAds]        = useState([]);
+    const [allAds,         setAllAds]          = useState([]);
     const [adsLoading,     setAdsLoading]      = useState(true);
 
     const [newPost,        setNewPost]         = useState({ title: '', description: '', tags: '' });
@@ -353,6 +292,7 @@ export default function Forum() {
     const dropRef  = useRef({});
     const rdropRef = useRef({});
 
+    // Fetch all ads once
     useEffect(() => {
         (async () => {
             setAdsLoading(true);
@@ -360,8 +300,8 @@ export default function Forum() {
                 const res  = await fetch(`${API_BASE}/ads/forum`);
                 const data = await res.json();
                 if (data.success) {
-                    setLeftAds(data.data.leftAds   || []);
-                    setRightAds(data.data.rightAds || []);
+                    const combined = [...(data.data.leftAds || []), ...(data.data.rightAds || [])];
+                    setAllAds(combined);
                 }
             } catch (e) {
                 console.error('Failed to load forum ads:', e);
@@ -448,12 +388,30 @@ export default function Forum() {
 
     const isOwner = (post) => uid && post.userId?._id === uid;
 
+    // Build feed items: posts interspersed with ads
+    const buildFeedItems = () => {
+        const items = [];
+        let adIdx = 0;
+        posts.forEach((post, i) => {
+            items.push({ type: 'post', data: post });
+            // Insert an ad after every AD_INSERT_INTERVAL posts
+            if ((i + 1) % AD_INSERT_INTERVAL === 0 && allAds.length > 0) {
+                const ad = allAds[adIdx % allAds.length];
+                items.push({ type: 'ad', data: ad, key: `ad-${i}-${adIdx}` });
+                adIdx++;
+            }
+        });
+        return items;
+    };
+
+    const feedItems = buildFeedItems();
+
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
 
             {/* ── Page Header ── */}
             <div style={{ background: `linear-gradient(135deg, ${cat.accent}18, ${cat.accent}06)`, borderBottom: `1px solid ${cat.accent}22`, padding: '32px 0 0' }}>
-                <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+                <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
                         <span style={{ fontSize: 32 }}>{cat.icon}</span>
                         <div>
@@ -471,251 +429,240 @@ export default function Forum() {
                 </div>
             </div>
 
-            {/* ── 3-column layout ── */}
-            <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px 60px', display: 'grid', gridTemplateColumns: '220px 1fr 220px', gap: 24, alignItems: 'start' }}>
+            {/* ── Single-column feed ── */}
+            <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 20px 60px' }}>
 
-                {/* LEFT sidebar */}
-                <aside style={{ position: 'sticky', top: 20 }}>
-                    <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.07em' }}>Featured Counsellors</p>
-                    {adsLoading ? <><AdSkeleton /><AdSkeleton /></> : leftAds.length > 0 ? leftAds.map((ad, i) => <CounsellorAd key={i} ad={ad} />) : <AdvertiseCard accent={cat.accent} isCounsellor={isCounsellor} />}
-                    <WellnessTip />
-                </aside>
+                {user?.isBannedFromForum && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 10, fontSize: 14, color: '#991b1b', alignItems: 'center' }}>
+                        <span style={{ fontSize: 20 }}>🚫</span>
+                        <span>Your account has been restricted from posting in this forum.{user.banReason ? ` Reason: ${user.banReason}` : ''}</span>
+                    </div>
+                )}
 
-                {/* ── CENTRE ── */}
-                <main>
-                    {user?.isBannedFromForum && (
-                        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 10, fontSize: 14, color: '#991b1b', alignItems: 'center' }}>
-                            <span style={{ fontSize: 20 }}>🚫</span>
-                            <span>Your account has been restricted from posting in this forum.{user.banReason ? ` Reason: ${user.banReason}` : ''}</span>
+                {/* Counsellor promo banner */}
+                {isCounsellor && (
+                    <div style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 14, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <div>
+                            <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: 14, color: '#fff' }}>📢 Advertise your practice on this forum</p>
+                            <p style={{ margin: 0, fontSize: 12, color: '#c7d2fe' }}>Plans from ₹499/month · Reach students in your niche · Live within 24 hours of approval</p>
                         </div>
-                    )}
+                        <button onClick={() => window.location.href = '/counsellor-settings'} style={{ padding: '8px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#fff', color: '#6366f1', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            Set up my ad →
+                        </button>
+                    </div>
+                )}
 
-                    {/* Counsellor promo banner */}
-                    {isCounsellor && (
-                        <div style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 14, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                            <div>
-                                <p style={{ margin: '0 0 3px', fontWeight: 700, fontSize: 14, color: '#fff' }}>📢 Advertise your practice on this forum</p>
-                                <p style={{ margin: 0, fontSize: 12, color: '#c7d2fe' }}>Plans from ₹499/month · Reach students in your niche · Live within 24 hours of approval</p>
-                            </div>
-                            <button onClick={() => window.location.href = '/counsellor-settings'} style={{ padding: '8px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#fff', color: '#6366f1', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                Set up my ad →
+                {/* ── Compose box ── */}
+                {!user?.isBannedFromForum && user && (
+                    <div style={{ background: '#fff', borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)' }}>
+                        <ComposeIdentityHeader user={user} postAnon={postAnon} onToggleAnon={setPostAnon} accent={cat.accent} light={cat.light} />
+                        <input type="text" placeholder="What's on your mind?" value={newPost.title} onChange={e => setNewPost(p => ({ ...p, title: e.target.value }))}
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', outline: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
+                        <textarea rows={3} placeholder="Share more details — you are among friends here." value={newPost.description} onChange={e => setNewPost(p => ({ ...p, description: e.target.value }))}
+                            style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
+                        <MediaPreview files={mediaFiles} onRemove={removeMedia} />
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: mediaFiles.length > 0 ? 10 : 0 }}>
+                            <input type="text" placeholder="Tags: anxiety, exams, sleep" value={newPost.tags} onChange={e => setNewPost(p => ({ ...p, tags: e.target.value }))}
+                                style={{ flex: 1, minWidth: 120, padding: '8px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', color: '#0f172a', background: '#f8fafc' }} />
+                            <input ref={fileInputRef} type="file" accept={ACCEPTED} multiple style={{ display: 'none' }} onChange={handleFileChange} />
+                            <button onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= MAX_MEDIA}
+                                style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${cat.accent}40`, background: cat.light, color: cat.accent, fontSize: 13, fontWeight: 600, cursor: mediaFiles.length >= MAX_MEDIA ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: mediaFiles.length >= MAX_MEDIA ? 0.5 : 1, whiteSpace: 'nowrap' }}>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                {mediaFiles.length > 0 ? `${mediaFiles.length}/${MAX_MEDIA}` : 'Photo/Video'}
+                            </button>
+                            <button onClick={handlePost} disabled={posting} style={{ padding: '9px 24px', borderRadius: 10, border: 'none', cursor: 'pointer', background: cat.accent, color: '#fff', fontSize: 14, fontWeight: 600, opacity: posting ? .6 : 1 }}>
+                                {posting ? 'Posting...' : 'Post'}
                             </button>
                         </div>
-                    )}
-
-                    {/* ── Compose box ── */}
-                    {!user?.isBannedFromForum && user && (
-                        <div style={{ background: '#fff', borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)' }}>
-                            <ComposeIdentityHeader user={user} postAnon={postAnon} onToggleAnon={setPostAnon} accent={cat.accent} light={cat.light} />
-                            <input type="text" placeholder="What's on your mind?" value={newPost.title} onChange={e => setNewPost(p => ({ ...p, title: e.target.value }))}
-                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', outline: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
-                            <textarea rows={3} placeholder="Share more details — you are among friends here." value={newPost.description} onChange={e => setNewPost(p => ({ ...p, description: e.target.value }))}
-                                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'none', marginBottom: 10, color: '#0f172a', background: '#f8fafc' }} />
-                            <MediaPreview files={mediaFiles} onRemove={removeMedia} />
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: mediaFiles.length > 0 ? 10 : 0 }}>
-                                <input type="text" placeholder="Tags: anxiety, exams, sleep" value={newPost.tags} onChange={e => setNewPost(p => ({ ...p, tags: e.target.value }))}
-                                    style={{ flex: 1, minWidth: 120, padding: '8px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', outline: 'none', color: '#0f172a', background: '#f8fafc' }} />
-                                <input ref={fileInputRef} type="file" accept={ACCEPTED} multiple style={{ display: 'none' }} onChange={handleFileChange} />
-                                <button onClick={() => fileInputRef.current?.click()} disabled={mediaFiles.length >= MAX_MEDIA}
-                                    style={{ padding: '8px 14px', borderRadius: 10, border: `1.5px solid ${cat.accent}40`, background: cat.light, color: cat.accent, fontSize: 13, fontWeight: 600, cursor: mediaFiles.length >= MAX_MEDIA ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: mediaFiles.length >= MAX_MEDIA ? 0.5 : 1, whiteSpace: 'nowrap' }}>
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                    {mediaFiles.length > 0 ? `${mediaFiles.length}/${MAX_MEDIA}` : 'Photo/Video'}
-                                </button>
-                                <button onClick={handlePost} disabled={posting} style={{ padding: '9px 24px', borderRadius: 10, border: 'none', cursor: 'pointer', background: cat.accent, color: '#fff', fontSize: 14, fontWeight: 600, opacity: posting ? .6 : 1 }}>
-                                    {posting ? 'Posting...' : 'Post'}
-                                </button>
-                            </div>
-                            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8' }}>Images (JPEG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV) — max {MAX_MEDIA} files, 50 MB each</p>
-                        </div>
-                    )}
-
-                    {/* Admin toolbar */}
-                    {isAdmin && (
-                        <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 12, padding: '10px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 13, color: '#92400e' }}>🛡️ <strong>Admin view</strong> — delete posts, warn/ban users, manage replies, clear reports.</span>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', userSelect: 'none', fontSize: 12, color: '#92400e', fontWeight: 500 }}>
-                                <div style={{ width: 32, height: 18, borderRadius: 9, position: 'relative', background: showDeleted ? '#ef4444' : '#d1d5db', transition: 'background .2s' }}>
-                                    <div style={{ position: 'absolute', top: 2, left: showDeleted ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
-                                    <input type="checkbox" checked={showDeleted} onChange={e => setShowDeleted(e.target.checked)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }} />
-                                </div>
-                                Show deleted posts
-                            </label>
-                        </div>
-                    )}
-
-                    {/* ── Feed ── */}
-                    {loading ? (
-                        <div style={{ textAlign: 'center', padding: 60 }}>
-                            <div style={{ width: 36, height: 36, borderRadius: '50%', margin: '0 auto 12px', border: `3px solid ${cat.accent}30`, borderTopColor: cat.accent, animation: 'spin .8s linear infinite' }} />
-                            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                            <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>Loading...</p>
-                        </div>
-                    ) : posts.length === 0 ? (
-                        <div style={{ background: '#fff', borderRadius: 16, padding: 52, textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
-                            <div style={{ fontSize: 48, marginBottom: 12 }}>{cat.icon}</div>
-                            <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>No posts yet in <strong>{category}</strong>. Be the first to share!</p>
-                        </div>
-                    ) : posts.map(post => {
-                        const name        = authorName(post);
-                        const avatar      = post.isAnonymous ? null : (post.userId?.avatar || post.userId?.profilePicture);
-                        const authorId    = post.userId?._id;
-                        const isBanned    = post.userId?.isBannedFromForum;
-                        const warnCount   = post.userId?.forumWarningCount || 0;
-                        const isDeleted   = !!post.deletedAt;
-                        const isFlagged   = post.isFlagged;
-                        const repliesOpen = !!expanded[post._id];
-                        const hasReported = !!reported[post._id];
-
-                        return (
-                            <article key={post._id} style={{ background: isDeleted ? '#fef2f2' : '#fff', borderRadius: 16, marginBottom: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)', opacity: isDeleted ? 0.75 : 1 }}>
-                                <div style={{ height: 3, background: isFlagged ? '#ef4444' : cat.accent }} />
-                                {isFlagged && isAdmin && (
-                                    <div style={{ background: '#fef2f2', padding: '6px 20px', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span>🚩 Flagged — {post.reportCount} report{post.reportCount !== 1 ? 's' : ''}</span>
-                                        <button onClick={() => handleDismissReports(post._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}>Dismiss reports</button>
-                                    </div>
-                                )}
-                                {isDeleted && isAdmin && (
-                                    <div style={{ background: '#fef2f2', padding: '6px 20px', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <span>🗑️ Deleted — {post.deleteReason}</span>
-                                        <button onClick={() => handleRestore(post._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}>Restore</button>
-                                    </div>
-                                )}
-                                <div style={{ padding: '20px 22px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                                            <Avatar src={avatar} name={name} size={44} accent={cat.accent} isAnon={post.isAnonymous} />
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                                                    <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{name}</span>
-                                                    {post.isAnonymous && <span style={{ fontSize: 10, background: '#f1f5f9', color: '#64748b', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>ANON</span>}
-                                                    {isAdmin && isBanned && <span style={{ fontSize: 10, background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>BANNED</span>}
-                                                    {isAdmin && warnCount > 0 && <span style={{ fontSize: 10, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>⚠️ {warnCount}</span>}
-                                                </div>
-                                                <span style={{ fontSize: 12, color: '#94a3b8' }}>{timeAgo(post.createdAt)}</span>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                                            <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cat.light, color: cat.accent, fontWeight: 500 }}>{cat.icon} {category}</span>
-                                            {isOwner(post) && !isDeleted && (
-                                                <button onClick={() => handleDeleteOwn(post._id)} title="Delete post" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 5, borderRadius: 7, display: 'flex', alignItems: 'center' }}>
-                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                                                </button>
-                                            )}
-                                            {isAdmin && (
-                                                <div style={{ position: 'relative' }} ref={el => dropRef.current[post._id] = el}>
-                                                    <button onClick={() => setAdminOpen(p => ({ ...p, [post._id]: !p[post._id] }))} style={{ padding: '5px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, border: `1px solid ${adminOpen[post._id] ? '#fde68a' : 'transparent'}`, background: adminOpen[post._id] ? '#fef3c7' : 'none', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}>
-                                                        🛡️ <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-                                                    </button>
-                                                    {adminOpen[post._id] && (
-                                                        <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 200, background: '#fff', borderRadius: 12, minWidth: 210, boxShadow: '0 8px 32px rgba(0,0,0,.14)', border: '1px solid #f1f5f9', padding: 6 }}>
-                                                            {!isDeleted && <AdminItem icon="🗑️" label="Remove post"     color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'adminDelete', postId: post._id }); }} />}
-                                                            {isDeleted  && <AdminItem icon="♻️" label="Restore post"    color="#10b981" onClick={() => { setAdminOpen({}); handleRestore(post._id); }} />}
-                                                            {isFlagged  && <AdminItem icon="✅" label="Dismiss reports" color="#6366f1" onClick={() => { setAdminOpen({}); handleDismissReports(post._id); }} />}
-                                                            {!post.isAnonymous && (<>
-                                                                <AdminItem icon="⚠️" label="Warn user"      color="#f59e0b" onClick={() => { setAdminOpen({}); setModal({ type: 'warn', postId: post._id }); }} />
-                                                                {isBanned ? <AdminItem icon="✅" label="Unban user" color="#10b981" onClick={() => { setAdminOpen({}); handleUnban(authorId); }} /> : <AdminItem icon="🚫" label="Ban from forum" color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'ban', postId: post._id, userId: authorId }); }} />}
-                                                            </>)}
-                                                            {post.isAnonymous && <div style={{ padding: '7px 12px', fontSize: 11, color: '#94a3b8' }}>Warn/ban unavailable for anonymous posts</div>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{post.title}</h2>
-                                    <p style={{ margin: '0 0 12px', fontSize: 14, color: '#374151', lineHeight: 1.75 }}>{post.description}</p>
-                                    <MediaGallery media={post.media} />
-                                    {post.tags?.length > 0 && (
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-                                            {post.tags.map((t, i) => <span key={i} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: '#f1f5f9', color: '#475569', fontWeight: 500 }}>#{t}</span>)}
-                                        </div>
-                                    )}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 2, borderTop: '1px solid #f1f5f9', paddingTop: 10, flexWrap: 'wrap' }}>
-                                        <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill={post.hasSupported ? cat.accent : 'none'} stroke={post.hasSupported ? cat.accent : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>} label={`${post.supportCount || 0} support`} active={post.hasSupported} color={cat.accent} onClick={() => handleSupport(post._id)} disabled={isDeleted} />
-                                        <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>} label={`${post.replies?.length || 0} replies`} active={repliesOpen} color={cat.accent} onClick={() => setExpanded(p => ({ ...p, [post._id]: !p[post._id] }))} />
-                                        {user && !isOwner(post) && !isAdmin && !isDeleted && (
-                                            <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>} label={hasReported ? 'Reported' : 'Report'} active={hasReported} color="#ef4444" onClick={() => !hasReported && setModal({ type: 'report', postId: post._id })} disabled={hasReported} />
-                                        )}
-                                        {isAdmin && post.reportCount > 0 && <span style={{ marginLeft: 'auto', fontSize: 12, color: '#ef4444', fontWeight: 600 }}>🚩 {post.reportCount} report{post.reportCount !== 1 ? 's' : ''}</span>}
-                                    </div>
-                                    {repliesOpen && (
-                                        <div style={{ marginTop: 16 }}>
-                                            {user && !isDeleted && (
-                                                <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-                                                    <Avatar src={replyAnon[post._id] ? null : user?.avatar} name={user?.fullName} size={32} accent={cat.accent} isAnon={replyAnon[post._id]} />
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                                                            <textarea rows={2} placeholder="Write a supportive reply..." value={replyText[post._id] || ''} onChange={e => setReplyText(r => ({ ...r, [post._id]: e.target.value }))}
-                                                                style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'none', color: '#0f172a' }} />
-                                                            <button onClick={() => handleReply(post._id)} style={{ alignSelf: 'flex-end', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: cat.accent, color: '#fff', fontSize: 13, fontWeight: 600 }}>Reply</button>
-                                                        </div>
-                                                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none', fontSize: 12, color: '#64748b' }}>
-                                                            <input type="checkbox" checked={replyAnon[post._id] || false} onChange={e => setReplyAnon(r => ({ ...r, [post._id]: e.target.checked }))} />
-                                                            🎭 Reply anonymously
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {post.replies?.length > 0 && (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                    {post.replies.map((r, ri) => {
-                                                        const rName   = replyAuthor(r);
-                                                        const rAvatar = r.isAnonymous ? null : (r.userId?.avatar || r.userId?.profilePicture);
-                                                        const isDelR  = !!r.deletedAt;
-                                                        return (
-                                                            <div key={r._id || ri} style={{ display: 'flex', gap: 10, padding: '11px 14px', background: isDelR ? '#fef2f2' : '#f8fafc', borderRadius: 11, opacity: isDelR ? 0.7 : 1 }}>
-                                                                <Avatar src={rAvatar} name={rName} size={28} accent={cat.accent} isAnon={r.isAnonymous} />
-                                                                <div style={{ flex: 1 }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                                                                            <span style={{ fontWeight: 600, fontSize: 12, color: '#0f172a' }}>{rName}</span>
-                                                                            {r.isAnonymous && <span style={{ fontSize: 10, background: '#f1f5f9', color: '#64748b', padding: '1px 6px', borderRadius: 20, fontWeight: 600 }}>ANON</span>}
-                                                                            <span style={{ fontSize: 11, color: '#94a3b8' }}>{timeAgo(r.createdAt)}</span>
-                                                                            {isAdmin && isDelR && <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 600 }}>DELETED</span>}
-                                                                        </div>
-                                                                        {isAdmin && !isDelR && r._id && (
-                                                                            <div style={{ position: 'relative' }} ref={el => rdropRef.current[r._id] = el}>
-                                                                                <button onClick={() => setReplyAdminOpen(p => ({ ...p, [r._id]: !p[r._id] }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', borderRadius: 6, fontSize: 11 }}>...</button>
-                                                                                {replyAdminOpen[r._id] && (
-                                                                                    <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 300, background: '#fff', borderRadius: 10, minWidth: 150, boxShadow: '0 6px 24px rgba(0,0,0,.14)', border: '1px solid #f1f5f9', padding: 4 }}>
-                                                                                        <AdminItem icon="🗑️" label="Delete reply" color="#ef4444" onClick={() => { setReplyAdminOpen({}); setModal({ type: 'adminDeleteReply', postId: post._id, replyId: r._id }); }} />
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                    <p style={{ margin: 0, fontSize: 13, color: isDelR ? '#94a3b8' : '#374151', lineHeight: 1.6, fontStyle: isDelR ? 'italic' : 'normal' }}>
-                                                                        {isDelR && !isAdmin ? '[This reply was removed by a moderator]' : r.content}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </article>
-                        );
-                    })}
-
-                    {/* Community guidelines */}
-                    <div style={{ marginTop: 32, background: '#fff', borderRadius: 14, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,.04)', display: 'flex', gap: 12 }}>
-                        <span style={{ fontSize: 18 }}>🌱</span>
-                        <div>
-                            <p style={{ margin: '0 0 3px', fontWeight: 600, fontSize: 13, color: '#0f172a' }}>Community guidelines</p>
-                            <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>Be kind and supportive. No hate speech, harmful advice, or personal attacks. Posts are monitored. 3 user reports auto-flag a post for admin review. Users who receive 3 warnings are automatically suspended from the forum.</p>
-                        </div>
+                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8' }}>Images (JPEG, PNG, GIF, WEBP) and videos (MP4, WEBM, MOV) — max {MAX_MEDIA} files, 50 MB each</p>
                     </div>
-                </main>
+                )}
 
-                {/* RIGHT sidebar */}
-                <aside style={{ position: 'sticky', top: 20 }}>
-                    <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.07em' }}>More Counsellors</p>
-                    {adsLoading ? <><AdSkeleton /><AdSkeleton /></> : rightAds.length > 0 ? rightAds.map((ad, i) => <CounsellorAd key={i} ad={ad} />) : <AdvertiseCard accent={cat.accent} isCounsellor={isCounsellor} />}
-                </aside>
+                {/* Admin toolbar */}
+                {isAdmin && (
+                    <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 12, padding: '10px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 13, color: '#92400e' }}>🛡️ <strong>Admin view</strong> — delete posts, warn/ban users, manage replies, clear reports.</span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', userSelect: 'none', fontSize: 12, color: '#92400e', fontWeight: 500 }}>
+                            <div style={{ width: 32, height: 18, borderRadius: 9, position: 'relative', background: showDeleted ? '#ef4444' : '#d1d5db', transition: 'background .2s' }}>
+                                <div style={{ position: 'absolute', top: 2, left: showDeleted ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
+                                <input type="checkbox" checked={showDeleted} onChange={e => setShowDeleted(e.target.checked)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer', margin: 0 }} />
+                            </div>
+                            Show deleted posts
+                        </label>
+                    </div>
+                )}
+
+                {/* ── Feed (posts + interspersed ads) ── */}
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: 60 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', margin: '0 auto 12px', border: `3px solid ${cat.accent}30`, borderTopColor: cat.accent, animation: 'spin .8s linear infinite' }} />
+                        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                        <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>Loading...</p>
+                    </div>
+                ) : posts.length === 0 ? (
+                    <div style={{ background: '#fff', borderRadius: 16, padding: 52, textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
+                        <div style={{ fontSize: 48, marginBottom: 12 }}>{cat.icon}</div>
+                        <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>No posts yet in <strong>{category}</strong>. Be the first to share!</p>
+                    </div>
+                ) : feedItems.map((item, idx) => {
+                    if (item.type === 'ad') {
+                        return <CounsellorAd key={item.key} ad={item.data} />;
+                    }
+
+                    const post = item.data;
+                    const name        = authorName(post);
+                    const avatar      = post.isAnonymous ? null : (post.userId?.avatar || post.userId?.profilePicture);
+                    const authorId    = post.userId?._id;
+                    const isBanned    = post.userId?.isBannedFromForum;
+                    const warnCount   = post.userId?.forumWarningCount || 0;
+                    const isDeleted   = !!post.deletedAt;
+                    const isFlagged   = post.isFlagged;
+                    const repliesOpen = !!expanded[post._id];
+                    const hasReported = !!reported[post._id];
+
+                    return (
+                        <article key={post._id} style={{ background: isDeleted ? '#fef2f2' : '#fff', borderRadius: 16, marginBottom: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04)', opacity: isDeleted ? 0.75 : 1 }}>
+                            <div style={{ height: 3, background: isFlagged ? '#ef4444' : cat.accent }} />
+                            {isFlagged && isAdmin && (
+                                <div style={{ background: '#fef2f2', padding: '6px 20px', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>🚩 Flagged — {post.reportCount} report{post.reportCount !== 1 ? 's' : ''}</span>
+                                    <button onClick={() => handleDismissReports(post._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}>Dismiss reports</button>
+                                </div>
+                            )}
+                            {isDeleted && isAdmin && (
+                                <div style={{ background: '#fef2f2', padding: '6px 20px', fontSize: 12, color: '#b91c1c', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>🗑️ Deleted — {post.deleteReason}</span>
+                                    <button onClick={() => handleRestore(post._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#16a34a', fontSize: 11, fontWeight: 600, textDecoration: 'underline' }}>Restore</button>
+                                </div>
+                            )}
+                            <div style={{ padding: '20px 22px' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                                        <Avatar src={avatar} name={name} size={44} accent={cat.accent} isAnon={post.isAnonymous} />
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                                                <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>{name}</span>
+                                                {post.isAnonymous && <span style={{ fontSize: 10, background: '#f1f5f9', color: '#64748b', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>ANON</span>}
+                                                {isAdmin && isBanned && <span style={{ fontSize: 10, background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>BANNED</span>}
+                                                {isAdmin && warnCount > 0 && <span style={{ fontSize: 10, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', padding: '1px 7px', borderRadius: 20, fontWeight: 600 }}>⚠️ {warnCount}</span>}
+                                            </div>
+                                            <span style={{ fontSize: 12, color: '#94a3b8' }}>{timeAgo(post.createdAt)}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cat.light, color: cat.accent, fontWeight: 500 }}>{cat.icon} {category}</span>
+                                        {isOwner(post) && !isDeleted && (
+                                            <button onClick={() => handleDeleteOwn(post._id)} title="Delete post" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 5, borderRadius: 7, display: 'flex', alignItems: 'center' }}>
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                                            </button>
+                                        )}
+                                        {isAdmin && (
+                                            <div style={{ position: 'relative' }} ref={el => dropRef.current[post._id] = el}>
+                                                <button onClick={() => setAdminOpen(p => ({ ...p, [post._id]: !p[post._id] }))} style={{ padding: '5px 9px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, border: `1px solid ${adminOpen[post._id] ? '#fde68a' : 'transparent'}`, background: adminOpen[post._id] ? '#fef3c7' : 'none', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 3 }}>
+                                                    🛡️ <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                                                </button>
+                                                {adminOpen[post._id] && (
+                                                    <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 200, background: '#fff', borderRadius: 12, minWidth: 210, boxShadow: '0 8px 32px rgba(0,0,0,.14)', border: '1px solid #f1f5f9', padding: 6 }}>
+                                                        {!isDeleted && <AdminItem icon="🗑️" label="Remove post"     color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'adminDelete', postId: post._id }); }} />}
+                                                        {isDeleted  && <AdminItem icon="♻️" label="Restore post"    color="#10b981" onClick={() => { setAdminOpen({}); handleRestore(post._id); }} />}
+                                                        {isFlagged  && <AdminItem icon="✅" label="Dismiss reports" color="#6366f1" onClick={() => { setAdminOpen({}); handleDismissReports(post._id); }} />}
+                                                        {!post.isAnonymous && (<>
+                                                            <AdminItem icon="⚠️" label="Warn user"      color="#f59e0b" onClick={() => { setAdminOpen({}); setModal({ type: 'warn', postId: post._id }); }} />
+                                                            {isBanned ? <AdminItem icon="✅" label="Unban user" color="#10b981" onClick={() => { setAdminOpen({}); handleUnban(authorId); }} /> : <AdminItem icon="🚫" label="Ban from forum" color="#ef4444" onClick={() => { setAdminOpen({}); setModal({ type: 'ban', postId: post._id, userId: authorId }); }} />}
+                                                        </>)}
+                                                        {post.isAnonymous && <div style={{ padding: '7px 12px', fontSize: 11, color: '#94a3b8' }}>Warn/ban unavailable for anonymous posts</div>}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <h2 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>{post.title}</h2>
+                                <p style={{ margin: '0 0 12px', fontSize: 14, color: '#374151', lineHeight: 1.75 }}>{post.description}</p>
+                                <MediaGallery media={post.media} />
+                                {post.tags?.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                                        {post.tags.map((t, i) => <span key={i} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20, background: '#f1f5f9', color: '#475569', fontWeight: 500 }}>#{t}</span>)}
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 2, borderTop: '1px solid #f1f5f9', paddingTop: 10, flexWrap: 'wrap' }}>
+                                    <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill={post.hasSupported ? cat.accent : 'none'} stroke={post.hasSupported ? cat.accent : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>} label={`${post.supportCount || 0} support`} active={post.hasSupported} color={cat.accent} onClick={() => handleSupport(post._id)} disabled={isDeleted} />
+                                    <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>} label={`${post.replies?.length || 0} replies`} active={repliesOpen} color={cat.accent} onClick={() => setExpanded(p => ({ ...p, [post._id]: !p[post._id] }))} />
+                                    {user && !isOwner(post) && !isAdmin && !isDeleted && (
+                                        <ActionBtn icon={<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>} label={hasReported ? 'Reported' : 'Report'} active={hasReported} color="#ef4444" onClick={() => !hasReported && setModal({ type: 'report', postId: post._id })} disabled={hasReported} />
+                                    )}
+                                    {isAdmin && post.reportCount > 0 && <span style={{ marginLeft: 'auto', fontSize: 12, color: '#ef4444', fontWeight: 600 }}>🚩 {post.reportCount} report{post.reportCount !== 1 ? 's' : ''}</span>}
+                                </div>
+                                {repliesOpen && (
+                                    <div style={{ marginTop: 16 }}>
+                                        {user && !isDeleted && (
+                                            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+                                                <Avatar src={replyAnon[post._id] ? null : user?.avatar} name={user?.fullName} size={32} accent={cat.accent} isAnon={replyAnon[post._id]} />
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                                                        <textarea rows={2} placeholder="Write a supportive reply..." value={replyText[post._id] || ''} onChange={e => setReplyText(r => ({ ...r, [post._id]: e.target.value }))}
+                                                            style={{ flex: 1, padding: '8px 12px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, fontFamily: 'inherit', outline: 'none', resize: 'none', color: '#0f172a' }} />
+                                                        <button onClick={() => handleReply(post._id)} style={{ alignSelf: 'flex-end', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', background: cat.accent, color: '#fff', fontSize: 13, fontWeight: 600 }}>Reply</button>
+                                                    </div>
+                                                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none', fontSize: 12, color: '#64748b' }}>
+                                                        <input type="checkbox" checked={replyAnon[post._id] || false} onChange={e => setReplyAnon(r => ({ ...r, [post._id]: e.target.checked }))} />
+                                                        🎭 Reply anonymously
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {post.replies?.length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                {post.replies.map((r, ri) => {
+                                                    const rName   = replyAuthor(r);
+                                                    const rAvatar = r.isAnonymous ? null : (r.userId?.avatar || r.userId?.profilePicture);
+                                                    const isDelR  = !!r.deletedAt;
+                                                    return (
+                                                        <div key={r._id || ri} style={{ display: 'flex', gap: 10, padding: '11px 14px', background: isDelR ? '#fef2f2' : '#f8fafc', borderRadius: 11, opacity: isDelR ? 0.7 : 1 }}>
+                                                            <Avatar src={rAvatar} name={rName} size={28} accent={cat.accent} isAnon={r.isAnonymous} />
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                                                        <span style={{ fontWeight: 600, fontSize: 12, color: '#0f172a' }}>{rName}</span>
+                                                                        {r.isAnonymous && <span style={{ fontSize: 10, background: '#f1f5f9', color: '#64748b', padding: '1px 6px', borderRadius: 20, fontWeight: 600 }}>ANON</span>}
+                                                                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{timeAgo(r.createdAt)}</span>
+                                                                        {isAdmin && isDelR && <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 600 }}>DELETED</span>}
+                                                                    </div>
+                                                                    {isAdmin && !isDelR && r._id && (
+                                                                        <div style={{ position: 'relative' }} ref={el => rdropRef.current[r._id] = el}>
+                                                                            <button onClick={() => setReplyAdminOpen(p => ({ ...p, [r._id]: !p[r._id] }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', borderRadius: 6, fontSize: 11 }}>...</button>
+                                                                            {replyAdminOpen[r._id] && (
+                                                                                <div style={{ position: 'absolute', right: 0, top: '110%', zIndex: 300, background: '#fff', borderRadius: 10, minWidth: 150, boxShadow: '0 6px 24px rgba(0,0,0,.14)', border: '1px solid #f1f5f9', padding: 4 }}>
+                                                                                    <AdminItem icon="🗑️" label="Delete reply" color="#ef4444" onClick={() => { setReplyAdminOpen({}); setModal({ type: 'adminDeleteReply', postId: post._id, replyId: r._id }); }} />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <p style={{ margin: 0, fontSize: 13, color: isDelR ? '#94a3b8' : '#374151', lineHeight: 1.6, fontStyle: isDelR ? 'italic' : 'normal' }}>
+                                                                    {isDelR && !isAdmin ? '[This reply was removed by a moderator]' : r.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </article>
+                    );
+                })}
+
+                {/* Community guidelines */}
+                <div style={{ marginTop: 32, background: '#fff', borderRadius: 14, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,.04)', display: 'flex', gap: 12 }}>
+                    <span style={{ fontSize: 18 }}>🌱</span>
+                    <div>
+                        <p style={{ margin: '0 0 3px', fontWeight: 600, fontSize: 13, color: '#0f172a' }}>Community guidelines</p>
+                        <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.6 }}>Be kind and supportive. No hate speech, harmful advice, or personal attacks. Posts are monitored. 3 user reports auto-flag a post for admin review. Users who receive 3 warnings are automatically suspended from the forum.</p>
+                    </div>
+                </div>
             </div>
 
             {/* Modals */}

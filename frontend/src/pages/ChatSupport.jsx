@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
-const MOOD_EMOJIS = { 1:"😞",2:"😔",3:"😐",4:"🙂",5:"😊" };
-
 const INITIAL_MSG = {
   id: 0, role: "model",
   text: "Hi there 👋 I'm Ira, your MindCare companion. I'm here to listen and support you — whatever's on your mind today.\n\nIs there something specific you'd like to talk about, or would you just like to chat?",
@@ -91,8 +89,6 @@ export default function ChatSupport() {
   const [input,     setInput]       = useState("");
   const [loading,   setLoading]     = useState(false);
   const [showCrisis, setShowCrisis] = useState(false);
-  const [todayMood,  setTodayMood]  = useState(null);
-  const [moodSaved,  setMoodSaved]  = useState(false);
 
   const bottomRef  = useRef(null);
   const inputRef   = useRef(null);
@@ -103,20 +99,11 @@ export default function ChatSupport() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Load today's mood
-  useEffect(() => {
-    if (!token) return;
-    fetch(`${API}/wellness/mood`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => { if (d.success) setTodayMood(d.data.todayMood); })
-      .catch(() => {});
-  }, [token]);
-
   // Build Gemini history from messages (exclude initial bot message)
   const buildHistory = useCallback(() => {
     return messages
-      .filter(m => m.id !== 0) // skip the initial greeting
-      .slice(-18) // last 18 messages for context
+      .filter(m => m.id !== 0)
+      .slice(-18)
       .map(m => ({
         role:  m.role === "user" ? "user" : "model",
         parts: [{ text: m.text }],
@@ -174,29 +161,6 @@ export default function ChatSupport() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
-  const logMood = async (m) => {
-    setTodayMood(m);
-    setMoodSaved(true);
-    if (token) {
-      await fetch(`${API}/wellness/mood`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ mood: m }),
-      }).catch(() => {});
-    }
-    // Auto-send a relevant message after mood log
-    setTimeout(() => {
-      const phrases = {
-        1: "I'm feeling really awful today",
-        2: "I'm not having a great day",
-        3: "I'm feeling okay, nothing special",
-        4: "I'm feeling pretty good today",
-        5: "I'm feeling great today!",
-      };
-      sendMessage(phrases[m]);
-    }, 600);
-  };
-
   const clearConversation = () => {
     setMessages([{
       ...INITIAL_MSG,
@@ -240,22 +204,6 @@ export default function ChatSupport() {
           </button>
         </div>
       </div>
-
-      {/* Mood check-in strip (shown if not logged today) */}
-      {todayMood === null && !moodSaved && (
-        <div className="relative z-10 bg-emerald-900/40 border-b border-emerald-500/20 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-white/70 text-xs font-medium">How are you feeling today?</p>
-          <div className="flex gap-1.5">
-            {[1,2,3,4,5].map(m => (
-              <button key={m} onClick={() => logMood(m)}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-xl flex items-center justify-center transition-all hover:scale-110"
-                title={["Awful","Bad","Okay","Good","Great"][m-1]}>
-                {MOOD_EMOJIS[m]}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Crisis banner — persistent when triggered */}
       {showCrisis && (

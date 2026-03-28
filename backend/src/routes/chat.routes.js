@@ -1,14 +1,31 @@
 import express from "express";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { optionalJWT } from "../middlewares/optionalAuth.middleware.js";
 
 const router = express.Router();
-const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  MENTAL HEALTH SYSTEM PROMPT
-//  This is the core of the AI's persona and clinical framework.
-//  It transforms a raw Gemini call into a structured mental health companion.
+//  AI PROVIDER CONFIG
+//  Supports: Groq (free, fast) → Gemini (fallback)
+//  Set GROQ_API_KEY in .env — get one free at https://console.groq.com
+//  Gemini is kept as optional fallback if GEMINI_API_KEY is also set
+// ─────────────────────────────────────────────────────────────────────────────
+const GROQ_KEY   = process.env.GROQ_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
+
+if (GROQ_KEY) {
+    console.log(`✅ GROQ_API_KEY loaded (${GROQ_KEY.slice(0, 8)}...${GROQ_KEY.slice(-4)}) — primary AI provider`);
+} else if (GEMINI_KEY) {
+    console.log(`✅ GEMINI_API_KEY loaded — using Gemini as AI provider`);
+} else {
+    console.error("╔══════════════════════════════════════════════════════════════╗");
+    console.error("║  ❌ No AI API key configured!                               ║");
+    console.error("║  Set GROQ_API_KEY (free) → https://console.groq.com         ║");
+    console.error("║  Or GEMINI_API_KEY → https://aistudio.google.com/apikey     ║");
+    console.error("╚══════════════════════════════════════════════════════════════╝");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  SYSTEM PROMPT
 // ─────────────────────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are Ira, MindCare's empathetic AI mental health companion. You are trained in evidence-based therapeutic approaches and support students and young adults with their mental health.
 
@@ -35,80 +52,142 @@ You draw on these evidence-based approaches:
 - **Closing**: Always end with a forward-looking statement and a check-in.
 
 ## Topic Expertise
-You can help with:
-- Anxiety, worry, panic attacks, social anxiety
-- Low mood, depression, lack of motivation
-- Exam stress, academic pressure, performance anxiety
-- Sleep problems and insomnia
-- Relationship issues, loneliness, social isolation
-- Self-esteem, negative self-talk, imposter syndrome
-- Grief and loss
-- Anger management
-- Study/productivity issues
-- General emotional support and venting
+You can help with: anxiety, worry, panic attacks, social anxiety, low mood, depression, lack of motivation, exam stress, academic pressure, performance anxiety, sleep problems and insomnia, relationship issues, loneliness, social isolation, self-esteem, negative self-talk, imposter syndrome, grief and loss, anger management, study/productivity issues, general emotional support and venting.
 
 ## Crisis Protocol (CRITICAL — Never ignore these)
-If the user mentions:
-- Suicidal thoughts, wanting to die, not wanting to be here
-- Self-harm (cutting, burning, hitting themselves)
-- Feeling unsafe or in immediate danger
-- Severe hopelessness with no way forward
-
-IMMEDIATELY:
+If the user mentions suicidal thoughts, self-harm, feeling unsafe, or severe hopelessness:
 1. Acknowledge their pain with full warmth — do NOT jump to hotlines first
 2. Ask directly: "Are you having thoughts of hurting yourself right now?"
-3. Provide crisis resources clearly:
-   - **iCall (India)**: 9152987821 (Mon–Sat, 8am–10pm)
-   - **Vandrevala Foundation**: 1860-2662-345 (24/7, free)
-   - **Emergency**: 112
+3. Provide crisis resources: iCall (India): 9152987821 | Vandrevala Foundation: 1860-2662-345 (24/7) | Emergency: 112
 4. Encourage them to reach out to someone they trust
-5. Stay with them in conversation — don't just list numbers and leave
+5. Stay with them in conversation
 
 ## Boundaries
-- You do NOT diagnose conditions
-- You do NOT prescribe or recommend medications
-- You do NOT provide detailed information about methods of self-harm
-- For questions requiring a doctor (medication, severe symptoms), always say: "This is something your doctor would be best placed to answer."
-- If someone asks for information harmful to themselves or others, gently redirect
+- You do NOT diagnose conditions, prescribe medications, or provide self-harm information
+- For medical questions: "This is something your doctor would be best placed to answer."
+- Not a general-purpose AI — stay on mental health. Redirect other topics gently.
 
 ## Response Format
-- Keep responses conversational and warm — not bullet-pointed lists by default
-- Use short paragraphs (2-3 sentences each)
-- Only use lists when teaching a technique with clear steps
-- Use emojis sparingly (1-2 per message maximum, only when appropriate)
-- Typical response length: 80-150 words. Never more than 250 words unless explaining a technique.
-- End most responses with either a question OR a gentle prompt — keep the conversation alive
+- Conversational and warm — not bullet-pointed lists by default
+- Short paragraphs (2-3 sentences each)
+- Emojis sparingly (1-2 max). Length: 80-150 words typically.
+- End with a question or gentle prompt to keep conversation alive.
 
 ## Platform Context
-The user is on MindCare — a mental health platform. You can refer them to:
-- "Take our screening test" → /screening (for PHQ-9, GAD-7 etc.)
-- "Browse our resource library" → /resources (videos, articles, guided meditations)
-- "Book a session with a counsellor" → /booking
-- "Join the peer forum" → /forum
-
-## What You Are NOT
-- Not a general-purpose AI assistant — stay on mental health and wellness topics
-- If asked about non-mental-health topics, gently redirect: "I'm best at supporting you with emotional wellbeing — is there something on that front I can help with?"
-- Not a search engine, not a coding assistant, not a news source
-
-Remember: Your goal is not to fix people. It is to help them feel heard, understood, and gently supported toward healthier thinking and behaviour patterns. You plant seeds — the user does the growing.`;
+Refer users to: screening (/screening), resources (/resources), book counsellor (/booking), peer forum (/forum).`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  CRISIS KEYWORDS — trigger extra safety response
+//  CRISIS KEYWORDS
 // ─────────────────────────────────────────────────────────────────────────────
 const CRISIS_PATTERNS = [
     /\b(suicid|kill myself|end my life|don.t want to (be here|live|exist)|want to die|better off dead)\b/i,
     /\b(self.harm|cutting|hurt myself|hurting myself)\b/i,
     /\b(no point in living|can.t go on|nothing to live for)\b/i,
 ];
-
 const isCrisisMessage = (text) => CRISIS_PATTERNS.some(p => p.test(text));
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  CHAT ROUTE
-//  POST /api/v1/chat
-//  Body: { message, history: [{ role, parts }] }
-//  history is an array of previous turns sent from the frontend
+//  GROQ API CALL (OpenAI-compatible, no npm package needed)
+// ─────────────────────────────────────────────────────────────────────────────
+async function callGroq(message, history) {
+    // Convert history from Gemini format to OpenAI format
+    const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+    ];
+
+    // Add conversation history
+    for (const turn of (history || []).slice(-20)) {
+        const role = turn.role === "model" ? "assistant" : "user";
+        const text = turn.parts?.[0]?.text || turn.content || "";
+        if (text) messages.push({ role, content: text });
+    }
+
+    messages.push({ role: "user", content: message.trim() });
+
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_KEY}`,
+        },
+        body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages,
+            max_tokens: 600,
+            temperature: 0.85,
+            top_p: 0.92,
+        }),
+    });
+
+    if (!res.ok) {
+        const errBody = await res.text();
+        const err = new Error(`Groq API error ${res.status}: ${errBody.slice(0, 300)}`);
+        err.status = res.status;
+        throw err;
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "I'm here for you. Could you tell me a bit more?";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  GEMINI API CALL (optional fallback)
+// ─────────────────────────────────────────────────────────────────────────────
+let genAI = null;
+async function callGemini(message, history) {
+    if (!genAI) {
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
+        genAI = new GoogleGenerativeAI(GEMINI_KEY);
+    }
+
+    const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        systemInstruction: SYSTEM_PROMPT,
+    });
+
+    const chat = model.startChat({
+        history: (history || []).slice(-20),
+        generationConfig: { maxOutputTokens: 600, temperature: 0.85, topP: 0.92, topK: 40 },
+    });
+
+    const result = await chat.sendMessage(message.trim());
+    return result.response.text();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  UNIFIED CALL — tries Groq first, falls back to Gemini
+// ─────────────────────────────────────────────────────────────────────────────
+async function callAI(message, history) {
+    const errors = [];
+
+    // Try Groq first (fast, free, reliable)
+    if (GROQ_KEY) {
+        try {
+            return await callGroq(message, history);
+        } catch (err) {
+            errors.push(`Groq: ${err.message?.slice(0, 150)}`);
+            console.error("[Chat] Groq failed:", err.message?.slice(0, 150));
+        }
+    }
+
+    // Fallback to Gemini
+    if (GEMINI_KEY) {
+        try {
+            return await callGemini(message, history);
+        } catch (err) {
+            errors.push(`Gemini: ${err.message?.slice(0, 150)}`);
+            console.error("[Chat] Gemini failed:", err.message?.slice(0, 150));
+        }
+    }
+
+    // Everything failed
+    const finalErr = new Error("All AI providers failed");
+    finalErr.allErrors = errors;
+    throw finalErr;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CHAT ROUTE — POST /api/v1/chat
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/", optionalJWT, async (req, res) => {
     try {
@@ -118,39 +197,29 @@ router.post("/", optionalJWT, async (req, res) => {
             return res.status(400).json({ error: "Message is required" });
         }
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
-            systemInstruction: SYSTEM_PROMPT,
-        });
+        if (!GROQ_KEY && !GEMINI_KEY) {
+            return res.json({
+                reply: "I'm sorry, Ira is not available right now because no AI service is configured. Please ask the admin to set GROQ_API_KEY (free at console.groq.com) in the server settings.",
+                crisisDetected: false,
+                suggestions: [],
+            });
+        }
 
-        // Build chat history from client (Gemini multi-turn format)
-        // history = [{ role: "user"|"model", parts: [{ text }] }]
-        const chat = model.startChat({
-            history: history.slice(-20), // keep last 20 turns for context window
-            generationConfig: {
-                maxOutputTokens: 600,
-                temperature:     0.85,   // warm but not unhinged
-                topP:            0.92,
-                topK:            40,
-            },
-        });
-
-        const result = await chat.sendMessage(message.trim());
-        const reply  = result.response.text();
-
-        // Check if AI missed a crisis signal — add safety footer if so
+        const reply = await callAI(message, history);
         const crisisDetected = isCrisisMessage(message);
 
         return res.json({
             reply,
             crisisDetected,
-            // Surface quick action suggestions to the frontend
             suggestions: getSuggestions(message, reply),
         });
     } catch (err) {
-        console.error("[Chat] Gemini error:", err.message);
+        console.error("╔══════════════════════════════════════════════════════════════╗");
+        console.error("║  ❌ AI CHAT ERROR                                           ║");
+        console.error("╚══════════════════════════════════════════════════════════════╝");
+        console.error("  Error:", err.message?.slice(0, 300));
+        if (err.allErrors) err.allErrors.forEach(e => console.error("  →", e));
 
-        // Graceful fallback — never leave user without a response
         return res.json({
             reply: "I'm here for you. I'm having a small technical hiccup right now, but I want you to know you're not alone. If you're in crisis, please call iCall at 9152987821 or Vandrevala at 1860-2662-345. Otherwise, feel free to type again and I'll do my best to respond.",
             crisisDetected: false,
@@ -160,7 +229,7 @@ router.post("/", optionalJWT, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  QUICK SUGGESTION CHIPS — contextual follow-up prompts
+//  QUICK SUGGESTION CHIPS
 // ─────────────────────────────────────────────────────────────────────────────
 function getSuggestions(userMsg, aiReply) {
     const msg = userMsg.toLowerCase();
@@ -176,7 +245,6 @@ function getSuggestions(userMsg, aiReply) {
         return ["Help me manage anger", "STOP technique for anger", "Why do I get so angry?"];
     if (/lonely|alone|isolated/.test(msg))
         return ["How to make connections", "Is loneliness bad for health?", "Small ways to feel less alone"];
-    // Default suggestions
     return ["How can you help me?", "Take a screening test", "Browse mental health resources"];
 }
 

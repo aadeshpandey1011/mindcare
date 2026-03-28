@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Navbar       from "./Navbar";
-import MoodWidget   from "./MoodWidget";
-import AccountAssistant from "./AccountAssistant";
 import OnboardingModal from "./OnboardingModal";
 import { Outlet }   from "react-router-dom";
 import { useAuth }  from "../context/AuthContext";
@@ -15,15 +13,12 @@ const Layout = () => {
   // Check if onboarding has been completed
   useEffect(() => {
     if (!token || !user) return;
-    // Only students see onboarding
     if (user.role !== "student") return;
 
     fetch(`${API}/wellness/onboarding`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => {
-        // Show modal if no onboarding record exists or it's not completed
         if (!d.data || !d.data.completed) {
-          // Delay slightly so the page renders first
           setTimeout(() => setShowOnboarding(true), 800);
         }
       })
@@ -40,12 +35,6 @@ const Layout = () => {
       <div>
         <Outlet />
       </div>
-
-      {/* Floating mood check-in widget — all authenticated users */}
-      <MoodWidget />
-
-      {/* Floating AI account assistant — all authenticated users */}
-      <AccountAssistant />
 
       {/* First-time onboarding modal — students only */}
       {showOnboarding && (
