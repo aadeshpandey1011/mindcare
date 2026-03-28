@@ -95,7 +95,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
 
         {/* Logo */}
-        <Link to={user?.role === "admin" ? "/dashboard" : user?.role === "counsellor" ? "/counsellorDashboard" : "/newhome"}
+        <Link to={user?.role === "admin" ? "/dashboard" : user?.role === "counsellor" ? "/newhome" : "/newhome"}
           className={`text-2xl font-extrabold tracking-tight transition-colors ${user?.role === "admin" ? "text-red-600 hover:text-red-700" : "text-emerald-700 hover:text-emerald-800"}`}>
           MindCare
           {user?.role === "admin" && <span className="ml-1 text-xs font-semibold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md align-middle">ADMIN</span>}
