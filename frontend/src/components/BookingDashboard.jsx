@@ -389,7 +389,7 @@ function FeeEditor({ currentFee, token, onSaved }) {
 
     const handleSave = async () => {
         const finalFee = isFree ? 0 : Number(fee);
-        if (!isFree && (isNaN(finalFee) || finalFee < 50 || finalFee > 5000)) { setError('Fee must be ₹50–₹5000'); return; }
+        if (!isFree && (isNaN(finalFee) || finalFee < 5 || finalFee > 5000)) { setError('Fee must be ₹5–₹5000'); return; }
         setMode('saving'); setError('');
         try {
             const res  = await fetch(`${API_BASE}/users/session-fee`, {
